@@ -62,7 +62,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Créer src/infrastructure/database/client.ts",
       "Générer et appliquer migration initiale"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 5,

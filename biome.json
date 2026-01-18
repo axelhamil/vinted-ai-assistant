@@ -7,7 +7,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"ignore": ["node_modules", "dist", ".cache", "*.db", "drizzle", ".claude"]
+		"ignore": ["node_modules", "dist", ".cache", "*.db", "drizzle", ".claude", "**/migrations/**"]
 	},
 	"formatter": {
 		"enabled": true,

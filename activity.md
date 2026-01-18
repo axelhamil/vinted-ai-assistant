@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 3/32
-**Current Task:** Task 4 - Setup Drizzle + SQLite backend
+**Tasks Completed:** 4/32
+**Current Task:** Task 5 - Setup extension Chrome avec Vite + CRXJS
 
 ---
 
@@ -92,3 +92,46 @@
 - Bun is not installed in this environment, added @hono/node-server adapter for Node.js compatibility
 - Added tsx for dev mode with Node.js (dev:bun script available when Bun is installed)
 - Server runs on port 3000 as specified in PRD
+
+### 2026-01-18 - Task 4: Setup Drizzle + SQLite backend
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/backend/drizzle.config.ts` - Drizzle Kit configuration (SQLite dialect, schema path, migrations output)
+- `apps/backend/src/infrastructure/database/schema.ts` - Full database schema with analyses table (38 columns matching PRD spec)
+- `apps/backend/src/infrastructure/database/client.ts` - Drizzle client with better-sqlite3, WAL mode enabled
+- `apps/backend/src/infrastructure/database/migrations/0000_acoustic_glorian.sql` - Initial migration SQL
+- `apps/backend/data/vinted-ai.db` - SQLite database file
+
+**Files Modified:**
+- `apps/backend/package.json` - Added drizzle-orm, better-sqlite3 dependencies and db:* scripts
+- `biome.json` - Added `**/migrations/**` to ignore list (auto-generated files)
+
+**Commands Executed:**
+- `npm install drizzle-orm better-sqlite3` - Installed ORM and SQLite driver
+- `npm install -D drizzle-kit @types/better-sqlite3` - Installed dev dependencies
+- `npm run db:generate` - Generated initial migration
+- `npm run db:push` - Applied schema to database
+- `npx biome check --write .` - Fixed formatting
+- `npx biome check .` - Verified linting passes
+- `npm run typecheck --workspaces` - Verified typecheck passes
+- `curl http://localhost:3000/api/health` - Verified server still works
+
+**Schema Columns:**
+- Article info: id, vintedId, url, title, description, price, brand, size, condition
+- Seller info: sellerUsername, sellerRating, sellerSalesCount
+- Photos: photos (JSON array)
+- Photo analysis: photoQualityScore, photoAnalysis (JSON)
+- Authenticity: authenticityScore, authenticityFlags, authenticityConfidence
+- Market price: marketPriceLow, marketPriceHigh, marketPriceAvg, marketPriceSources, marketPriceConfidence
+- Opportunity: opportunityScore, margin, marginPercent, signals
+- Negotiation: suggestedOffer, negotiationScript, negotiationArguments, negotiationTone
+- Resale: resalePrice, resaleEstimatedDays, resaleTips, resalePlatforms
+- Meta: status, analyzedAt, updatedAt
+
+**Notes:**
+- Database stored in `apps/backend/data/vinted-ai.db`
+- WAL mode enabled for better concurrent performance
+- All JSON columns properly typed with Drizzle's $type<> helper
+- Export types: Analysis (select) and NewAnalysis (insert)
