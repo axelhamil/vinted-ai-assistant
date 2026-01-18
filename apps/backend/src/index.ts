@@ -3,11 +3,11 @@ import 'reflect-metadata'
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { createAnalysisRoutes } from './adapters/http/analysis.routes'
+import { errorHandler } from './adapters/http/middleware/error-handler.middleware'
+import { container } from './application/container'
+import { TYPES } from './application/di-types'
 import type { IAIProvider } from './application/interfaces/providers/ai.provider.interface'
-import { container } from './container/container'
-import { TYPES } from './container/types'
-import { createAnalysisRoutes } from './routes/analysis.routes'
-import { errorHandler } from './routes/middleware/error-handler.middleware'
 
 const app = new Hono()
 

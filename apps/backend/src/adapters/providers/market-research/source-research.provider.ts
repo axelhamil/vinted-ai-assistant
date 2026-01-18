@@ -1,6 +1,6 @@
 import PQueue from 'p-queue'
 import { inject, injectable } from 'inversify'
-import { TYPES } from '../../../container/types'
+import { TYPES } from '../../../application/di-types'
 import type {
 	EnrichedSource,
 	ISourceResearchProvider,

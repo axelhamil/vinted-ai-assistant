@@ -6,8 +6,8 @@ import type {
 	IAnalysisRepository,
 } from '../../application/interfaces/repositories/analysis.repository.interface'
 import { AnalysisEntity, type AnalysisProps } from '../../domain/entities/analysis.entity'
-import { db } from '../database/client'
-import { type Analysis, type NewAnalysis, analyses } from '../database/schema'
+import { db } from './database/client'
+import { type Analysis, type NewAnalysis, analyses } from './database/schema'
 
 /**
  * Drizzle implementation of the Analysis repository

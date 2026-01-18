@@ -15,7 +15,7 @@ import type {
 	ExportMarkdownUseCase,
 } from '../../application/use-cases/export-markdown.use-case'
 import type { GetAnalysisUseCase } from '../../application/use-cases/get-analysis.use-case'
-import { TYPES } from '../../container/types'
+import { TYPES } from '../../application/di-types'
 import { AnalysisNotFoundError } from '../../domain/errors/domain.error'
 
 /**

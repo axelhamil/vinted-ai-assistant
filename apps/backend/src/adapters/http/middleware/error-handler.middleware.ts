@@ -1,5 +1,5 @@
 import type { Context, Next } from 'hono'
-import { AnalysisNotFoundError, DomainError } from '../../domain/errors/domain.error'
+import { AnalysisNotFoundError, DomainError } from '../../../domain/errors/domain.error'
 import { ValidationError } from './validation.middleware'
 
 /**

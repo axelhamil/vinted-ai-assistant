@@ -1,7 +1,7 @@
 import { createId } from '@paralleldrive/cuid2'
 import type { MarketPrice, Resale } from '@vinted-ai/shared/analysis'
 import { inject, injectable } from 'inversify'
-import { TYPES } from '../../container/types'
+import { TYPES } from '../di-types'
 import { AnalysisEntity, type AnalysisProps } from '../../domain/entities/analysis.entity'
 import { type AnalysisResponseDTO, toAnalysisResponseDTO } from '../dtos/analysis.dto'
 import { type ArticleInputDTO, calculateDaysListed, toVintedArticleData } from '../dtos/article.dto'

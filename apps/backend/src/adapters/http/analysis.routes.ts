@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import type { Container } from 'inversify'
-import { AnalysisController } from '../adapters/controllers/analysis.controller'
+import { AnalysisController } from '../controllers/analysis.controller'
 import {
 	isValidationError,
 	validateBody,

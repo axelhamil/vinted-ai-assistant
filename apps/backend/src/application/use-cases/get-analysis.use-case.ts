@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify'
-import { TYPES } from '../../container/types'
+import { TYPES } from '../di-types'
 import { AnalysisNotFoundError } from '../../domain/errors/domain.error'
 import {
 	type AnalysisListResponseDTO,
