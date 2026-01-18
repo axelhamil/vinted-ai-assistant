@@ -337,7 +337,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Actions: analyze, toggleSidebar, clearError",
       "Persist settings dans chrome.storage"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 27,

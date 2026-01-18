@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 25/32
-**Current Task:** Task 26 - Implémenter store Zustand
+**Tasks Completed:** 26/32
+**Current Task:** Task 27 - Implémenter Popup extension
 
 ---
 
@@ -1179,3 +1179,73 @@
 - Expired entries are automatically deleted on read
 - Dates are properly serialized/deserialized for IndexedDB storage
 - Local cache is checked before backend API call for faster response
+
+### 2026-01-18 - Task 26: Implémenter store Zustand
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/extension/src/stores/analysis.store.ts` - Zustand store with full state management and chrome.storage persistence
+- `apps/extension/src/stores/index.ts` - Store exports
+
+**Commands Executed:**
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+- `npm run build` (in apps/extension) - Verified extension builds successfully
+
+**Store Implementation:**
+
+**State:**
+- `articleData` - Current article data from DOM
+- `currentAnalysis` - Analysis result from backend
+- `isLoading` - Loading state for initial page load
+- `isAnalyzing` - Loading state during analysis
+- `error` - Error message if any
+- `sidebarOpen` - Sidebar visibility state
+- `cacheInfo` - Cache status and time remaining
+- `settings` - Extension settings (persisted in chrome.storage)
+
+**Actions:**
+- `setArticleData(data)` - Set article data from parser
+- `analyze(data, forceRefresh?)` - Trigger analysis via backend
+- `checkCachedAnalysis(vintedId)` - Check local and backend cache
+- `setAnalysis(analysis)` - Manually set analysis
+- `updateStatus(status)` - Update analysis status (WATCHING, BOUGHT, etc.)
+- `exportMarkdown()` - Export analysis to markdown file
+- `refresh()` - Force re-analysis invalidating cache
+- `setLoading(loading)` - Set loading state
+- `setError(error)` - Set error state
+- `clearError()` - Clear error state
+- `toggleSidebar()` - Toggle sidebar visibility
+- `openSidebar()` - Open sidebar
+- `closeSidebar()` - Close sidebar
+- `loadSettings()` - Load settings from chrome.storage
+- `updateSettings(settings)` - Update and persist settings
+- `reset()` - Reset store to initial state
+
+**Selectors:**
+- `selectArticleData` - Get article data
+- `selectCurrentAnalysis` - Get current analysis
+- `selectIsLoading` - Get loading state
+- `selectIsAnalyzing` - Get analyzing state
+- `selectError` - Get error state
+- `selectSidebarOpen` - Get sidebar state
+- `selectCacheInfo` - Get cache info
+- `selectSettings` - Get settings
+- `selectOpportunityScore` - Derived: get opportunity score
+- `selectMarginPercent` - Derived: get margin percent
+- `selectIsHighOpportunity` - Derived: check if score >= threshold
+
+**Chrome Storage Persistence:**
+- Settings are loaded via `GET_SETTINGS` message to background worker
+- Settings are saved via `UPDATE_SETTINGS` message to background worker
+- Background worker handles chrome.storage.local persistence
+- Default settings: backendUrl, scoreThreshold (7), autoOpenSidebar (true), enabled (true)
+
+**Technical Notes:**
+- Uses Zustand 5.x with create() API
+- Follows same message passing pattern as existing App.tsx
+- Integrates with existing Dexie IndexedDB cache
+- Provides performance-optimized selectors for React components
+- Fully typed with TypeScript strict mode
+- Store can be used alongside existing App.tsx implementation or as replacement
