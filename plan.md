@@ -137,7 +137,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Binder les interfaces aux implémentations",
       "Ajouter reflect-metadata import dans index.ts"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 11,

@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 9/32
-**Current Task:** Task 10 - Setup Inversify (DI Container)
+**Tasks Completed:** 10/32
+**Current Task:** Task 11 - Implémenter Use Case AnalyzeArticle
 
 ---
 
@@ -360,3 +360,45 @@
 - Supports image analysis via GPT-4o multimodal capabilities
 - API key configurable via constructor or OPENAI_API_KEY env var
 - Prompts in French matching PRD specifications
+
+### 2026-01-18 - Task 10: Setup Inversify (DI Container)
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/backend/src/container/types.ts` - TYPES symbols for DI (AnalysisRepository, AIProvider, MarketPriceProvider, Use Cases, Database)
+- `apps/backend/src/container/container.ts` - Inversify container configuration with bindings
+- `apps/backend/src/container/index.ts` - Container exports
+
+**Files Modified:**
+- `apps/backend/package.json` - Added inversify and reflect-metadata dependencies
+- `apps/backend/tsconfig.json` - Added experimentalDecorators and emitDecoratorMetadata for Inversify support
+- `apps/backend/src/index.ts` - Added reflect-metadata import at top, updated health endpoint to use container
+- `apps/backend/src/infrastructure/repositories/drizzle-analysis.repository.ts` - Added @injectable() decorator
+- `apps/backend/src/infrastructure/providers/ai/openai.provider.ts` - Added @injectable() decorator
+
+**Commands Executed:**
+- `npm install inversify reflect-metadata` - Installed DI dependencies
+- `npx biome check --write .` - Fixed formatting and import order
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+- `curl http://localhost:3000/api/health` - Verified endpoint returns `{"status":"ok","aiProvider":"openai"}` (now using DI)
+
+**Container Bindings:**
+- `TYPES.AnalysisRepository` → `DrizzleAnalysisRepository` (singleton)
+- `TYPES.AIProvider` → `OpenAIProvider` (singleton)
+
+**TYPES Symbols:**
+- `AnalysisRepository` - For IAnalysisRepository
+- `AIProvider` - For IAIProvider
+- `MarketPriceProvider` - For IMarketPriceProvider
+- `AnalyzeArticleUseCase` - For future use case
+- `GetAnalysisUseCase` - For future use case
+- `ExportMarkdownUseCase` - For future use case
+- `Database` - For database instance
+
+**Notes:**
+- Container resolves dependencies properly
+- Health endpoint now dynamically gets AI provider name from container
+- Decorators enabled in tsconfig for Inversify
+- reflect-metadata imported before all other imports

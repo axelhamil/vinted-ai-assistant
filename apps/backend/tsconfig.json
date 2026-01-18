@@ -3,7 +3,9 @@
 	"compilerOptions": {
 		"outDir": "dist",
 		"rootDir": "src",
-		"types": ["bun"]
+		"types": ["bun"],
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "dist"]

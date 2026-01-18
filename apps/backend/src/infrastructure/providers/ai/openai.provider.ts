@@ -8,6 +8,7 @@ import type {
 	PhotoQuality,
 } from '@vinted-ai/shared'
 import { generateObject } from 'ai'
+import { injectable } from 'inversify'
 import { z } from 'zod'
 import type {
 	IAIProvider,
@@ -65,6 +66,7 @@ const negotiationSchema = z.object({
 /**
  * OpenAI provider implementation using Vercel AI SDK
  */
+@injectable()
 export class OpenAIProvider implements IAIProvider {
 	private readonly model = 'gpt-4o'
 	private readonly apiKey: string | undefined

@@ -1,5 +1,6 @@
 import type { AnalysisStatus } from '@vinted-ai/shared'
 import { and, count, desc, eq, gte } from 'drizzle-orm'
+import { injectable } from 'inversify'
 import type {
 	FindAllOptions,
 	IAnalysisRepository,
@@ -11,6 +12,7 @@ import { type Analysis, type NewAnalysis, analyses } from '../database/schema'
 /**
  * Drizzle implementation of the Analysis repository
  */
+@injectable()
 export class DrizzleAnalysisRepository implements IAnalysisRepository {
 	/**
 	 * Save a new analysis or update an existing one
