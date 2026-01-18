@@ -2,7 +2,7 @@
 
 > Extension Chrome intelligente qui utilise l'IA pour analyser les annonces Vinted en temps réel.
 
-![License](https://img.shields.io/badge/license-AGPL--3.0%20with%20Commons%20Clause-blue)
+![License](https://img.shields.io/badge/license-AGPL--3.0-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![Bun](https://img.shields.io/badge/Bun-runtime-f9f1e1)
@@ -143,17 +143,7 @@ pnpm lint
 
 ## Licence
 
-Ce projet est sous licence **AGPL-3.0 avec Commons Clause**.
-
-Vous êtes libre de :
-- Voir, modifier et distribuer le code source
-- Utiliser pour un usage personnel et non-commercial
-
-Vous ne pouvez pas :
-- Vendre ce logiciel ou des services basés dessus
-- Utiliser à des fins commerciales sans autorisation
-
-Voir [LICENSE](./LICENSE) pour les détails complets.
+Ce projet est sous licence [AGPL-3.0](./LICENSE). Toute utilisation du code (y compris en SaaS) oblige à partager les modifications sous la même licence.
 
 ---
 
