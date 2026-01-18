@@ -249,7 +249,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Monter React app dans le shadow root",
       "Injecter Tailwind styles dans shadow DOM"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 20,

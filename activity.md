@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 18/32
-**Current Task:** Task 19 - Setup React + Shadow DOM pour content script
+**Tasks Completed:** 19/32
+**Current Task:** Task 20 - Implémenter composant Badge score
 
 ---
 
@@ -824,3 +824,56 @@
 - High-resolution image URL extraction from srcset
 - Debounced DOM mutation observer (300ms)
 - Full TypeScript strict mode compliance (no `any`)
+
+### 2026-01-18 - Task 19: Setup React + Shadow DOM pour content script
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/extension/src/content/styles.css` - Tailwind imports and custom styles for Shadow DOM
+- `apps/extension/src/content/lib/shadow-dom.ts` - Shadow DOM container management utilities
+- `apps/extension/src/content/App.tsx` - Main React component for content script UI
+- `apps/extension/src/vite-env.d.ts` - Vite type declarations for CSS imports
+
+**Files Modified:**
+- `apps/extension/src/content/index.tsx` - Rewritten with Shadow DOM and React mounting
+
+**Commands Executed:**
+- `npx biome check --write .` - Fixed formatting and import order
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+- `npm run build` (in apps/extension) - Verified extension builds successfully
+
+**Implementation Details:**
+
+**Shadow DOM Container (`shadow-dom.ts`):**
+- `createShadowContainer()` - Creates host element with shadow root and React mount point
+- `injectStyles()` - Injects CSS string into shadow root
+- `removeShadowContainer()` - Cleanup function for unmounting
+- `shadowContainerExists()` - Utility to check if container exists
+
+**Content Script Entry (`index.tsx`):**
+- Creates Shadow DOM container on Vinted article pages
+- Mounts React app inside shadow root for style isolation
+- Injects Tailwind styles using Vite's `?inline` CSS import
+- Handles SPA-like navigation with MutationObserver
+- Cleans up React root on page unload or navigation
+
+**App Component (`App.tsx`):**
+- Loads article data using parser from Task 18
+- Displays loading, error, and success states
+- Temporary debug display showing extracted article info
+- Placeholder for Badge and Sidebar components (Tasks 20-21)
+
+**Styles (`styles.css`):**
+- Tailwind directives for utility classes
+- `:host` styles to reset shadow root defaults
+- Fixed positioning for UI container
+- Pointer-events management for click-through
+
+**Technical Notes:**
+- Uses Vite's `?inline` query to import CSS as string for injection
+- Shadow DOM provides complete style isolation from Vinted's styles
+- MutationObserver detects SPA navigation for re-initialization
+- React StrictMode enabled for development
+- Maximum z-index (2147483647) ensures UI stays on top
