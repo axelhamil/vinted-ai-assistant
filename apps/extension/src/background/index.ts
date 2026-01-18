@@ -1,7 +1,7 @@
 // Background service worker for Vinted AI Assistant
 // Handles communication between content scripts and backend API
 
-import type { AnalysisResult, VintedArticleData } from '@vinted-ai/shared'
+import type { AnalysisResult, Negotiation, NegotiationTone, VintedArticleData } from '@vinted-ai/shared'
 
 // ============================================================================
 // Types
@@ -32,6 +32,7 @@ type MessageType =
 	| 'GET_STATE'
 	| 'TOGGLE_EXTENSION'
 	| 'CHECK_BACKEND_STATUS'
+	| 'REGENERATE_NEGOTIATION'
 
 interface BaseMessage {
 	type: MessageType
@@ -39,7 +40,7 @@ interface BaseMessage {
 
 interface AnalyzeArticleMessage extends BaseMessage {
 	type: 'ANALYZE_ARTICLE'
-	data: VintedArticleData
+	data: VintedArticleData & { forceRefresh?: boolean }
 }
 
 interface GetAnalysisMessage extends BaseMessage {
@@ -84,6 +85,12 @@ interface CheckBackendStatusMessage extends BaseMessage {
 	type: 'CHECK_BACKEND_STATUS'
 }
 
+interface RegenerateNegotiationMessage extends BaseMessage {
+	type: 'REGENERATE_NEGOTIATION'
+	vintedId: string
+	tone: NegotiationTone
+}
+
 type ExtensionMessage =
 	| AnalyzeArticleMessage
 	| GetAnalysisMessage
@@ -95,6 +102,7 @@ type ExtensionMessage =
 	| GetStateMessage
 	| ToggleExtensionMessage
 	| CheckBackendStatusMessage
+	| RegenerateNegotiationMessage
 
 interface ApiResponse<T> {
 	success: boolean
@@ -241,12 +249,13 @@ async function checkBackendStatus(): Promise<ApiResponse<BackendHealthResponse>>
 }
 
 async function analyzeArticle(
-	articleData: VintedArticleData
+	articleData: VintedArticleData & { forceRefresh?: boolean }
 ): Promise<ApiResponse<AnalysisResult>> {
 	// Convert Date objects to ISO strings for JSON serialization
 	const payload = {
 		...articleData,
 		listedAt: articleData.listedAt?.toISOString() ?? null,
+		forceRefresh: articleData.forceRefresh ?? false,
 	}
 
 	const result = await apiRequest<AnalysisResult>('/api/analyze', {
@@ -320,6 +329,19 @@ async function getStats(): Promise<ApiResponse<StatsResponse>> {
 	return apiRequest<StatsResponse>('/api/stats')
 }
 
+async function regenerateNegotiation(
+	vintedId: string,
+	tone: NegotiationTone
+): Promise<ApiResponse<Negotiation>> {
+	console.log('[Background] Regenerating negotiation for:', vintedId, 'with tone:', tone)
+	const result = await apiRequest<Negotiation>(`/api/analyses/${vintedId}/regenerate-negotiation`, {
+		method: 'POST',
+		body: JSON.stringify({ tone }),
+	})
+	console.log('[Background] Regeneration result:', result)
+	return result
+}
+
 // ============================================================================
 // Message Handlers
 // ============================================================================
@@ -373,6 +395,9 @@ async function handleMessage(message: ExtensionMessage): Promise<ApiResponse<unk
 
 		case 'CHECK_BACKEND_STATUS':
 			return checkBackendStatus()
+
+		case 'REGENERATE_NEGOTIATION':
+			return regenerateNegotiation(message.vintedId, message.tone)
 
 		default:
 			return { success: false, error: 'Unknown message type' }

@@ -10,6 +10,7 @@ import {
 import {
 	analyzeBodySchema,
 	listAnalysesQuerySchema,
+	regenerateNegotiationBodySchema,
 	updateStatusBodySchema,
 	vintedIdParamSchema,
 } from './schemas/analysis.schemas'
@@ -21,6 +22,7 @@ import {
  * - GET /api/analyses
  * - GET /api/analyses/:vintedId
  * - PATCH /api/analyses/:vintedId/status
+ * - POST /api/analyses/:vintedId/regenerate-negotiation
  * - GET /api/analyses/:vintedId/export
  * - GET /api/stats
  */
@@ -41,8 +43,23 @@ export function createAnalysisRoutes(container: Container): Hono {
 	 * Analyze a Vinted article
 	 */
 	router.post('/analyze', async (c) => {
-		const body = await validateBody(c, analyzeBodySchema)
-		const result = await controller.analyze(body)
+		const rawBody = await c.req.json()
+		console.log('[API] POST /api/analyze - Raw body received:', JSON.stringify(rawBody, null, 2))
+
+		const validation = analyzeBodySchema.safeParse(rawBody)
+		if (!validation.success) {
+			console.log('[API] Validation errors:', JSON.stringify(validation.error.issues, null, 2))
+			return c.json({
+				error: 'Validation Error',
+				message: 'Request validation failed',
+				details: validation.error.issues.map(issue => ({
+					field: issue.path.join('.'),
+					message: issue.message,
+				})),
+			}, 400)
+		}
+
+		const result = await controller.analyze(validation.data)
 		return c.json(result, 201)
 	})
 
@@ -84,6 +101,17 @@ export function createAnalysisRoutes(container: Container): Hono {
 		const { vintedId } = validateParams(c, vintedIdParamSchema)
 		const body = await validateBody(c, updateStatusBodySchema)
 		const result = await controller.updateStatus(vintedId, body.status)
+		return c.json(result)
+	})
+
+	/**
+	 * POST /api/analyses/:vintedId/regenerate-negotiation
+	 * Regenerate negotiation script with specified tone
+	 */
+	router.post('/analyses/:vintedId/regenerate-negotiation', async (c) => {
+		const { vintedId } = validateParams(c, vintedIdParamSchema)
+		const body = await validateBody(c, regenerateNegotiationBodySchema)
+		const result = await controller.regenerateNegotiation(vintedId, body.tone)
 		return c.json(result)
 	})
 

@@ -1,15 +1,47 @@
 import { z } from 'zod'
 
 /**
+ * Valid seller reliability values
+ */
+const sellerReliabilityEnum = z.enum(['high', 'medium', 'low', 'unknown'])
+
+/**
+ * Zod schema for seller badge
+ */
+const sellerBadgeSchema = z.object({
+	id: z.string(),
+	label: z.string(),
+	description: z.string().nullable(),
+})
+
+/**
  * Zod schema for seller data in article input
  */
 const sellerSchema = z.object({
 	username: z.string().min(1, 'Seller username is required'),
+	profileUrl: z.string().url().nullable().optional().default(null),
+	avatarUrl: z.string().url().nullable().optional().default(null),
 	rating: z.number().min(0).max(5).nullable(),
+	ratingCount: z.number().int().min(0).nullable(),
 	salesCount: z.number().int().min(0),
 	responseTime: z.string().nullable(),
 	lastSeen: z.string().nullable(),
+	location: z.string().nullable().optional().default(null),
+	badges: z.array(sellerBadgeSchema).optional().default([]),
+	// Extended fields from profile fetch
+	activeListings: z.number().int().min(0).nullable(),
+	memberSince: z.string().nullable(),
+	followers: z.number().int().min(0).nullable(),
+	verifiedProfile: z.boolean(),
+	reliability: sellerReliabilityEnum,
 })
+
+/**
+ * Supported language codes
+ */
+const languageEnum = z.enum([
+	'fr', 'en', 'de', 'es', 'it', 'nl', 'pl', 'pt', 'cs', 'sk', 'hu', 'ro', 'lt', 'hr'
+])
 
 /**
  * Zod schema for POST /api/analyze body
@@ -31,6 +63,9 @@ export const analyzeBodySchema = z.object({
 	listedAt: z.string().nullable(),
 	views: z.number().int().min(0).nullable(),
 	favorites: z.number().int().min(0).nullable(),
+	forceRefresh: z.boolean().optional().default(false),
+	/** ISO language code for response localization */
+	language: languageEnum.optional(),
 })
 
 /**
@@ -89,9 +124,22 @@ export const vintedIdParamSchema = z.object({
 })
 
 /**
+ * Valid negotiation tone values
+ */
+const negotiationToneEnum = z.enum(['friendly', 'direct', 'urgent'])
+
+/**
+ * Zod schema for POST /api/analyses/:vintedId/regenerate-negotiation body
+ */
+export const regenerateNegotiationBodySchema = z.object({
+	tone: negotiationToneEnum,
+})
+
+/**
  * Type exports for validated data
  */
 export type AnalyzeBody = z.infer<typeof analyzeBodySchema>
 export type ListAnalysesQuery = z.infer<typeof listAnalysesQuerySchema>
 export type UpdateStatusBody = z.infer<typeof updateStatusBodySchema>
 export type VintedIdParam = z.infer<typeof vintedIdParamSchema>
+export type RegenerateNegotiationBody = z.infer<typeof regenerateNegotiationBodySchema>

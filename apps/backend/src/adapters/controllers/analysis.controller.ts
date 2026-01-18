@@ -1,4 +1,4 @@
-import type { AnalysisStatus } from '@vinted-ai/shared'
+import type { AnalysisStatus, Negotiation, NegotiationTone } from '@vinted-ai/shared'
 import type { Container } from 'inversify'
 import type {
 	AnalysisListResponseDTO,
@@ -7,6 +7,7 @@ import type {
 	ListAnalysesQueryDTO,
 } from '../../application/dtos/analysis.dto'
 import type { ArticleInputDTO } from '../../application/dtos/article.dto'
+import type { IAIProvider } from '../../application/interfaces/providers/ai.provider.interface'
 import type { IAnalysisRepository } from '../../application/interfaces/repositories/analysis.repository.interface'
 import type { AnalyzeArticleUseCase } from '../../application/use-cases/analyze-article.use-case'
 import type {
@@ -26,12 +27,14 @@ export class AnalysisController {
 	private readonly getAnalysisUseCase: GetAnalysisUseCase
 	private readonly exportMarkdownUseCase: ExportMarkdownUseCase
 	private readonly analysisRepository: IAnalysisRepository
+	private readonly aiProvider: IAIProvider
 
 	constructor(container: Container) {
 		this.analyzeArticleUseCase = container.get<AnalyzeArticleUseCase>(TYPES.AnalyzeArticleUseCase)
 		this.getAnalysisUseCase = container.get<GetAnalysisUseCase>(TYPES.GetAnalysisUseCase)
 		this.exportMarkdownUseCase = container.get<ExportMarkdownUseCase>(TYPES.ExportMarkdownUseCase)
 		this.analysisRepository = container.get<IAnalysisRepository>(TYPES.AnalysisRepository)
+		this.aiProvider = container.get<IAIProvider>(TYPES.AIProvider)
 	}
 
 	/**
@@ -77,6 +80,11 @@ export class AnalysisController {
 			title: entity.title,
 			price: entity.askingPrice.value,
 			brand: entity.brand,
+			aiDetection: {
+				detectedBrand: entity.brand,
+				detectedModel: entity.detectedModel,
+				estimatedCondition: entity.condition,
+			},
 			photoQuality: entity.photoQuality,
 			authenticityCheck: entity.authenticityCheck,
 			marketPrice: entity.marketPrice,
@@ -103,5 +111,35 @@ export class AnalysisController {
 	 */
 	async getStats(): Promise<AnalysisStatsDTO> {
 		return this.getAnalysisUseCase.getStats()
+	}
+
+	/**
+	 * POST /api/analyses/:vintedId/regenerate-negotiation
+	 * Regenerate negotiation script with specified tone
+	 */
+	async regenerateNegotiation(vintedId: string, tone: NegotiationTone): Promise<Negotiation> {
+		// Get existing analysis to extract required data
+		const entity = await this.analysisRepository.findByVintedId(vintedId)
+
+		if (!entity) {
+			throw new AnalysisNotFoundError(vintedId)
+		}
+
+		// Calculate days listed from analyzedAt (approximation)
+		const daysListed = Math.floor(
+			(Date.now() - entity.analyzedAt.getTime()) / (1000 * 60 * 60 * 24)
+		)
+
+		// Generate new negotiation with requested tone
+		const negotiation = await this.aiProvider.generateNegotiation({
+			price: entity.askingPrice.value,
+			marketPriceAvg: entity.marketPrice.average,
+			daysListed,
+			sellerSalesCount: entity.sellerSalesCount ?? 0,
+			condition: entity.condition ?? 'Non spécifié',
+			preferredTone: tone,
+		})
+
+		return negotiation
 	}
 }

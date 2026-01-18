@@ -1,4 +1,4 @@
-import type { AnalysisResult, AnalysisStatus, VintedArticleData } from '@vinted-ai/shared'
+import type { AnalysisResult, AnalysisStatus, Negotiation, NegotiationTone, VintedArticleData } from '@vinted-ai/shared'
 import { create } from 'zustand'
 import { cacheAnalysis, getCacheTimeRemaining, getCachedAnalysis, invalidateCache } from '../db'
 
@@ -61,6 +61,7 @@ interface AnalysisActions {
 	updateStatus: (status: AnalysisStatus) => Promise<void>
 	exportMarkdown: () => Promise<void>
 	refresh: () => Promise<void>
+	regenerateNegotiation: (tone: NegotiationTone) => Promise<Negotiation | null>
 
 	// UI actions
 	setLoading: (loading: boolean) => void
@@ -248,6 +249,25 @@ export const useAnalysisStore = create<AnalysisStore>((set, get) => ({
 		if (!articleData) return
 		// Force refresh bypasses cache and invalidates local cache
 		await analyze(articleData, true)
+	},
+
+	regenerateNegotiation: async (tone: NegotiationTone) => {
+		const { currentAnalysis } = get()
+		if (!currentAnalysis) return null
+
+		const response = await sendMessage<Negotiation>({
+			type: 'REGENERATE_NEGOTIATION',
+			vintedId: currentAnalysis.vintedId,
+			tone,
+		})
+
+		if (response.success && response.data) {
+			console.log('[Vinted AI Store] Negotiation regenerated with tone:', tone)
+			return response.data
+		}
+
+		console.error('[Vinted AI Store] Failed to regenerate negotiation:', response.error)
+		return null
 	},
 
 	// UI actions
