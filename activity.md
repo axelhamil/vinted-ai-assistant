@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 22/32
-**Current Task:** Task 23 - Implémenter section Revente dans Sidebar
+**Tasks Completed:** 23/32
+**Current Task:** Task 24 - Implémenter Export Markdown
 
 ---
 
@@ -1044,3 +1044,45 @@
 - Added `handleCopyScript` callback using navigator.clipboard API
 - Added `getToneInfo()` helper function for tone display
 - Uses Section component for consistent styling with other sections
+
+### 2026-01-18 - Task 23: Implémenter section Revente dans Sidebar
+
+**Status:** Completed
+
+**Files Modified:**
+- `apps/extension/src/content/components/Sidebar.tsx` - Added Resale section with all features
+
+**Commands Executed:**
+- `npx biome check --write .` - Fixed formatting issues
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+- `npm run build` (in apps/extension) - Verified extension builds successfully
+
+**Resale Section Features:**
+
+**Recommended Price Display:**
+- Purple highlighted box with recommended resale price
+- Shows profit margin compared to potential purchase price
+- Clear visual hierarchy with large price display
+
+**Estimated Days Display:**
+- Shows estimated days to sell with intelligent formatting
+- Displays as days (<7), weeks (7-30), or months (>30)
+- Gray background for subtle emphasis
+
+**Recommended Platforms Section:**
+- Lists platforms with relevance indicators (Recommandé/Possible/Alternatif)
+- Color-coded badges: green (high), orange (medium), gray (low)
+- Compact flex-wrap layout for multiple platforms
+
+**Resale Tips Section:**
+- Lists actionable tips for successful resale
+- Purple bullet points for visual consistency
+- Only displays when tips are available
+
+**Technical Notes:**
+- Added `PlatformRelevance` type import from @vinted-ai/shared
+- Added `resale` to destructured analysis object
+- Added `getPlatformRelevanceBadge()` helper function for platform relevance display
+- Uses Section component for consistent styling with other sections
+- Smart display logic for estimated days (days/weeks/months)

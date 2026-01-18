@@ -300,7 +300,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Afficher tips",
       "Afficher plateformes recommandées"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 24,

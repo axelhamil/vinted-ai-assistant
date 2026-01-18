@@ -3,6 +3,7 @@ import type {
 	AnalysisStatus,
 	NegotiationTone,
 	OpportunitySignal,
+	PlatformRelevance,
 } from '@vinted-ai/shared'
 import { useCallback, useState } from 'react'
 
@@ -62,6 +63,24 @@ function getToneInfo(tone: NegotiationTone): { emoji: string; label: string } {
 			return { emoji: '💼', label: 'Direct' }
 		case 'urgent':
 			return { emoji: '⚡', label: 'Urgent' }
+	}
+}
+
+/**
+ * Gets the platform relevance badge styling
+ */
+function getPlatformRelevanceBadge(relevance: PlatformRelevance): {
+	bg: string
+	text: string
+	label: string
+} {
+	switch (relevance) {
+		case 'high':
+			return { bg: 'bg-green-100', text: 'text-green-700', label: 'Recommandé' }
+		case 'medium':
+			return { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Possible' }
+		case 'low':
+			return { bg: 'bg-gray-100', text: 'text-gray-600', label: 'Alternatif' }
 	}
 }
 
@@ -168,7 +187,7 @@ export function Sidebar({
 		return null
 	}
 
-	const { opportunity, marketPrice, authenticityCheck, negotiation } = analysis
+	const { opportunity, marketPrice, authenticityCheck, negotiation, resale } = analysis
 	const confidenceBadge = getConfidenceBadge(marketPrice.confidence)
 	const toneInfo = getToneInfo(negotiation.tone)
 
@@ -446,6 +465,75 @@ export function Sidebar({
 									<li key={argument} className="flex items-start gap-2 text-sm text-gray-600">
 										<span className="text-blue-500 mt-0.5">•</span>
 										<span>{argument}</span>
+									</li>
+								))}
+							</ul>
+						</div>
+					)}
+				</Section>
+
+				{/* Revente Section */}
+				<Section title="🏷️ Revente">
+					{/* Recommended Price */}
+					<div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-3">
+						<div className="flex items-center justify-between mb-1">
+							<span className="text-sm text-gray-600">Prix de revente recommandé</span>
+							<span className="text-xl font-bold text-purple-600">{resale.recommendedPrice}€</span>
+						</div>
+						<div className="text-xs text-gray-500">
+							+{(resale.recommendedPrice - analysis.price).toFixed(0)}€ par rapport au prix d'achat
+							potentiel
+						</div>
+					</div>
+
+					{/* Estimated Days */}
+					<div className="flex items-center justify-between mb-3 p-2 bg-gray-50 rounded">
+						<span className="text-sm text-gray-600">Délai estimé de vente</span>
+						<span className="font-semibold text-gray-800">
+							{resale.estimatedDays === 1
+								? '1 jour'
+								: resale.estimatedDays < 7
+									? `${resale.estimatedDays} jours`
+									: resale.estimatedDays < 30
+										? `${Math.round(resale.estimatedDays / 7)} semaine${Math.round(resale.estimatedDays / 7) > 1 ? 's' : ''}`
+										: `${Math.round(resale.estimatedDays / 30)} mois`}
+						</span>
+					</div>
+
+					{/* Platforms */}
+					{resale.platforms.length > 0 && (
+						<div className="mb-3">
+							<span className="text-sm font-medium text-gray-700 block mb-2">
+								Plateformes recommandées:
+							</span>
+							<div className="flex flex-wrap gap-2">
+								{resale.platforms.map((platform) => {
+									const badge = getPlatformRelevanceBadge(platform.relevance)
+									return (
+										<div
+											key={platform.name}
+											className={`flex items-center gap-1.5 px-2 py-1 rounded ${badge.bg}`}
+										>
+											<span className={`text-sm font-medium ${badge.text}`}>{platform.name}</span>
+											<span className={`text-xs ${badge.text} opacity-75`}>({badge.label})</span>
+										</div>
+									)
+								})}
+							</div>
+						</div>
+					)}
+
+					{/* Tips */}
+					{resale.tips.length > 0 && (
+						<div>
+							<span className="text-sm font-medium text-gray-700 block mb-2">
+								💡 Conseils revente:
+							</span>
+							<ul className="space-y-1.5">
+								{resale.tips.map((tip) => (
+									<li key={tip} className="flex items-start gap-2 text-sm text-gray-600">
+										<span className="text-purple-500 mt-0.5">•</span>
+										<span>{tip}</span>
 									</li>
 								))}
 							</ul>
