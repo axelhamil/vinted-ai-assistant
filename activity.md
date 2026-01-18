@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 6/32
-**Current Task:** Task 7 - Implémenter interfaces Application (ports)
+**Tasks Completed:** 7/32
+**Current Task:** Task 8 - Implémenter repository Drizzle
 
 ---
 
@@ -222,3 +222,61 @@
 - Uses shared types from @vinted-ai/shared package
 - Follows DDD principles with immutable value objects
 - Entity provides rich business logic methods
+
+### 2026-01-18 - Task 7: Implémenter interfaces Application (ports)
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/backend/src/application/interfaces/repositories/analysis.repository.interface.ts` - Repository interface with save, find, update, delete operations
+- `apps/backend/src/application/interfaces/repositories/index.ts` - Repository exports
+- `apps/backend/src/application/interfaces/providers/ai.provider.interface.ts` - AI provider interface with analyzePhotos, scoreOpportunity, generateNegotiation
+- `apps/backend/src/application/interfaces/providers/market-price.provider.interface.ts` - Market price provider interface with lookup method
+- `apps/backend/src/application/interfaces/providers/index.ts` - Provider exports
+- `apps/backend/src/application/interfaces/index.ts` - Main interfaces exports
+- `apps/backend/src/application/dtos/article.dto.ts` - ArticleInputDTO with conversion helpers
+- `apps/backend/src/application/dtos/analysis.dto.ts` - AnalysisResponseDTO, AnalysisListResponseDTO, AnalysisStatsDTO, UpdateStatusDTO, ListAnalysesQueryDTO
+- `apps/backend/src/application/dtos/index.ts` - DTO exports
+- `apps/backend/src/application/index.ts` - Main application layer exports
+
+**Commands Executed:**
+- `pnpm lint` - Verified linting passes (fixed unused imports)
+- `pnpm typecheck` - Verified TypeScript compiles
+
+**Interfaces Created:**
+
+**Repository Interface (IAnalysisRepository):**
+- `save(analysis)` - Save or update analysis
+- `findByVintedId(vintedId)` - Find by Vinted ID
+- `findById(id)` - Find by internal ID
+- `findAll(options)` - List with pagination and filtering
+- `count(options)` - Count matching analyses
+- `updateStatus(vintedId, status)` - Update analysis status
+- `delete(vintedId)` - Delete analysis
+- `exists(vintedId)` - Check existence
+
+**AI Provider Interface (IAIProvider):**
+- `analyzePhotos(input)` - Analyze photos for quality and authenticity
+- `scoreOpportunity(input)` - Calculate opportunity score
+- `generateNegotiation(input)` - Generate negotiation script
+- `getProviderName()` - Get provider name (openai, ollama)
+- `isAvailable()` - Check if provider is configured
+
+**Market Price Provider Interface (IMarketPriceProvider):**
+- `lookup(input)` - Lookup market price for article
+- `getProviderName()` - Get provider name
+- `isAvailable()` - Check if provider is available
+
+**DTOs Created:**
+- `ArticleInputDTO` - Input DTO for article data from extension
+- `AnalysisResponseDTO` - Response DTO for analysis results
+- `AnalysisListResponseDTO` - Response DTO for paginated list
+- `AnalysisStatsDTO` - Stats response (today, opportunities, bought, sold)
+- `UpdateStatusDTO` - Request DTO for status update
+- `ListAnalysesQueryDTO` - Query params for list endpoint
+
+**Notes:**
+- Follows Clean Architecture ports pattern
+- Interfaces define contracts between layers
+- DTOs handle data transformation at boundaries
+- All types are strictly typed (no any)

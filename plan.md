@@ -100,7 +100,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Créer src/application/interfaces/providers/market-price.provider.interface.ts",
       "Créer DTOs dans src/application/dtos/"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 8,
