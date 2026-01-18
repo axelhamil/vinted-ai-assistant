@@ -262,7 +262,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Ajouter tooltip au hover",
       "Click ouvre sidebar"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 21,

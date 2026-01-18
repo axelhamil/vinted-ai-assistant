@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 19/32
-**Current Task:** Task 20 - Implémenter composant Badge score
+**Tasks Completed:** 20/32
+**Current Task:** Task 21 - Implémenter composant Sidebar
 
 ---
 
@@ -877,3 +877,58 @@
 - MutationObserver detects SPA navigation for re-initialization
 - React StrictMode enabled for development
 - Maximum z-index (2147483647) ensures UI stays on top
+
+### 2026-01-18 - Task 20: Implémenter composant Badge score
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/extension/src/content/components/Badge.tsx` - Badge component with score display, color coding, tooltip, and click-to-open-sidebar
+- `apps/extension/src/content/components/index.ts` - Component exports
+
+**Files Modified:**
+- `apps/extension/src/content/App.tsx` - Integrated Badge component, added analysis state management, backend communication
+
+**Commands Executed:**
+- `npx biome check --write .` - Fixed formatting issues
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+- `npm run build` (in apps/extension) - Verified extension builds successfully
+
+**Badge Component Features:**
+
+**Score Display:**
+- Circular badge showing score 1-10
+- Color-coded by opportunity level:
+  - Green (7-10): Good opportunity
+  - Orange (5-6): Average opportunity
+  - Red (1-4): Poor opportunity
+- Positioned on main Vinted photo using React Portal
+
+**Tooltip on Hover:**
+- Shows opportunity label (Excellente/Bonne/Moyenne/Faible opportunité)
+- Displays margin percentage with color coding
+- Call-to-action text to open full analysis
+
+**Click to Open Sidebar:**
+- Opens placeholder sidebar panel on the right
+- Shows score and margin summary
+- Close button to dismiss sidebar
+- Full sidebar implementation planned for Task 21
+
+**Photo Container Detection:**
+- Multiple selector fallbacks for Vinted's DOM structure
+- MutationObserver for SPA navigation handling
+- Fallback to fixed positioning if container not found
+
+**App Component Updates:**
+- Added analysis state management with useState
+- Implemented backend communication via chrome.runtime.sendMessage
+- Cache check before new analysis
+- Loading state handling for badge
+
+**Technical Notes:**
+- Uses React Portal to render badge inside Vinted's photo container
+- Maximum z-index ensures badge stays visible
+- Accessibility: aria-labels and aria-hidden for screen readers
+- Hover/click interactions with proper event handling
