@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 26/32
-**Current Task:** Task 27 - Implémenter Popup extension
+**Tasks Completed:** 27/32
+**Current Task:** Task 28 - Implémenter page Settings dans Popup
 
 ---
 
@@ -1249,3 +1249,52 @@
 - Provides performance-optimized selectors for React components
 - Fully typed with TypeScript strict mode
 - Store can be used alongside existing App.tsx implementation or as replacement
+
+### 2026-01-18 - Task 27: Implémenter Popup extension
+
+**Status:** Completed
+
+**Files Modified:**
+- `apps/extension/src/popup/App.tsx` - Complete rewrite with full popup functionality
+
+**Commands Executed:**
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+- `npm run build` (in apps/extension) - Verified extension builds successfully
+
+**Popup Features Implemented:**
+
+**Main View:**
+- Header with gradient background and settings button
+- Backend connection status indicator (green/yellow/red)
+- AI provider badge when connected (e.g., "openai")
+- Extension ON/OFF toggle with status description
+- Statistics grid showing:
+  - Articles analyzed today
+  - Opportunities detected (score >= 7, highlighted in green when > 0)
+  - Bought count
+  - Sold count
+- Backend disconnected warning with retry button
+- Footer showing current score threshold
+
+**Settings View:**
+- Back button navigation
+- Backend URL configuration (text input)
+- Score threshold slider (1-10) with live value display
+- Auto-open sidebar toggle
+- Save button with loading state
+
+**Technical Details:**
+- Uses chrome.runtime.sendMessage for background worker communication
+- Message types: CHECK_BACKEND_STATUS, GET_STATE, GET_STATS, GET_SETTINGS, UPDATE_SETTINGS, TOGGLE_EXTENSION
+- Loading state with spinner animation
+- All SVG icons have aria-hidden="true" for accessibility
+- Responsive 320px width popup
+- Tailwind CSS styling with consistent design language
+- TypeScript strict mode compliant (no `any`)
+
+**UI Components:**
+- `App` - Main component with view routing and state management
+- `SettingsView` - Dedicated settings page component
+- `StatCard` - Reusable statistics card with icon and highlight support
+- Icon components: SettingsIcon, BackIcon, AnalysisIcon, OpportunityIcon, BoughtIcon, SoldIcon

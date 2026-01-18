@@ -350,7 +350,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Toggle ON/OFF extension",
       "Lien vers settings"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 28,
