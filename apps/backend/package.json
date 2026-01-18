@@ -18,6 +18,7 @@
 	"dependencies": {
 		"@ai-sdk/openai": "^3.0.12",
 		"@hono/node-server": "^1.13.7",
+		"@paralleldrive/cuid2": "^3.0.6",
 		"@vinted-ai/shared": "*",
 		"ai": "^6.0.39",
 		"better-sqlite3": "^12.6.2",

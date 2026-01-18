@@ -149,7 +149,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Orchestrer: analyzePhotos → scoreOpportunity → generateNegotiation → save",
       "Retourner AnalysisResult complet"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 12,

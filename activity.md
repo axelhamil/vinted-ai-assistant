@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 10/32
-**Current Task:** Task 11 - Implémenter Use Case AnalyzeArticle
+**Tasks Completed:** 11/32
+**Current Task:** Task 12 - Implémenter Use Case GetAnalysis
 
 ---
 
@@ -402,3 +402,53 @@
 - Health endpoint now dynamically gets AI provider name from container
 - Decorators enabled in tsconfig for Inversify
 - reflect-metadata imported before all other imports
+
+### 2026-01-18 - Task 11: Implémenter Use Case AnalyzeArticle
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/backend/src/application/use-cases/analyze-article.use-case.ts` - Main analysis use case orchestrating the full pipeline
+- `apps/backend/src/application/use-cases/index.ts` - Use case exports
+
+**Files Modified:**
+- `apps/backend/src/container/container.ts` - Added AnalyzeArticleUseCase binding to DI container
+- `apps/backend/package.json` - Added @paralleldrive/cuid2 for ID generation
+- `biome.json` - Enabled unsafeParameterDecoratorsEnabled for Inversify parameter decorators
+
+**Commands Executed:**
+- `npm install @paralleldrive/cuid2` - Installed ID generation library
+- `npx biome check --write .` - Fixed formatting
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+
+**Use Case Implementation:**
+
+**AnalyzeArticleUseCase:**
+- Constructor injection of IAIProvider and IAnalysisRepository via Inversify
+- `execute(input)` - Main orchestration method:
+  1. Check cache (returns cached analysis if not expired)
+  2. Analyze photos (quality + authenticity) via AI provider
+  3. Estimate market price (simplified local estimation)
+  4. Score opportunity via AI provider
+  5. Generate negotiation script via AI provider
+  6. Generate resale recommendation (local logic)
+  7. Create AnalysisEntity and save to repository
+  8. Return AnalysisResponseDTO
+
+**Helper Methods:**
+- `estimateMarketPrice(askingPrice, brand)` - Simple market price estimation (20-30% markup based on brand)
+- `generateResaleRecommendation(marketPriceAvg, margin, brand)` - Generates resale tips, recommended price, estimated days, and platforms
+
+**Technical Details:**
+- Uses @paralleldrive/cuid2 for unique ID generation
+- Preserves existing analysis ID on re-analysis (cache refresh)
+- Preserves existing status on re-analysis
+- Full type safety with TypeScript strict mode
+- Registered in DI container as singleton
+
+**Notes:**
+- Market price estimation is simplified for MVP (would use IMarketPriceProvider in production)
+- Resale recommendation is generated locally with business logic
+- All AI calls are delegated to the IAIProvider interface
+- Cache TTL is 1 hour (managed by AnalysisEntity)
