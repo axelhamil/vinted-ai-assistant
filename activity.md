@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 16/32
-**Current Task:** Task 17 - Implémenter Background Service Worker
+**Tasks Completed:** 17/32
+**Current Task:** Task 18 - Implémenter parser DOM Vinted
 
 ---
 
@@ -701,3 +701,66 @@
 - Creates formatted error responses with `createErrorResponse()` helper
 - Middleware order: CORS → Error Handler → Routes
 - Error handler wraps `await next()` in try-catch to catch all downstream errors
+
+### 2026-01-18 - Task 17: Implémenter Background Service Worker
+
+**Status:** Completed
+
+**Files Modified:**
+- `apps/extension/src/background/index.ts` - Complete rewrite with full functionality
+
+**Commands Executed:**
+- `npx biome check --write .` - Fixed formatting issues
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+- `npm run build` (in apps/extension) - Verified extension builds successfully
+
+**Features Implemented:**
+
+**Message Listeners:**
+- `ANALYZE_ARTICLE` - Sends article data to backend for analysis
+- `GET_ANALYSIS` - Fetches existing analysis by Vinted ID
+- `UPDATE_STATUS` - Updates analysis status (WATCHING, BOUGHT, SOLD, etc.)
+- `EXPORT_MARKDOWN` - Exports analysis to markdown format
+- `GET_STATS` - Fetches analysis statistics from backend
+- `GET_SETTINGS` - Returns extension settings
+- `UPDATE_SETTINGS` - Updates extension settings
+- `GET_STATE` - Returns extension state (enabled, today's count)
+- `TOGGLE_EXTENSION` - Enables/disables the extension
+- `CHECK_BACKEND_STATUS` - Checks if backend is reachable
+
+**Backend API Client:**
+- `apiRequest<T>()` - Generic API client with error handling
+- `checkBackendStatus()` - Health check endpoint
+- `analyzeArticle()` - POST /api/analyze
+- `getAnalysis()` - GET /api/analyses/:vintedId
+- `updateAnalysisStatus()` - PATCH /api/analyses/:vintedId/status
+- `exportMarkdown()` - GET /api/analyses/:vintedId/export
+- `getStats()` - GET /api/stats
+
+**Extension State Management:**
+- `getSettings()` - Retrieves settings from chrome.storage.local
+- `saveSettings()` - Persists settings to chrome.storage.local
+- `getState()` - Retrieves state with automatic daily counter reset
+- `incrementAnalyzedCount()` - Increments today's analysis counter
+- `updateBadge()` - Updates extension badge with today's count
+- `toggleExtension()` - Toggles extension on/off
+
+**Default Settings:**
+- Backend URL: http://localhost:3000
+- Score threshold: 7
+- Auto-open sidebar: true
+- Enabled: true
+
+**Event Listeners:**
+- `chrome.runtime.onInstalled` - Initializes settings and state on install
+- `chrome.runtime.onMessage` - Handles all message types from content scripts and popup
+- `chrome.runtime.onStartup` - Updates badge on browser startup
+
+**Technical Details:**
+- Uses chrome.storage.local for persistence
+- Badge displays today's analyzed article count
+- Automatic daily counter reset based on date comparison
+- Type-safe message handling with discriminated unions
+- All API responses wrapped in ApiResponse<T> interface
+- Exports types for use by content scripts and popup

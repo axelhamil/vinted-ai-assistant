@@ -224,7 +224,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Implémenter appel API backend",
       "Gérer état extension (on/off)"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 18,
