@@ -166,8 +166,7 @@ Retourne les résultats dans l'ordre des indices.`
 					verification,
 				}
 			})
-		} catch (error) {
-			console.error('[AIMatcher] Batch verification failed:', error)
+		} catch {
 			// Return all listings with low confidence on error
 			return listings.map((listing) => ({
 				...listing,

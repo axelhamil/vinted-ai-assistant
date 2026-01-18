@@ -95,8 +95,8 @@ export class LeboncoinScraper extends BaseScraper {
 					imageUrl: imageUrl || undefined,
 					condition: location ? this.cleanText(location) : undefined,
 				})
-			} catch (error) {
-				console.error('[Leboncoin] Failed to parse item:', error)
+			} catch {
+				// Skip malformed items
 			}
 		})
 

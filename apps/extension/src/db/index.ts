@@ -3,7 +3,7 @@
  * Caches analysis results locally with TTL support
  */
 
-import type { AnalysisResult } from '@vinted-ai/shared'
+import type { AnalysisResult } from '@vinted-ai/shared/analysis'
 import Dexie, { type EntityTable } from 'dexie'
 
 // ============================================================================

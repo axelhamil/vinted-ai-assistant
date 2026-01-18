@@ -1,4 +1,5 @@
-import { Card, ProgressBar } from '../primitives'
+import { Card } from '../primitives/Card'
+import { ProgressBar } from '../primitives/ProgressBar'
 
 interface MarginCardProps {
 	margin: number

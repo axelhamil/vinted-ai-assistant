@@ -1,4 +1,4 @@
-import type { AnalysisStatus, Negotiation, NegotiationTone } from '@vinted-ai/shared'
+import type { AnalysisStatus, Negotiation, NegotiationTone } from '@vinted-ai/shared/analysis'
 import type { Container } from 'inversify'
 import type {
 	AnalysisListResponseDTO,

@@ -1,4 +1,4 @@
-import { IconButton } from '../primitives'
+import { IconButton } from '../primitives/Button'
 
 interface SidebarHeaderProps {
 	onClose: () => void

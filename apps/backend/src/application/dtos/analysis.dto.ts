@@ -7,7 +7,7 @@ import type {
 	Opportunity,
 	PhotoQuality,
 	Resale,
-} from '@vinted-ai/shared'
+} from '@vinted-ai/shared/analysis'
 import type { AnalysisEntity } from '../../domain/entities/analysis.entity'
 
 /**

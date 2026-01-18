@@ -1,22 +1,17 @@
-import type { AnalysisResult, AnalysisStatus, VintedArticleData } from '@vinted-ai/shared'
+import type { AnalysisResult, AnalysisStatus } from '@vinted-ai/shared/analysis'
+import type { VintedArticleData } from '@vinted-ai/shared/article'
 import { useCallback, useEffect, useState } from 'react'
 import { cacheAnalysis, getCacheTimeRemaining, getCachedAnalysis, invalidateCache } from '../db'
-import {
-	Badge,
-	ErrorDisplay,
-	FloatingButton,
-	Sidebar,
-	SkeletonSidebar,
-	ToastContainer,
-	useToast,
-} from './components'
-import {
-	detectLanguage,
-	fetchSellerProfile,
-	mergeSellerWithProfile,
-	parseVintedArticle,
-	waitForPageLoad,
-} from './lib/parser'
+import { Badge } from './components/Badge'
+import { ErrorDisplay } from './components/ErrorDisplay'
+import { FloatingButton } from './components/FloatingButton'
+import { Sidebar } from './components/Sidebar'
+import { SkeletonSidebar } from './components/SkeletonSidebar'
+import { ToastContainer, useToast } from './components/Toast'
+import { parseVintedArticle, waitForPageLoad } from './lib/parser'
+import { detectLanguage } from './lib/parser/language-detector'
+import { fetchSellerProfile } from './lib/parser/profile-fetcher'
+import { mergeSellerWithProfile } from './lib/parser/seller-parser'
 import { formatRelativeTime } from './lib/time'
 
 interface ApiResponse<T> {

@@ -1,4 +1,4 @@
-import type { AnalysisStatus } from '@vinted-ai/shared'
+import type { AnalysisStatus } from '@vinted-ai/shared/analysis'
 import { and, count, desc, eq, gte } from 'drizzle-orm'
 import { injectable } from 'inversify'
 import type {

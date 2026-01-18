@@ -1,7 +1,15 @@
-import type { AnalysisResult, AnalysisStatus, VintedSeller } from '@vinted-ai/shared'
+import type { AnalysisResult, AnalysisStatus } from '@vinted-ai/shared/analysis'
+import type { VintedSeller } from '@vinted-ai/shared/article'
 import { useCallback, useState, useEffect } from 'react'
-import { SidebarHeader, HeroScore, ArticleContext, TabNavigation, ActionBar, type TabId } from './sidebar-components'
-import { InsightTab, NegotiateTab, ResellTab, SourcesTab } from './tabs'
+import { SidebarHeader } from './sidebar-components/SidebarHeader'
+import { HeroScore } from './sidebar-components/HeroScore'
+import { ArticleContext } from './sidebar-components/ArticleContext'
+import { TabNavigation, type TabId } from './sidebar-components/TabNavigation'
+import { ActionBar } from './sidebar-components/ActionBar'
+import { InsightTab } from './tabs/InsightTab'
+import { NegotiateTab } from './tabs/NegotiateTab'
+import { ResellTab } from './tabs/ResellTab'
+import { SourcesTab } from './tabs/SourcesTab'
 
 interface SidebarProps {
 	analysis: AnalysisResult

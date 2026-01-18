@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react'
-import type { NegotiationTone } from '@vinted-ai/shared'
-import { Card, Button, Pill } from '../primitives'
+import type { NegotiationTone } from '@vinted-ai/shared/analysis'
+import { Card } from '../primitives/Card'
+import { Button } from '../primitives/Button'
+import { Pill } from '../primitives/Pill'
 
 interface ScriptCardProps {
 	script: string

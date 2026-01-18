@@ -60,13 +60,11 @@ export abstract class BaseScraper implements IScraper {
 		// Check cache
 		const cached = this.cache.get(cacheKey)
 		if (cached && Date.now() - cached.timestamp < this.cacheDuration) {
-			console.log(`[${this.platform}] Cache hit for: ${query}`)
 			return cached.data
 		}
 
 		try {
 			const url = this.buildSearchUrl(query, options)
-			console.log(`[${this.platform}] Searching: ${url}`)
 
 			const html = await this.fetchPage(url)
 			const $ = cheerio.load(html)
@@ -89,10 +87,8 @@ export abstract class BaseScraper implements IScraper {
 				timestamp: Date.now(),
 			})
 
-			console.log(`[${this.platform}] Found ${listings.length} listings`)
 			return listings
-		} catch (error) {
-			console.error(`[${this.platform}] Search failed:`, error)
+		} catch {
 			return []
 		}
 	}

@@ -1,5 +1,7 @@
-import type { PhotoQuality } from '@vinted-ai/shared'
-import { Card, ScoreRing, Pill } from '../primitives'
+import type { PhotoQuality } from '@vinted-ai/shared/analysis'
+import { Card } from '../primitives/Card'
+import { ScoreRing } from '../primitives/ScoreRing'
+import { Pill } from '../primitives/Pill'
 
 interface PhotoQualityCardProps {
 	photoQuality: PhotoQuality

@@ -1,5 +1,6 @@
-import type { ResalePlatform, PlatformRelevance } from '@vinted-ai/shared'
-import { Card, Pill } from '../primitives'
+import type { ResalePlatform, PlatformRelevance } from '@vinted-ai/shared/analysis'
+import { Card } from '../primitives/Card'
+import { Pill } from '../primitives/Pill'
 
 interface PlatformsCardProps {
 	recommendedPrice: number

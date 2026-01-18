@@ -44,11 +44,9 @@ export function createAnalysisRoutes(container: Container): Hono {
 	 */
 	router.post('/analyze', async (c) => {
 		const rawBody = await c.req.json()
-		console.log('[API] POST /api/analyze - Raw body received:', JSON.stringify(rawBody, null, 2))
 
 		const validation = analyzeBodySchema.safeParse(rawBody)
 		if (!validation.success) {
-			console.log('[API] Validation errors:', JSON.stringify(validation.error.issues, null, 2))
 			return c.json({
 				error: 'Validation Error',
 				message: 'Request validation failed',

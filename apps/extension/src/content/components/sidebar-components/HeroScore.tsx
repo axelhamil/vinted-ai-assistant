@@ -1,5 +1,6 @@
-import type { ConfidenceLevel } from '@vinted-ai/shared'
-import { ScoreRing, Pill } from '../primitives'
+import type { ConfidenceLevel } from '@vinted-ai/shared/analysis'
+import { ScoreRing } from '../primitives/ScoreRing'
+import { Pill } from '../primitives/Pill'
 
 interface HeroScoreProps {
 	score: number

@@ -1,5 +1,6 @@
-import type { RetailPrice } from '@vinted-ai/shared'
-import { Card, RangeBar } from '../primitives'
+import type { RetailPrice } from '@vinted-ai/shared/analysis'
+import { Card } from '../primitives/Card'
+import { RangeBar } from '../primitives/ProgressBar'
 
 interface MarketPriceCardProps {
 	low: number

@@ -103,8 +103,8 @@ export class GoogleShoppingScraper extends BaseScraper {
 							}
 						: undefined,
 				})
-			} catch (error) {
-				console.error('[GoogleShopping] Failed to parse item:', error)
+			} catch {
+				// Skip malformed items
 			}
 		})
 

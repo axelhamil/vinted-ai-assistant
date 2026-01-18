@@ -1,5 +1,6 @@
-import type { SellerReliability, VintedSeller } from '@vinted-ai/shared'
-import { Card, CardRow, Pill } from '../primitives'
+import type { SellerReliability, VintedSeller } from '@vinted-ai/shared/article'
+import { Card, CardRow } from '../primitives/Card'
+import { Pill } from '../primitives/Pill'
 
 interface SellerCardProps {
 	seller: VintedSeller

@@ -1,6 +1,7 @@
-import type { AnalysisResult } from '@vinted-ai/shared'
-import { PlatformsCard } from '../cards'
-import { Card, CardRow, ProgressBar } from '../primitives'
+import type { AnalysisResult } from '@vinted-ai/shared/analysis'
+import { PlatformsCard } from '../cards/PlatformsCard'
+import { Card, CardRow } from '../primitives/Card'
+import { ProgressBar } from '../primitives/ProgressBar'
 
 interface ResellTabProps {
 	analysis: AnalysisResult

@@ -1,6 +1,7 @@
-import type { OpportunitySignal } from '@vinted-ai/shared'
+import type { OpportunitySignal } from '@vinted-ai/shared/analysis'
 import { useState } from 'react'
-import { Card, SignalPill } from '../primitives'
+import { Card } from '../primitives/Card'
+import { SignalPill } from '../primitives/Pill'
 
 interface SignalsCardProps {
 	signals: OpportunitySignal[]

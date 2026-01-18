@@ -108,9 +108,8 @@ export class VintedScraper extends BaseScraper {
 							}
 						: undefined,
 				})
-			} catch (error) {
+			} catch {
 				// Skip malformed items
-				console.error('[Vinted] Failed to parse item:', error)
 			}
 		})
 

@@ -1,5 +1,12 @@
-import type { AnalysisResult, VintedSeller } from '@vinted-ai/shared'
-import { MarginCard, MarketPriceCard, SignalsCard, AuthenticityCard, PhotoQualityCard, PhotoGalleryCard, SellerCard } from '../cards'
+import type { AnalysisResult } from '@vinted-ai/shared/analysis'
+import type { VintedSeller } from '@vinted-ai/shared/article'
+import { MarginCard } from '../cards/MarginCard'
+import { MarketPriceCard } from '../cards/MarketPriceCard'
+import { SignalsCard } from '../cards/SignalsCard'
+import { AuthenticityCard } from '../cards/AuthenticityCard'
+import { PhotoQualityCard } from '../cards/PhotoQualityCard'
+import { PhotoGalleryCard } from '../cards/PhotoGalleryCard'
+import { SellerCard } from '../cards/SellerCard'
 
 interface InsightTabProps {
 	analysis: AnalysisResult

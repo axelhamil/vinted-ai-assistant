@@ -1,7 +1,9 @@
-import type { AnalysisResult, Negotiation, NegotiationTone } from '@vinted-ai/shared'
+import type { AnalysisResult, Negotiation, NegotiationTone } from '@vinted-ai/shared/analysis'
 import { useState, useCallback } from 'react'
-import { ScriptCard } from '../cards'
-import { Card, CardRow, Pill, Button } from '../primitives'
+import { ScriptCard } from '../cards/ScriptCard'
+import { Card, CardRow } from '../primitives/Card'
+import { Pill } from '../primitives/Pill'
+import { Button } from '../primitives/Button'
 import { useAnalysisStore } from '../../../stores/analysis.store'
 
 interface NegotiateTabProps {

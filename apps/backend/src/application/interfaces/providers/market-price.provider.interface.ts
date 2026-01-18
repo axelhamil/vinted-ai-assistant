@@ -1,4 +1,4 @@
-import type { MarketPrice } from '@vinted-ai/shared'
+import type { MarketPrice } from '@vinted-ai/shared/analysis'
 
 /**
  * Input for market price lookup

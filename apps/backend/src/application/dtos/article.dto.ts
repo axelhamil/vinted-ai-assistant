@@ -1,4 +1,4 @@
-import type { VintedArticleData } from '@vinted-ai/shared'
+import type { VintedArticleData } from '@vinted-ai/shared/article'
 
 /**
  * Seller badge data

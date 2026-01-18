@@ -1,4 +1,4 @@
-import type { AnalysisResult } from '@vinted-ai/shared'
+import type { AnalysisResult } from '@vinted-ai/shared/analysis'
 import { useState } from 'react'
 
 interface FloatingButtonProps {

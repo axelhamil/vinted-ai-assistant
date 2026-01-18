@@ -42,7 +42,6 @@ async function downloadImageAsBase64(url: string): Promise<string | null> {
 		})
 
 		if (!response.ok) {
-			console.error(`[ImageAnalyzer] Failed to download image: ${response.status} ${url}`)
 			return null
 		}
 
@@ -51,8 +50,7 @@ async function downloadImageAsBase64(url: string): Promise<string | null> {
 		const contentType = response.headers.get('content-type') || 'image/webp'
 
 		return `data:${contentType};base64,${base64}`
-	} catch (error) {
-		console.error(`[ImageAnalyzer] Error downloading image: ${url}`, error)
+	} catch {
 		return null
 	}
 }
@@ -106,17 +104,13 @@ IMPORTANT:
 - Le prix retail doit être réaliste pour le marché français`
 
 		// Download images and convert to base64
-		console.log(`[ImageAnalyzer] Downloading ${photoUrls.length} images...`)
 		const imagePromises = photoUrls.slice(0, 4).map(downloadImageAsBase64)
 		const base64Images = await Promise.all(imagePromises)
 		const validImages = base64Images.filter((img): img is string => img !== null)
 
 		if (validImages.length === 0) {
-			console.error('[ImageAnalyzer] No images could be downloaded, using fallback')
 			return this.getFallbackResult(context)
 		}
-
-		console.log(`[ImageAnalyzer] Successfully downloaded ${validImages.length} images`)
 
 		const imageContent = validImages.map((dataUrl) => ({
 			type: 'image' as const,
@@ -136,7 +130,6 @@ IMPORTANT:
 			})
 
 			if (!output) {
-				console.error('[ImageAnalyzer] No output from AI')
 				return this.getFallbackResult(context)
 			}
 
@@ -155,8 +148,7 @@ IMPORTANT:
 				},
 				estimatedRetailPrice: output.estimatedRetailPrice,
 			}
-		} catch (error) {
-			console.error('[ImageAnalyzer] AI analysis failed:', error)
+		} catch {
 			return this.getFallbackResult(context)
 		}
 	}

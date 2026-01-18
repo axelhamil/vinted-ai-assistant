@@ -1,4 +1,4 @@
-import type { AnalysisStatus } from '@vinted-ai/shared'
+import type { AnalysisStatus } from '@vinted-ai/shared/analysis'
 import type { AnalysisEntity } from '../../../domain/entities/analysis.entity'
 
 /**

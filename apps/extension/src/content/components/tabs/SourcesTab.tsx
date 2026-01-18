@@ -1,5 +1,5 @@
-import type { MarketPriceSource } from '@vinted-ai/shared'
-import { Card } from '../primitives'
+import type { MarketPriceSource } from '@vinted-ai/shared/analysis'
+import { Card } from '../primitives/Card'
 
 interface SourcesTabProps {
 	sources: MarketPriceSource[]

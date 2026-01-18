@@ -108,8 +108,8 @@ export class EbayScraper extends BaseScraper {
 							}
 						: undefined,
 				})
-			} catch (error) {
-				console.error('[eBay] Failed to parse item:', error)
+			} catch {
+				// Skip malformed items
 			}
 		})
 

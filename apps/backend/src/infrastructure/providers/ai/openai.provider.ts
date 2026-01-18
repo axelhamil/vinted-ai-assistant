@@ -6,7 +6,7 @@ import type {
 	Opportunity,
 	OpportunitySignal,
 	PhotoQuality,
-} from '@vinted-ai/shared'
+} from '@vinted-ai/shared/analysis'
 import { generateText, Output } from 'ai'
 import { injectable } from 'inversify'
 import { z } from 'zod'
@@ -111,7 +111,6 @@ async function downloadImageAsBase64(url: string): Promise<string | null> {
 		})
 
 		if (!response.ok) {
-			console.error(`[OpenAI] Failed to download image: ${response.status} ${url}`)
 			return null
 		}
 
@@ -120,8 +119,7 @@ async function downloadImageAsBase64(url: string): Promise<string | null> {
 		const contentType = response.headers.get('content-type') || 'image/webp'
 
 		return `data:${contentType};base64,${base64}`
-	} catch (error) {
-		console.error(`[OpenAI] Error downloading image: ${url}`, error)
+	} catch {
 		return null
 	}
 }
@@ -211,7 +209,6 @@ Génère un script de négociation:
 IMPORTANT: Sois précis et réaliste. Base-toi sur ta connaissance du marché de la mode d'occasion en France.`
 
 		// Download images
-		console.log(`[OpenAI] Downloading ${photoUrls.length} images for complete analysis...`)
 		const imagePromises = photoUrls.slice(0, 4).map(downloadImageAsBase64)
 		const base64Images = await Promise.all(imagePromises)
 		const validImages = base64Images.filter((img): img is string => img !== null)
@@ -219,8 +216,6 @@ IMPORTANT: Sois précis et réaliste. Base-toi sur ta connaissance du marché de
 		if (validImages.length === 0) {
 			throw new Error('Failed to download any images for analysis')
 		}
-
-		console.log(`[OpenAI] Downloaded ${validImages.length} images, starting single unified analysis...`)
 
 		const imageContent = validImages.map((dataUrl) => ({
 			type: 'image' as const,
@@ -241,8 +236,6 @@ IMPORTANT: Sois précis et réaliste. Base-toi sur ta connaissance du marché de
 		if (!output) {
 			throw new Error('Failed to generate complete analysis output')
 		}
-
-		console.log('[OpenAI] Complete analysis done in single call')
 
 		return {
 			photoQuality: output.photoQuality as PhotoQuality,
@@ -327,17 +320,13 @@ Contexte article:
 IMPORTANT: Sois précis et réaliste dans ton estimation de prix. Base-toi sur ta connaissance du marché de la mode d'occasion en France.`
 
 		// Download images and convert to base64 (OpenAI cannot access Vinted CDN directly)
-		console.log(`[OpenAI] Downloading ${photoUrls.length} images...`)
 		const imagePromises = photoUrls.slice(0, 4).map(downloadImageAsBase64)
 		const base64Images = await Promise.all(imagePromises)
 		const validImages = base64Images.filter((img): img is string => img !== null)
 
 		if (validImages.length === 0) {
-			console.error('[OpenAI] No images could be downloaded')
 			throw new Error('Failed to download any images for analysis')
 		}
-
-		console.log(`[OpenAI] Successfully downloaded ${validImages.length} images`)
 
 		const imageContent = validImages.map((dataUrl) => ({
 			type: 'image' as const,

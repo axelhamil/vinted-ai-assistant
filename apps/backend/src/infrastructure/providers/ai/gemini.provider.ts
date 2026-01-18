@@ -6,7 +6,7 @@ import type {
 	Opportunity,
 	OpportunitySignal,
 	PhotoQuality,
-} from '@vinted-ai/shared'
+} from '@vinted-ai/shared/analysis'
 import { generateText, Output, stepCountIs } from 'ai'
 import { injectable } from 'inversify'
 import { z } from 'zod'
@@ -113,7 +113,6 @@ async function downloadImageAsBase64(url: string): Promise<string | null> {
 		})
 
 		if (!response.ok) {
-			console.error(`[Gemini] Failed to download image: ${response.status} ${url}`)
 			return null
 		}
 
@@ -122,8 +121,7 @@ async function downloadImageAsBase64(url: string): Promise<string | null> {
 		const contentType = response.headers.get('content-type') || 'image/webp'
 
 		return `data:${contentType};base64,${base64}`
-	} catch (error) {
-		console.error(`[Gemini] Error downloading image: ${url}`, error)
+	} catch {
 		return null
 	}
 }
@@ -401,7 +399,6 @@ Article: Nike Air Max 90, état "Bon", 45€, en ligne 23 jours
 
 Analyse maintenant les photos fournies avec cette méthodologie. Utilise Google Search de manière intensive pour trouver un maximum de sources de prix comparables.`
 
-		console.log(`[Gemini] Downloading ${photoUrls.length} images...`)
 		const imagePromises = photoUrls.slice(0, 4).map(downloadImageAsBase64)
 		const base64Images = await Promise.all(imagePromises)
 		const validImages = base64Images.filter((img): img is string => img !== null)
@@ -541,17 +538,13 @@ Renseigne: flags (éléments observés ✓ ou suspects ⚠), confidence (low/med
 
 Analyse les photos fournies.`
 
-		console.log(`[Gemini] Downloading ${photoUrls.length} images...`)
 		const imagePromises = photoUrls.slice(0, 4).map(downloadImageAsBase64)
 		const base64Images = await Promise.all(imagePromises)
 		const validImages = base64Images.filter((img): img is string => img !== null)
 
 		if (validImages.length === 0) {
-			console.error('[Gemini] No images could be downloaded')
 			throw new Error('Failed to download any images for analysis')
 		}
-
-		console.log(`[Gemini] Successfully downloaded ${validImages.length} images`)
 
 		const imageContent = validImages.map((dataUrl) => ({
 			type: 'image' as const,

@@ -65,22 +65,13 @@ export class SourceResearchProvider implements ISourceResearchProvider {
 	 * Execute full source research pipeline
 	 */
 	async research(input: SourceResearchInput): Promise<SourceResearchResult> {
-		console.log('[SourceResearch] Starting research for:', input.title)
-
 		// Step 1: Analyze images to get features and search queries
-		console.log('[SourceResearch] Step 1: Analyzing images...')
 		const imageAnalysis = await this.imageAnalyzer.analyzeImages(input.photos, {
 			title: input.title,
 			brand: input.brand,
 		})
-		console.log('[SourceResearch] Image analysis complete:', {
-			brand: imageAnalysis.brand,
-			model: imageAnalysis.model,
-			primaryQuery: imageAnalysis.searchQueries.primary,
-		})
 
 		// Step 2: Search all platforms in parallel
-		console.log('[SourceResearch] Step 2: Searching platforms...')
 		const searchPromises = this.scrapers.map((scraper) =>
 			this.queue.add(async () => {
 				try {
@@ -88,8 +79,7 @@ export class SourceResearchProvider implements ISourceResearchProvider {
 						maxResults: 20,
 					})
 					return { platform: scraper.platform, listings }
-				} catch (error) {
-					console.error(`[SourceResearch] ${scraper.platform} search failed:`, error)
+				} catch {
 					return { platform: scraper.platform, listings: [] }
 				}
 			})
@@ -97,10 +87,8 @@ export class SourceResearchProvider implements ISourceResearchProvider {
 
 		const searchResults = await Promise.all(searchPromises)
 		const allListings = searchResults.flatMap((r) => r?.listings ?? [])
-		console.log(`[SourceResearch] Found ${allListings.length} total listings`)
 
 		// Step 3: Verify matches with AI
-		console.log('[SourceResearch] Step 3: Verifying matches...')
 		const verifiedListings = await this.aiMatcher.verifyMatches(allListings, {
 			title: input.title,
 			brand: input.brand ?? imageAnalysis.brand,
@@ -112,10 +100,8 @@ export class SourceResearchProvider implements ISourceResearchProvider {
 		const matchedListings = verifiedListings.filter(
 			(l) => l.verification.isMatch && l.verification.confidence >= 50
 		)
-		console.log(`[SourceResearch] ${matchedListings.length} listings matched`)
 
 		// Step 4: Aggregate by platform and calculate prices
-		console.log('[SourceResearch] Step 4: Aggregating results...')
 		const sources = this.aggregateSources(matchedListings, imageAnalysis.searchQueries.primary)
 
 		// Calculate overall market price
@@ -275,8 +261,8 @@ export class SourceResearchProvider implements ISourceResearchProvider {
 					}
 				}
 			}
-		} catch (error) {
-			console.error('[SourceResearch] Failed to find retail price:', error)
+		} catch {
+			// Failed to find retail price - not critical
 		}
 
 		return undefined

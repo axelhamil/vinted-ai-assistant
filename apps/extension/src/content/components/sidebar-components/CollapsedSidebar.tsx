@@ -1,4 +1,5 @@
-import { ScoreRing, IconButton } from '../primitives'
+import { ScoreRing } from '../primitives/ScoreRing'
+import { IconButton } from '../primitives/Button'
 
 interface CollapsedSidebarProps {
 	score: number

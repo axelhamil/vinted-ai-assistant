@@ -1,5 +1,5 @@
 import { createId } from '@paralleldrive/cuid2'
-import type { MarketPrice, Resale } from '@vinted-ai/shared'
+import type { MarketPrice, Resale } from '@vinted-ai/shared/analysis'
 import { inject, injectable } from 'inversify'
 import { TYPES } from '../../container/types'
 import { AnalysisEntity, type AnalysisProps } from '../../domain/entities/analysis.entity'
@@ -37,7 +37,6 @@ export class AnalyzeArticleUseCase {
 		const daysListed = calculateDaysListed(articleData.listedAt)
 
 		// Single AI call for complete analysis (photos + opportunity + negotiation)
-		console.log('[AnalyzeArticle] Starting unified analysis...')
 		const analysisResult = await this.aiProvider.analyzeComplete({
 			photoUrls: articleData.photos,
 			title: articleData.title,
@@ -51,11 +50,6 @@ export class AnalyzeArticleUseCase {
 
 		// Extract results from unified analysis
 		const aiEstimation = analysisResult.marketPriceEstimation
-		console.log('[AnalyzeArticle] Analysis complete:', {
-			opportunityScore: analysisResult.opportunity.score,
-			marketPrice: aiEstimation.average,
-			margin: analysisResult.opportunity.margin,
-		})
 
 		// Build sources from AI estimation or fallback to default
 		const sources = aiEstimation.sources && aiEstimation.sources.length > 0

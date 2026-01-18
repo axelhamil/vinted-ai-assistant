@@ -4,7 +4,7 @@ import type {
 	NegotiationTone,
 	Opportunity,
 	PhotoQuality,
-} from '@vinted-ai/shared'
+} from '@vinted-ai/shared/analysis'
 
 /**
  * Input for complete analysis (single AI call)

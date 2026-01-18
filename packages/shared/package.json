@@ -3,12 +3,14 @@
 	"version": "1.0.0",
 	"private": true,
 	"type": "module",
-	"main": "./dist/index.js",
-	"types": "./dist/index.d.ts",
 	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
+		"./article": {
+			"types": "./dist/types/article.d.ts",
+			"import": "./dist/types/article.js"
+		},
+		"./analysis": {
+			"types": "./dist/types/analysis.d.ts",
+			"import": "./dist/types/analysis.js"
 		}
 	},
 	"scripts": {

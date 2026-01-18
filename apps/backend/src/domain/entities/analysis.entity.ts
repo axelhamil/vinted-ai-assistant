@@ -7,7 +7,7 @@ import type {
 	OpportunitySignal,
 	PhotoQuality,
 	Resale,
-} from '@vinted-ai/shared'
+} from '@vinted-ai/shared/analysis'
 import { InvalidAnalysisDataError } from '../errors/domain.error'
 import { Margin, Price, PriceRange } from '../value-objects/price.vo'
 import { Score } from '../value-objects/score.vo'

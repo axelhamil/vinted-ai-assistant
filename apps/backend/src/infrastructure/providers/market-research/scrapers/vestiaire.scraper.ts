@@ -92,8 +92,8 @@ export class VestiaireScraper extends BaseScraper {
 					imageUrl: imageUrl || undefined,
 					condition: condition ? this.cleanText(condition) : undefined,
 				})
-			} catch (error) {
-				console.error('[Vestiaire] Failed to parse item:', error)
+			} catch {
+				// Skip malformed items
 			}
 		})
 

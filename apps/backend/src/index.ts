@@ -4,9 +4,10 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import type { IAIProvider } from './application/interfaces/providers/ai.provider.interface'
-import { TYPES, container } from './container'
+import { container } from './container/container'
+import { TYPES } from './container/types'
 import { createAnalysisRoutes } from './routes/analysis.routes'
-import { errorHandler } from './routes/middleware'
+import { errorHandler } from './routes/middleware/error-handler.middleware'
 
 const app = new Hono()
 

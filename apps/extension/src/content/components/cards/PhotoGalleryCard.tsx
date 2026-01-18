@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { Card } from '../primitives'
+import { Card } from '../primitives/Card'
 
 interface PhotoGalleryCardProps {
 	photos: string[]

@@ -1,5 +1,5 @@
-import type { AnalysisStatus } from '@vinted-ai/shared'
-import { Button, IconButton } from '../primitives'
+import type { AnalysisStatus } from '@vinted-ai/shared/analysis'
+import { Button, IconButton } from '../primitives/Button'
 
 interface ActionBarProps {
 	status: AnalysisStatus

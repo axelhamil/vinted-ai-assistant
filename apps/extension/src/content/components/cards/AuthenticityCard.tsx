@@ -1,5 +1,7 @@
-import type { ConfidenceLevel } from '@vinted-ai/shared'
-import { Card, ScoreRing, Pill } from '../primitives'
+import type { ConfidenceLevel } from '@vinted-ai/shared/analysis'
+import { Card } from '../primitives/Card'
+import { ScoreRing } from '../primitives/ScoreRing'
+import { Pill } from '../primitives/Pill'
 
 interface AuthenticityCardProps {
 	score: number
