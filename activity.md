@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 27/32
-**Current Task:** Task 28 - Implémenter page Settings dans Popup
+**Tasks Completed:** 28/32
+**Current Task:** Task 29 - Implémenter états Loading/Error UI
 
 ---
 
@@ -1298,3 +1298,39 @@
 - `SettingsView` - Dedicated settings page component
 - `StatCard` - Reusable statistics card with icon and highlight support
 - Icon components: SettingsIcon, BackIcon, AnalysisIcon, OpportunityIcon, BoughtIcon, SoldIcon
+
+### 2026-01-18 - Task 28: Implémenter page Settings dans Popup
+
+**Status:** Completed
+
+**Files Modified:**
+- `apps/extension/src/background/index.ts` - Added `openaiApiKey` field to ExtensionSettings interface and DEFAULT_SETTINGS
+- `apps/extension/src/popup/App.tsx` - Added OpenAI API Key input field in Settings view with password type, clear button, and helper text
+- `apps/extension/src/stores/analysis.store.ts` - Added `openaiApiKey` field to ExtensionSettings interface and DEFAULT_SETTINGS
+
+**Commands Executed:**
+- `npx biome check --write .` - Fixed formatting issues
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+- `npm run build` (in apps/extension) - Verified extension builds successfully
+
+**Settings Page Features (Complete):**
+
+**Already Implemented (Task 27):**
+- URL backend configurable (text input)
+- Seuil score pour highlight (slider 1-10)
+- Auto-open sidebar toggle
+- Save to chrome.storage
+
+**Newly Added (Task 28):**
+- API Key OpenAI (optionnel) - Password input with clear button
+  - Uses type="password" for security
+  - Clear button (X icon) to reset the field
+  - Helper text explaining that backend default is used if empty
+  - autoComplete="off" to prevent browser from caching
+
+**Technical Details:**
+- Added ClearIcon component for clear button
+- ExtensionSettings interface updated in all 3 files with consistent `openaiApiKey: string` field
+- Default value is empty string ('')
+- Settings are saved to chrome.storage.local via background worker

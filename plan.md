@@ -363,7 +363,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Auto-open sidebar toggle",
       "Sauvegarder dans chrome.storage"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 29,
