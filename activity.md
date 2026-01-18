@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 5/32
-**Current Task:** Task 6 - Implémenter couche Domain
+**Tasks Completed:** 6/32
+**Current Task:** Task 7 - Implémenter interfaces Application (ports)
 
 ---
 
@@ -175,3 +175,50 @@
 - Icons removed from manifest temporarily (optional for development)
 - Extension targets `https://www.vinted.fr/items/*` URLs
 - Build produces valid Chrome extension ready to load in developer mode
+
+### 2026-01-18 - Task 6: Implémenter couche Domain
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/backend/src/domain/errors/domain.error.ts` - Domain error classes (DomainError, InvalidScoreError, InvalidPriceError, InvalidMarginError, AnalysisNotFoundError, InvalidAnalysisDataError)
+- `apps/backend/src/domain/errors/index.ts` - Error exports
+- `apps/backend/src/domain/value-objects/score.vo.ts` - Score value object (1-10 scale, opportunity level methods)
+- `apps/backend/src/domain/value-objects/price.vo.ts` - Price, Margin, and PriceRange value objects
+- `apps/backend/src/domain/value-objects/index.ts` - Value object exports
+- `apps/backend/src/domain/entities/analysis.entity.ts` - AnalysisEntity with full business logic
+- `apps/backend/src/domain/entities/index.ts` - Entity exports
+- `apps/backend/src/domain/index.ts` - Main domain layer exports
+
+**Commands Executed:**
+- `pnpm lint` - Verified linting passes (fixed import order and unused imports)
+- `pnpm typecheck` - Verified TypeScript compiles
+
+**Domain Layer Components:**
+
+**Errors:**
+- `DomainError` - Base domain error class
+- `InvalidScoreError` - Score validation (must be 1-10)
+- `InvalidPriceError` - Price validation (must be positive)
+- `InvalidMarginError` - Margin calculation errors
+- `AnalysisNotFoundError` - Analysis lookup failures
+- `InvalidAnalysisDataError` - Analysis validation errors
+
+**Value Objects:**
+- `Score` - Immutable score (1-10), with level helpers (high/medium/low)
+- `Price` - Immutable price in euros, with arithmetic operations
+- `Margin` - Calculated margin (amount + percent), with profitability checks
+- `PriceRange` - Market price range (low/high/average)
+
+**Entities:**
+- `AnalysisEntity` - Rich domain entity encapsulating analysis data and business logic
+  - Validation on creation
+  - Value object getters for type-safe access
+  - Business methods: isHighOpportunity(), isProfitable(), isPriceUnderMarket()
+  - Status transition validation (ANALYZED -> WATCHING -> BOUGHT -> SOLD -> ARCHIVED)
+  - Cache management (1h TTL)
+
+**Notes:**
+- Uses shared types from @vinted-ai/shared package
+- Follows DDD principles with immutable value objects
+- Entity provides rich business logic methods

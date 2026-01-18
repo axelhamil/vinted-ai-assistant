@@ -88,7 +88,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Créer src/domain/errors/domain.error.ts",
       "Exporter depuis index.ts"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 7,
