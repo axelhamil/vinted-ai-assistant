@@ -1,5 +1,6 @@
 import type { AnalysisResult, AnalysisStatus, VintedArticleData } from '@vinted-ai/shared'
 import { useCallback, useEffect, useState } from 'react'
+import { cacheAnalysis, getCacheTimeRemaining, getCachedAnalysis, invalidateCache } from '../db'
 import { Badge, Sidebar } from './components'
 import { parseVintedArticle, waitForPageLoad } from './lib/parser'
 
@@ -25,6 +26,9 @@ export function App() {
 	const [isAnalyzing, setIsAnalyzing] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [sidebarOpen, setSidebarOpen] = useState(false)
+	const [cacheInfo, setCacheInfo] = useState<{ fromCache: boolean; timeRemaining: number } | null>(
+		null
+	)
 
 	// Send message to background service worker
 	const sendMessage = useCallback(
@@ -38,11 +42,17 @@ export function App() {
 		[]
 	)
 
-	// Analyze article via backend
+	// Analyze article via backend and cache result
 	const analyzeArticle = useCallback(
-		async (data: VintedArticleData): Promise<void> => {
+		async (data: VintedArticleData, forceRefresh = false): Promise<void> => {
 			setIsAnalyzing(true)
+			setCacheInfo(null)
 			try {
+				// Invalidate cache if forcing refresh
+				if (forceRefresh) {
+					await invalidateCache(data.vintedId)
+				}
+
 				const response = await sendMessage<AnalysisResult>({
 					type: 'ANALYZE_ARTICLE',
 					data,
@@ -50,6 +60,9 @@ export function App() {
 
 				if (response.success && response.data) {
 					setAnalysis(response.data)
+					// Cache the analysis result locally
+					await cacheAnalysis(response.data)
+					setCacheInfo({ fromCache: false, timeRemaining: 0 })
 					console.log('[Vinted AI] Analysis complete:', response.data.opportunity.score)
 				} else {
 					console.error('[Vinted AI] Analysis failed:', response.error)
@@ -64,16 +77,34 @@ export function App() {
 		[sendMessage]
 	)
 
-	// Check for cached analysis
+	// Check for locally cached analysis (IndexedDB) first, then backend
 	const checkCachedAnalysis = useCallback(
-		async (vintedId: string): Promise<AnalysisResult | null> => {
+		async (vintedId: string): Promise<{ analysis: AnalysisResult; fromCache: boolean } | null> => {
+			// First check local IndexedDB cache
+			const localCached = await getCachedAnalysis(vintedId)
+			if (localCached) {
+				const timeRemaining = await getCacheTimeRemaining(vintedId)
+				setCacheInfo({ fromCache: true, timeRemaining })
+				console.log(
+					'[Vinted AI] Found in local cache, TTL remaining:',
+					Math.round(timeRemaining / 1000),
+					's'
+				)
+				return { analysis: localCached, fromCache: true }
+			}
+
+			// If not in local cache, check backend
 			const response = await sendMessage<AnalysisResult>({
 				type: 'GET_ANALYSIS',
 				vintedId,
 			})
 
 			if (response.success && response.data) {
-				return response.data
+				// Cache the result locally
+				await cacheAnalysis(response.data)
+				const timeRemaining = await getCacheTimeRemaining(vintedId)
+				setCacheInfo({ fromCache: true, timeRemaining })
+				return { analysis: response.data, fromCache: true }
 			}
 			return null
 		},
@@ -85,6 +116,7 @@ export function App() {
 			try {
 				setIsLoading(true)
 				setError(null)
+				setCacheInfo(null)
 
 				// Wait for page to fully load
 				await waitForPageLoad()
@@ -96,11 +128,15 @@ export function App() {
 					setArticleData(data)
 					console.log('[Vinted AI] Article data extracted:', data.vintedId)
 
-					// Check for cached analysis first
+					// Check for cached analysis first (local IndexedDB, then backend)
 					const cached = await checkCachedAnalysis(data.vintedId)
 					if (cached) {
-						setAnalysis(cached)
-						console.log('[Vinted AI] Using cached analysis')
+						setAnalysis(cached.analysis)
+						console.log(
+							'[Vinted AI] Using cached analysis (from:',
+							cached.fromCache ? 'local' : 'backend',
+							')'
+						)
 					} else {
 						// Trigger analysis
 						analyzeArticle(data)
@@ -179,10 +215,11 @@ export function App() {
 		}
 	}, [analysis, sendMessage])
 
-	// Handle refresh analysis
+	// Handle refresh analysis (force re-analysis, invalidate cache)
 	const handleRefresh = useCallback(async (): Promise<void> => {
 		if (!articleData) return
-		await analyzeArticle(articleData)
+		// Force refresh bypasses cache and invalidates local cache
+		await analyzeArticle(articleData, true)
 	}, [articleData, analyzeArticle])
 
 	// Loading state
@@ -233,6 +270,8 @@ export function App() {
 					onUpdateStatus={handleUpdateStatus}
 					onExport={handleExport}
 					onRefresh={handleRefresh}
+					cacheInfo={cacheInfo}
+					isRefreshing={isAnalyzing}
 				/>
 			)}
 		</div>

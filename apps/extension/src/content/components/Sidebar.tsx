@@ -14,6 +14,8 @@ interface SidebarProps {
 	onUpdateStatus: (status: AnalysisStatus) => Promise<void>
 	onExport: () => Promise<void>
 	onRefresh: () => Promise<void>
+	cacheInfo?: { fromCache: boolean; timeRemaining: number } | null
+	isRefreshing?: boolean
 }
 
 /**
@@ -147,10 +149,25 @@ export function Sidebar({
 	onUpdateStatus,
 	onExport,
 	onRefresh,
+	cacheInfo,
+	isRefreshing = false,
 }: SidebarProps) {
 	const [isExporting, setIsExporting] = useState(false)
 	const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
 	const [isCopied, setIsCopied] = useState(false)
+
+	/**
+	 * Format cache time remaining for display
+	 */
+	const formatCacheTime = (ms: number): string => {
+		const minutes = Math.floor(ms / 60000)
+		if (minutes < 1) return "moins d'1 min"
+		if (minutes === 1) return '1 min'
+		if (minutes < 60) return `${minutes} min`
+		const hours = Math.floor(minutes / 60)
+		if (hours === 1) return '1 heure'
+		return `${hours} heures`
+	}
 
 	const handleCopyScript = useCallback(async (script: string) => {
 		try {
@@ -583,23 +600,28 @@ export function Sidebar({
 					<button
 						type="button"
 						onClick={onRefresh}
-						className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-						title="Rafraîchir l'analyse"
+						disabled={isRefreshing}
+						className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+						title="Rafraîchir l'analyse (ignorer le cache)"
 					>
-						<svg
-							className="w-4 h-4"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-							aria-hidden="true"
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
-								d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-							/>
-						</svg>
+						{isRefreshing ? (
+							<div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+						) : (
+							<svg
+								className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+								aria-hidden="true"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+								/>
+							</svg>
+						)}
 					</button>
 				</div>
 
@@ -637,15 +659,24 @@ export function Sidebar({
 					)}
 				</div>
 
-				{/* Analyzed timestamp */}
+				{/* Analyzed timestamp and cache info */}
 				<div className="text-xs text-gray-400 text-center pt-2">
-					Analysé le{' '}
-					{new Date(analysis.analyzedAt).toLocaleDateString('fr-FR', {
-						day: 'numeric',
-						month: 'short',
-						hour: '2-digit',
-						minute: '2-digit',
-					})}
+					{cacheInfo?.fromCache && cacheInfo.timeRemaining > 0 ? (
+						<div className="flex items-center justify-center gap-1">
+							<span className="inline-block w-2 h-2 bg-green-400 rounded-full" />
+							<span>Depuis le cache (expire dans {formatCacheTime(cacheInfo.timeRemaining)})</span>
+						</div>
+					) : (
+						<span>
+							Analysé le{' '}
+							{new Date(analysis.analyzedAt).toLocaleDateString('fr-FR', {
+								day: 'numeric',
+								month: 'short',
+								hour: '2-digit',
+								minute: '2-digit',
+							})}
+						</span>
+					)}
 				</div>
 			</div>
 		</aside>

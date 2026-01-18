@@ -325,7 +325,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Invalider cache après 1h",
       "Bouton refresh force re-analyse"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 26,
