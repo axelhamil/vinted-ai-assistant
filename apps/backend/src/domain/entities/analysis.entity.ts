@@ -22,6 +22,8 @@ export interface AnalysisProps {
 	brand: string | null
 	size: string | null
 	condition: string | null
+	/** Model detected by AI (e.g., "Air Max 90", "Speedy 30") */
+	detectedModel: string | null
 
 	sellerUsername: string
 	sellerRating: number | null
@@ -126,6 +128,10 @@ export class AnalysisEntity {
 
 	get condition(): string | null {
 		return this.props.condition
+	}
+
+	get detectedModel(): string | null {
+		return this.props.detectedModel
 	}
 
 	get sellerUsername(): string {

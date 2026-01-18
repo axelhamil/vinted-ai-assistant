@@ -38,6 +38,9 @@ export const analyses = sqliteTable('analyses', {
 		.$type<'low' | 'medium' | 'high'>()
 		.notNull(),
 
+	// AI Detection
+	detectedModel: text('detected_model'),
+
 	// Market Price
 	marketPriceLow: real('market_price_low'),
 	marketPriceHigh: real('market_price_high'),
@@ -50,6 +53,7 @@ export const analyses = sqliteTable('analyses', {
 		}>
 	>(),
 	marketPriceConfidence: text('market_price_confidence').$type<'low' | 'medium' | 'high'>(),
+	marketPriceReasoning: text('market_price_reasoning'),
 
 	// Opportunity
 	opportunityScore: integer('opportunity_score').notNull(),

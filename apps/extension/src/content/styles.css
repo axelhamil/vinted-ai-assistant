@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,7 +7,58 @@
 /* Custom styles for Vinted AI Assistant content UI */
 :host {
 	all: initial;
-	font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* CSS Variables for the light premium theme with orange accents */
+:root {
+	/* Surface colors */
+	--vai-surface: #FFFFFF;
+	--vai-surface-secondary: #FAFAFA;
+	--vai-surface-tertiary: #F5F5F5;
+
+	/* Border colors */
+	--vai-border: #E5E7EB;
+	--vai-border-light: #F3F4F6;
+	--vai-border-dark: #D1D5DB;
+	--vai-border-hover: #D1D5DB;
+
+	/* Brand orange */
+	--vai-brand: #F97316;
+	--vai-brand-light: #FDBA74;
+	--vai-brand-dark: #EA580C;
+	--vai-brand-darker: #C2410C;
+	--vai-brand-gradient: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+
+	/* Semantic colors */
+	--vai-profit: #10B981;
+	--vai-caution: #F59E0B;
+	--vai-danger: #EF4444;
+	--vai-info: #3B82F6;
+	--vai-exceptional: #8B5CF6;
+
+	/* Text colors */
+	--vai-text-primary: #1F2937;
+	--vai-text-secondary: #6B7280;
+	--vai-text-muted: #9CA3AF;
+	--vai-text-on-brand: #FFFFFF;
+
+	/* Spacing */
+	--vai-sidebar-width: 480px;
+	--vai-sidebar-collapsed: 60px;
+	--vai-header-height: 72px;
+	--vai-action-bar-height: 140px;
+
+	/* Shadows */
+	--vai-shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+	--vai-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+	--vai-shadow-elevated: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+	--vai-shadow-sidebar: 0 0 40px rgba(0, 0, 0, 0.15);
+
+	/* Transitions */
+	--vai-transition-fast: 150ms ease;
+	--vai-transition-normal: 200ms ease;
+	--vai-transition-slow: 300ms ease;
 }
 
 /* Ensure the shadow root container doesn't interfere with page layout */
@@ -19,4 +72,231 @@
 
 .vinted-ai-root > * {
 	pointer-events: auto;
+}
+
+/* Light card utility */
+@layer components {
+	.light-card {
+		background: var(--vai-surface);
+		border: 1px solid var(--vai-border);
+		border-radius: 12px;
+		box-shadow: var(--vai-shadow-card);
+		transition: border-color var(--vai-transition-fast), box-shadow var(--vai-transition-fast);
+	}
+
+	.light-card:hover {
+		border-color: var(--vai-border-hover);
+		box-shadow: var(--vai-shadow-soft);
+	}
+
+	/* Orange accent border */
+	.orange-accent-top {
+		position: relative;
+	}
+
+	.orange-accent-top::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 3px;
+		background: var(--vai-brand-gradient);
+		border-radius: 12px 12px 0 0;
+	}
+
+	/* Score colors */
+	.score-danger { color: var(--vai-danger); }
+	.score-caution { color: var(--vai-caution); }
+	.score-info { color: var(--vai-info); }
+	.score-profit { color: var(--vai-profit); }
+	.score-exceptional {
+		color: var(--vai-exceptional);
+	}
+
+	/* Shimmer animation for skeleton - light theme */
+	.shimmer {
+		background: linear-gradient(
+			90deg,
+			#F3F4F6 0%,
+			#E5E7EB 50%,
+			#F3F4F6 100%
+		);
+		background-size: 200% 100%;
+		animation: shimmer 1.5s infinite linear;
+	}
+
+	/* Glow effect for exceptional scores */
+	.glow-exceptional {
+		animation: pulseGlow 2s ease-in-out infinite;
+	}
+
+	/* Button base styles - light theme */
+	.btn-light {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--vai-text-primary);
+		background: var(--vai-surface);
+		border: 1px solid var(--vai-border);
+		border-radius: 8px;
+		box-shadow: var(--vai-shadow-soft);
+		transition: all var(--vai-transition-fast);
+		cursor: pointer;
+	}
+
+	.btn-light:hover {
+		background: var(--vai-surface-secondary);
+		border-color: var(--vai-border-hover);
+		transform: translateY(-1px);
+		box-shadow: var(--vai-shadow-card);
+	}
+
+	.btn-light:active {
+		transform: translateY(0);
+	}
+
+	.btn-light:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+		transform: none;
+	}
+
+	/* Primary button with orange gradient */
+	.btn-primary-orange {
+		background: var(--vai-brand-gradient);
+		border: none;
+		color: white;
+		box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+	}
+
+	.btn-primary-orange:hover {
+		background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%);
+		box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+	}
+
+	/* Success button */
+	.btn-success {
+		background: var(--vai-profit);
+		border: none;
+		color: white;
+	}
+
+	.btn-success:hover {
+		background: #0ea572;
+		box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+	}
+
+	/* Scrollbar styling for light theme */
+	.light-scrollbar::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	.light-scrollbar::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.light-scrollbar::-webkit-scrollbar-thumb {
+		background: rgba(0, 0, 0, 0.15);
+		border-radius: 3px;
+	}
+
+	.light-scrollbar::-webkit-scrollbar-thumb:hover {
+		background: rgba(0, 0, 0, 0.25);
+	}
+
+	/* Icon container with colored background */
+	.icon-container {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 2rem;
+		height: 2rem;
+		border-radius: 0.5rem;
+		flex-shrink: 0;
+	}
+
+	.icon-container-orange {
+		background: rgba(249, 115, 22, 0.1);
+		color: var(--vai-brand);
+	}
+
+	.icon-container-green {
+		background: rgba(16, 185, 129, 0.1);
+		color: var(--vai-profit);
+	}
+
+	.icon-container-blue {
+		background: rgba(59, 130, 246, 0.1);
+		color: var(--vai-info);
+	}
+
+	.icon-container-red {
+		background: rgba(239, 68, 68, 0.1);
+		color: var(--vai-danger);
+	}
+
+	.icon-container-amber {
+		background: rgba(245, 158, 11, 0.1);
+		color: var(--vai-caution);
+	}
+
+	.icon-container-violet {
+		background: rgba(139, 92, 246, 0.1);
+		color: var(--vai-exceptional);
+	}
+}
+
+/* Keyframe animations */
+@keyframes pulseGlow {
+	0%, 100% {
+		box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
+	}
+	50% {
+		box-shadow: 0 4px 30px rgba(249, 115, 22, 0.6);
+	}
+}
+
+@keyframes shimmer {
+	0% {
+		background-position: -200% 0;
+	}
+	100% {
+		background-position: 200% 0;
+	}
+}
+
+@keyframes slideInFromRight {
+	0% {
+		transform: translateX(100%);
+		opacity: 0;
+	}
+	100% {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+@keyframes fadeInUp {
+	0% {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes scoreRingFill {
+	0% {
+		stroke-dashoffset: 283;
+	}
+	100% {
+		stroke-dashoffset: var(--score-offset, 0);
+	}
 }

@@ -8,7 +8,6 @@ export const TYPES = {
 
 	// Providers
 	AIProvider: Symbol.for('AIProvider'),
-	MarketPriceProvider: Symbol.for('MarketPriceProvider'),
 
 	// Use Cases (will be added in future tasks)
 	AnalyzeArticleUseCase: Symbol.for('AnalyzeArticleUseCase'),

@@ -6,7 +6,8 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"lint": "biome check ."
 	},
 	"dependencies": {
 		"react": "^19.0.0",
@@ -15,7 +16,7 @@
 		"dexie": "^4.0.0",
 		"clsx": "^2.1.1",
 		"tailwind-merge": "^2.6.0",
-		"@vinted-ai/shared": "*"
+		"@vinted-ai/shared": "workspace:*"
 	},
 	"devDependencies": {
 		"@crxjs/vite-plugin": "^2.0.0-beta.31",

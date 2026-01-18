@@ -1,4 +1,5 @@
 import type {
+	AIDetection,
 	AnalysisStatus,
 	AuthenticityCheck,
 	MarketPrice,
@@ -19,6 +20,8 @@ export interface AnalysisResponseDTO {
 	title: string
 	price: number
 	brand: string | null
+
+	aiDetection: AIDetection
 
 	photoQuality: PhotoQuality
 	authenticityCheck: AuthenticityCheck
@@ -43,6 +46,12 @@ export function toAnalysisResponseDTO(entity: AnalysisEntity): AnalysisResponseD
 		title: entity.title,
 		price: entity.askingPrice.value,
 		brand: entity.brand,
+
+		aiDetection: {
+			detectedBrand: entity.brand,
+			detectedModel: entity.detectedModel,
+			estimatedCondition: entity.condition,
+		},
 
 		photoQuality: entity.photoQuality,
 		authenticityCheck: entity.authenticityCheck,

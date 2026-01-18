@@ -12,10 +12,12 @@ export class Score {
 	}
 
 	static create(value: number): Score {
-		if (value < 1 || value > 10 || !Number.isInteger(value)) {
+		if (value < 1 || value > 10) {
 			throw new InvalidScoreError(value)
 		}
-		return new Score(value)
+		// Round to 1 decimal place for consistency
+		const rounded = Math.round(value * 10) / 10
+		return new Score(rounded)
 	}
 
 	static createFromFloat(value: number): Score {

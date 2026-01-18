@@ -1,9 +1,13 @@
 export type {
+	SellerReliability,
+	SellerBadge,
 	VintedSeller,
 	VintedArticleData,
 	PhotoQuality,
 	AuthenticityCheck,
+	SourceListing,
 	MarketPriceSource,
+	RetailPrice,
 	MarketPrice,
 	SignalType,
 	OpportunitySignal,
@@ -15,5 +19,6 @@ export type {
 	Resale,
 	AnalysisStatus,
 	ConfidenceLevel,
+	AIDetection,
 	AnalysisResult,
 } from './types/index.js'

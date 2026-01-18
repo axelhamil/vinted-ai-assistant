@@ -21,13 +21,14 @@ export class AnalyzeArticleUseCase {
 
 	/**
 	 * Execute the analysis pipeline for an article
+	 * Uses a single AI call for maximum performance
 	 * @param input - Article data from the extension
 	 * @returns Complete analysis result
 	 */
 	async execute(input: ArticleInputDTO): Promise<AnalysisResponseDTO> {
-		// Check if we already have a cached analysis
+		// Check if we already have a cached analysis (skip if forceRefresh)
 		const existingAnalysis = await this.repository.findByVintedId(input.vintedId)
-		if (existingAnalysis && !existingAnalysis.isCacheExpired()) {
+		if (existingAnalysis && !existingAnalysis.isCacheExpired() && !input.forceRefresh) {
 			return toAnalysisResponseDTO(existingAnalysis)
 		}
 
@@ -35,51 +36,66 @@ export class AnalyzeArticleUseCase {
 		const articleData = toVintedArticleData(input)
 		const daysListed = calculateDaysListed(articleData.listedAt)
 
-		// Step 1: Analyze photos (quality + authenticity)
-		const photoAnalysisResult = await this.aiProvider.analyzePhotos({
+		// Single AI call for complete analysis (photos + opportunity + negotiation)
+		console.log('[AnalyzeArticle] Starting unified analysis...')
+		const analysisResult = await this.aiProvider.analyzeComplete({
 			photoUrls: articleData.photos,
 			title: articleData.title,
 			brand: articleData.brand,
 			condition: articleData.condition,
 			price: articleData.price,
-		})
-
-		// Step 2: Estimate market price (for now, using AI-based estimation)
-		const marketPrice = this.estimateMarketPrice(
-			articleData.price,
-			photoAnalysisResult.detectedBrand
-		)
-
-		// Step 3: Score opportunity
-		const opportunity = await this.aiProvider.scoreOpportunity({
-			price: articleData.price,
-			marketPriceLow: marketPrice.low,
-			marketPriceHigh: marketPrice.high,
-			marketPriceAvg: marketPrice.average,
-			photoQualityScore: photoAnalysisResult.photoQuality.score,
 			daysListed,
-			sellerSalesCount: articleData.seller.salesCount,
-			sellerRating: articleData.seller.rating,
-			authenticityScore: photoAnalysisResult.authenticityCheck.score,
+			language: input.language,
+			size: articleData.size ?? undefined,
 		})
 
-		// Step 4: Generate negotiation script
-		const negotiation = await this.aiProvider.generateNegotiation({
-			price: articleData.price,
-			marketPriceAvg: marketPrice.average,
-			daysListed,
-			sellerSalesCount: articleData.seller.salesCount,
-			condition: articleData.condition,
+		// Extract results from unified analysis
+		const aiEstimation = analysisResult.marketPriceEstimation
+		console.log('[AnalyzeArticle] Analysis complete:', {
+			opportunityScore: analysisResult.opportunity.score,
+			marketPrice: aiEstimation.average,
+			margin: analysisResult.opportunity.margin,
 		})
 
-		// Step 5: Generate resale recommendation
+		// Build sources from AI estimation or fallback to default
+		const sources = aiEstimation.sources && aiEstimation.sources.length > 0
+			? aiEstimation.sources.map((s) => ({
+					name: s.name,
+					price: s.price,
+					searchQuery: s.searchQuery,
+					count: s.count,
+				}))
+			: [
+					{
+						name: 'Estimation IA',
+						price: aiEstimation.average,
+					},
+				]
+
+		const marketPrice: MarketPrice = {
+			low: aiEstimation.low,
+			high: aiEstimation.high,
+			average: aiEstimation.average,
+			confidence: aiEstimation.confidence,
+			reasoning: aiEstimation.reasoning,
+			sources,
+			...(aiEstimation.retailPrice && {
+				retailPrice: {
+					price: aiEstimation.retailPrice,
+					url: '',
+					brand: analysisResult.detectedBrand ?? articleData.brand ?? 'Marque',
+				},
+			}),
+		}
+
+		// Generate resale recommendation (no AI needed)
 		const resale = this.generateResaleRecommendation(
 			marketPrice.average,
-			opportunity.margin,
+			analysisResult.opportunity.margin,
 			articleData.brand
 		)
 
-		// Step 6: Create and save the analysis entity
+		// Create and save the analysis entity
 		const now = new Date()
 		const analysisProps: AnalysisProps = {
 			id: existingAnalysis?.id ?? createId(),
@@ -88,9 +104,10 @@ export class AnalyzeArticleUseCase {
 			title: articleData.title,
 			description: articleData.description,
 			price: articleData.price,
-			brand: photoAnalysisResult.detectedBrand ?? articleData.brand,
+			brand: analysisResult.detectedBrand ?? articleData.brand,
 			size: articleData.size,
-			condition: photoAnalysisResult.estimatedCondition ?? articleData.condition,
+			condition: analysisResult.estimatedCondition ?? articleData.condition,
+			detectedModel: analysisResult.detectedModel,
 
 			sellerUsername: articleData.seller.username,
 			sellerRating: articleData.seller.rating,
@@ -98,11 +115,11 @@ export class AnalyzeArticleUseCase {
 
 			photos: articleData.photos,
 
-			photoQuality: photoAnalysisResult.photoQuality,
-			authenticityCheck: photoAnalysisResult.authenticityCheck,
+			photoQuality: analysisResult.photoQuality,
+			authenticityCheck: analysisResult.authenticityCheck,
 			marketPrice,
-			opportunity,
-			negotiation,
+			opportunity: analysisResult.opportunity,
+			negotiation: analysisResult.negotiation,
 			resale,
 
 			status: existingAnalysis?.status ?? 'ANALYZED',
@@ -114,32 +131,6 @@ export class AnalyzeArticleUseCase {
 		const savedEntity = await this.repository.save(analysisEntity)
 
 		return toAnalysisResponseDTO(savedEntity)
-	}
-
-	/**
-	 * Estimate market price based on article data
-	 * This is a simplified estimation - in production, would use market price provider
-	 */
-	private estimateMarketPrice(askingPrice: number, brand: string | null): MarketPrice {
-		// Simple estimation logic: market price is typically 20-40% higher than asking
-		// for good deals, or close to asking for fair prices
-		const multiplier = brand ? 1.3 : 1.2 // Branded items have higher market value
-		const average = Math.round(askingPrice * multiplier)
-		const low = Math.round(average * 0.85)
-		const high = Math.round(average * 1.15)
-
-		return {
-			low,
-			high,
-			average,
-			sources: [
-				{
-					name: 'Estimation IA',
-					price: average,
-				},
-			],
-			confidence: brand ? 'medium' : 'low',
-		}
 	}
 
 	/**

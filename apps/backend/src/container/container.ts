@@ -4,7 +4,7 @@ import type { IAnalysisRepository } from '../application/interfaces/repositories
 import { AnalyzeArticleUseCase } from '../application/use-cases/analyze-article.use-case'
 import { ExportMarkdownUseCase } from '../application/use-cases/export-markdown.use-case'
 import { GetAnalysisUseCase } from '../application/use-cases/get-analysis.use-case'
-import { OpenAIProvider } from '../infrastructure/providers/ai/openai.provider'
+import { GeminiProvider } from '../infrastructure/providers/ai/gemini.provider'
 import { DrizzleAnalysisRepository } from '../infrastructure/repositories/drizzle-analysis.repository'
 import { TYPES } from './types'
 
@@ -21,7 +21,7 @@ export function createContainer(): Container {
 		.inSingletonScope()
 
 	// Bind AI provider
-	container.bind<IAIProvider>(TYPES.AIProvider).to(OpenAIProvider).inSingletonScope()
+	container.bind<IAIProvider>(TYPES.AIProvider).to(GeminiProvider).inSingletonScope()
 
 	// Bind use cases
 	container

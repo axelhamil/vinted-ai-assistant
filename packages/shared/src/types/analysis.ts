@@ -19,12 +19,38 @@ export interface AuthenticityCheck {
 }
 
 /**
+ * Individual listing in a source
+ */
+export interface SourceListing {
+	title: string
+	price: number
+	url: string
+	imageUrl?: string
+}
+
+/**
  * Market price source
  */
 export interface MarketPriceSource {
 	name: string
 	price: number
 	url?: string
+	count?: number // Number of articles found
+	searchQuery?: string // The search query used
+	listings?: SourceListing[] // Top listings from this source
+	priceRange?: {
+		min: number
+		max: number
+	}
+}
+
+/**
+ * Retail price information
+ */
+export interface RetailPrice {
+	price: number
+	url: string
+	brand: string
 }
 
 /**
@@ -36,6 +62,10 @@ export interface MarketPrice {
 	average: number
 	sources: MarketPriceSource[]
 	confidence: ConfidenceLevel
+	/** Retail price if found */
+	retailPrice?: RetailPrice
+	/** AI reasoning for the price estimation */
+	reasoning?: string
 }
 
 /**
@@ -111,6 +141,18 @@ export type AnalysisStatus = 'ANALYZED' | 'WATCHING' | 'BOUGHT' | 'SOLD' | 'ARCH
 export type ConfidenceLevel = 'low' | 'medium' | 'high'
 
 /**
+ * AI detection summary
+ */
+export interface AIDetection {
+	/** Brand detected by AI (may differ from seller's claim) */
+	detectedBrand: string | null
+	/** Model detected by AI (e.g., "Air Max 90", "Speedy 30") */
+	detectedModel: string | null
+	/** Condition estimated by AI */
+	estimatedCondition: string | null
+}
+
+/**
  * Complete analysis result returned by the backend
  */
 export interface AnalysisResult {
@@ -120,6 +162,9 @@ export interface AnalysisResult {
 	title: string
 	price: number
 	brand: string | null
+
+	/** AI detection results */
+	aiDetection: AIDetection
 
 	photoQuality: PhotoQuality
 	authenticityCheck: AuthenticityCheck

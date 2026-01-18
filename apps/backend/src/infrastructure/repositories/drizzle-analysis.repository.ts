@@ -142,9 +142,12 @@ export class DrizzleAnalysisRepository implements IAnalysisRepository {
 	 * Delete an analysis by its Vinted ID
 	 */
 	async delete(vintedId: string): Promise<boolean> {
-		const result = await db.delete(analyses).where(eq(analyses.vintedId, vintedId))
+		const result = await db
+			.delete(analyses)
+			.where(eq(analyses.vintedId, vintedId))
+			.returning({ id: analyses.id })
 
-		return result.changes > 0
+		return result.length > 0
 	}
 
 	/**
@@ -176,6 +179,7 @@ export class DrizzleAnalysisRepository implements IAnalysisRepository {
 			brand: props.brand,
 			size: props.size,
 			condition: props.condition,
+			detectedModel: props.detectedModel,
 
 			sellerUsername: props.sellerUsername,
 			sellerRating: props.sellerRating,
@@ -200,6 +204,7 @@ export class DrizzleAnalysisRepository implements IAnalysisRepository {
 			marketPriceAvg: props.marketPrice.average,
 			marketPriceSources: props.marketPrice.sources,
 			marketPriceConfidence: props.marketPrice.confidence,
+			marketPriceReasoning: props.marketPrice.reasoning,
 
 			opportunityScore: props.opportunity.score,
 			margin: props.opportunity.margin,
@@ -236,6 +241,7 @@ export class DrizzleAnalysisRepository implements IAnalysisRepository {
 			brand: record.brand,
 			size: record.size,
 			condition: record.condition,
+			detectedModel: record.detectedModel ?? null,
 
 			sellerUsername: record.sellerUsername,
 			sellerRating: record.sellerRating,
@@ -263,6 +269,7 @@ export class DrizzleAnalysisRepository implements IAnalysisRepository {
 				average: record.marketPriceAvg ?? 0,
 				sources: record.marketPriceSources ?? [],
 				confidence: record.marketPriceConfidence ?? 'low',
+				reasoning: record.marketPriceReasoning ?? undefined,
 			},
 
 			opportunity: {

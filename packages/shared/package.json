@@ -14,7 +14,8 @@
 	"scripts": {
 		"build": "tsc",
 		"typecheck": "tsc --noEmit",
-		"dev": "tsc --watch"
+		"dev": "tsc --watch",
+		"lint": "biome check ."
 	},
 	"devDependencies": {
 		"typescript": "^5.7.2"

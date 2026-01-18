@@ -1,6 +1,15 @@
 import type { VintedArticleData } from '@vinted-ai/shared'
 
 /**
+ * Seller badge data
+ */
+export interface SellerBadgeDTO {
+	id: string
+	label: string
+	description: string | null
+}
+
+/**
  * DTO for article data received from the extension
  * This matches the VintedArticleData interface from shared package
  */
@@ -16,14 +25,28 @@ export interface ArticleInputDTO {
 	photos: string[]
 	seller: {
 		username: string
+		profileUrl: string | null
+		avatarUrl: string | null
 		rating: number | null
+		ratingCount: number | null
 		salesCount: number
 		responseTime: string | null
 		lastSeen: string | null
+		location: string | null
+		badges: SellerBadgeDTO[]
+		// Extended fields from profile fetch
+		activeListings: number | null
+		memberSince: string | null
+		followers: number | null
+		verifiedProfile: boolean
+		reliability: 'high' | 'medium' | 'low' | 'unknown'
 	}
 	listedAt: string | null
 	views: number | null
 	favorites: number | null
+	forceRefresh?: boolean
+	/** ISO language code for response localization (e.g., 'fr', 'en', 'de') */
+	language?: string
 }
 
 /**

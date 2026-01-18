@@ -18,47 +18,52 @@ interface ToastStyles {
 	bg: string
 	border: string
 	text: string
+	iconBg: string
 	icon: string
 }
 
 /**
- * Gets the toast styling based on type
+ * Gets the toast styling based on type - light theme
  */
 function getToastStyles(type: ToastType): ToastStyles {
 	switch (type) {
 		case 'success':
 			return {
-				bg: 'bg-green-50',
-				border: 'border-green-200',
-				text: 'text-green-800',
+				bg: 'bg-white',
+				border: 'border-profit/30',
+				text: 'text-profit',
+				iconBg: 'bg-profit/10',
 				icon: '✓',
 			}
 		case 'error':
 			return {
-				bg: 'bg-red-50',
-				border: 'border-red-200',
-				text: 'text-red-800',
+				bg: 'bg-white',
+				border: 'border-danger/30',
+				text: 'text-danger',
+				iconBg: 'bg-danger/10',
 				icon: '✕',
 			}
 		case 'warning':
 			return {
-				bg: 'bg-yellow-50',
-				border: 'border-yellow-200',
-				text: 'text-yellow-800',
+				bg: 'bg-white',
+				border: 'border-caution/30',
+				text: 'text-caution',
+				iconBg: 'bg-caution/10',
 				icon: '⚠',
 			}
 		case 'info':
 			return {
-				bg: 'bg-blue-50',
-				border: 'border-blue-200',
-				text: 'text-blue-800',
+				bg: 'bg-white',
+				border: 'border-info/30',
+				text: 'text-info',
+				iconBg: 'bg-info/10',
 				icon: 'ℹ',
 			}
 	}
 }
 
 /**
- * Individual Toast component
+ * Individual Toast component - light theme
  */
 function Toast({ toast, onDismiss }: ToastProps) {
 	const styles = getToastStyles(toast.type)
@@ -89,7 +94,7 @@ function Toast({ toast, onDismiss }: ToastProps) {
 	return (
 		<div
 			className={`
-				flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg
+				flex items-center gap-3 px-4 py-3 rounded-xl border shadow-card
 				${styles.bg} ${styles.border}
 				transition-all duration-300 ease-out
 				${isVisible && !isLeaving ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}
@@ -98,22 +103,24 @@ function Toast({ toast, onDismiss }: ToastProps) {
 			aria-live="polite"
 		>
 			{/* Icon */}
-			<span className={`text-lg ${styles.text}`} aria-hidden="true">
-				{styles.icon}
-			</span>
+			<div className={`w-8 h-8 rounded-full flex items-center justify-center ${styles.iconBg}`}>
+				<span className={`text-base ${styles.text}`} aria-hidden="true">
+					{styles.icon}
+				</span>
+			</div>
 
 			{/* Message */}
-			<p className={`flex-1 text-sm font-medium ${styles.text}`}>{toast.message}</p>
+			<p className="flex-1 text-base font-medium text-content-primary">{toast.message}</p>
 
 			{/* Dismiss button */}
 			<button
 				type="button"
 				onClick={handleDismiss}
-				className={`p-1 rounded hover:bg-black/5 transition-colors ${styles.text}`}
+				className="p-1 rounded hover:bg-surface-secondary transition-colors text-content-muted hover:text-content-secondary"
 				aria-label="Fermer la notification"
 			>
 				<svg
-					className="w-4 h-4"
+					className="w-5 h-5"
 					fill="none"
 					stroke="currentColor"
 					viewBox="0 0 24 24"

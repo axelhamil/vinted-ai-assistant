@@ -8,6 +8,7 @@ build/
 # Cache
 .cache/
 *.tsbuildinfo
+.turbo/
 
 # Database
 *.db

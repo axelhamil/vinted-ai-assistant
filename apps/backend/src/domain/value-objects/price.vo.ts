@@ -17,6 +17,13 @@ export class Price {
 		return new Price(Math.round(value * 100) / 100)
 	}
 
+	/**
+	 * Create a signed amount (can be negative, used for margins/differences)
+	 */
+	static createSignedAmount(value: number): Price {
+		return new Price(Math.round(value * 100) / 100)
+	}
+
 	static zero(): Price {
 		return new Price(0)
 	}
@@ -78,7 +85,7 @@ export class Margin {
 	}
 
 	static create(amount: number, percent: number): Margin {
-		return new Margin(Price.create(amount), Math.round(percent * 100) / 100)
+		return new Margin(Price.createSignedAmount(amount), Math.round(percent * 100) / 100)
 	}
 
 	get amount(): Price {
