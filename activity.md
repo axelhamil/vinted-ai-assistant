@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 13/32
-**Current Task:** Task 14 - Implémenter Controller et Routes
+**Tasks Completed:** 14/32
+**Current Task:** Task 15 - Ajouter validation Zod sur les routes
 
 ---
 
@@ -549,3 +549,53 @@
 - Markdown template matches PRD specification exactly
 - French locale used for date formatting
 - Emojis used for signal visualization (✅ positive, ❌ negative, ℹ️ neutral)
+
+### 2026-01-18 - Task 14: Implémenter Controller et Routes
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/backend/src/adapters/controllers/analysis.controller.ts` - Controller handling all analysis endpoints
+- `apps/backend/src/adapters/controllers/index.ts` - Controller exports
+- `apps/backend/src/adapters/index.ts` - Adapters module exports
+- `apps/backend/src/routes/analysis.routes.ts` - Hono routes for all analysis endpoints
+- `apps/backend/src/routes/index.ts` - Routes exports
+
+**Files Modified:**
+- `apps/backend/src/index.ts` - Mounted analysis routes under /api
+
+**Commands Executed:**
+- `npx biome check --write .` - Fixed formatting and import order
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+- `npx tsc` - Built backend to verify compilation
+
+**Endpoints Implemented:**
+
+**AnalysisController:**
+- `analyze(input)` - Delegates to AnalyzeArticleUseCase
+- `getAnalyses(query)` - Delegates to GetAnalysisUseCase.getAll()
+- `getAnalysisByVintedId(vintedId)` - Delegates to GetAnalysisUseCase.getByVintedId()
+- `updateStatus(vintedId, status)` - Updates status via repository
+- `exportMarkdown(vintedId)` - Delegates to ExportMarkdownUseCase
+- `getStats()` - Delegates to GetAnalysisUseCase.getStats()
+
+**Routes:**
+- `POST /api/analyze` - Analyze a Vinted article, returns 201 with analysis result
+- `GET /api/analyses` - List analyses with query params (limit, offset, minScore, status)
+- `GET /api/analyses/:vintedId` - Get single analysis by Vinted ID
+- `PATCH /api/analyses/:vintedId/status` - Update analysis status
+- `GET /api/analyses/:vintedId/export` - Export analysis to markdown (downloadable file)
+- `GET /api/stats` - Get analysis statistics
+
+**Technical Details:**
+- Controller uses DI container to resolve use cases and repository
+- Routes use Hono's routing and context handling
+- Export endpoint sets proper Content-Type and Content-Disposition headers for file download
+- Error handling via AnalysisNotFoundError for missing analyses
+
+**Notes:**
+- All endpoints follow PRD specification
+- Controller pattern separates HTTP handling from business logic
+- Use cases handle domain orchestration
+- Repository handles persistence

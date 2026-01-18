@@ -188,7 +188,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "PATCH /api/analyses/:vintedId/status",
       "GET /api/analyses/:vintedId/export"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 15,
