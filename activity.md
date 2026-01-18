@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 14/32
-**Current Task:** Task 15 - Ajouter validation Zod sur les routes
+**Tasks Completed:** 15/32
+**Current Task:** Task 16 - Ajouter CORS et error handling global
 
 ---
 
@@ -599,3 +599,59 @@
 - Controller pattern separates HTTP handling from business logic
 - Use cases handle domain orchestration
 - Repository handles persistence
+
+### 2026-01-18 - Task 15: Ajouter validation Zod sur les routes
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/backend/src/routes/schemas/analysis.schemas.ts` - Zod schemas for all endpoints (analyzeBodySchema, listAnalysesQuerySchema, updateStatusBodySchema, vintedIdParamSchema)
+- `apps/backend/src/routes/schemas/index.ts` - Schema exports
+- `apps/backend/src/routes/middleware/validation.middleware.ts` - Validation helpers (validateBody, validateQuery, validateParams, formatZodError, ValidationError class)
+- `apps/backend/src/routes/middleware/index.ts` - Middleware exports
+
+**Files Modified:**
+- `apps/backend/src/routes/analysis.routes.ts` - Integrated Zod validation for all endpoints with error handling middleware
+
+**Commands Executed:**
+- `npx biome check --write .` - Fixed formatting and import order issues
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+- `npx tsc` (in apps/backend) - Built backend to verify compilation
+
+**Zod Schemas Created:**
+
+**analyzeBodySchema (POST /api/analyze):**
+- Validates all article fields: vintedId, url (URL format), title, description, price (positive number), brand, size, condition, photos (array of URLs), seller object, listedAt, views, favorites
+- Seller schema validates: username, rating (0-5), salesCount (non-negative int), responseTime, lastSeen
+
+**listAnalysesQuerySchema (GET /api/analyses):**
+- limit: optional positive integer 1-100
+- offset: optional non-negative integer
+- minScore: optional integer 1-10
+- status: optional enum (ANALYZED, WATCHING, BOUGHT, SOLD, ARCHIVED)
+- All query params are transformed from strings to proper types
+
+**updateStatusBodySchema (PATCH /api/analyses/:vintedId/status):**
+- status: required enum (ANALYZED, WATCHING, BOUGHT, SOLD, ARCHIVED)
+
+**vintedIdParamSchema (path params):**
+- vintedId: required non-empty string
+
+**Validation Error Response Format:**
+```json
+{
+  "error": "Validation Error",
+  "message": "Request validation failed",
+  "details": [
+    { "field": "price", "message": "Price must be positive" }
+  ]
+}
+```
+
+**Technical Details:**
+- ValidationError class extends Error for proper error handling
+- isValidationError type guard for error checking
+- Route-level error handler catches ValidationError and returns 400 with formatted response
+- All validators return typed data matching Zod schema inferences
+- Uses ZodError.issues for detailed error messages

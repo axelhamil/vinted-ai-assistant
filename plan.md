@@ -200,7 +200,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Valider query params GET /api/analyses",
       "Retourner erreurs 400 formatées"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 16,

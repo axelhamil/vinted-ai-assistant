@@ -1,9 +1,18 @@
-import type { AnalysisStatus } from '@vinted-ai/shared'
 import { Hono } from 'hono'
 import type { Container } from 'inversify'
 import { AnalysisController } from '../adapters/controllers/analysis.controller'
-import type { ListAnalysesQueryDTO } from '../application/dtos/analysis.dto'
-import type { ArticleInputDTO } from '../application/dtos/article.dto'
+import {
+	isValidationError,
+	validateBody,
+	validateParams,
+	validateQuery,
+} from './middleware/validation.middleware'
+import {
+	analyzeBodySchema,
+	listAnalysesQuerySchema,
+	updateStatusBodySchema,
+	vintedIdParamSchema,
+} from './schemas/analysis.schemas'
 
 /**
  * Create analysis routes
@@ -19,12 +28,20 @@ export function createAnalysisRoutes(container: Container): Hono {
 	const router = new Hono()
 	const controller = new AnalysisController(container)
 
+	// Error handling middleware for validation errors
+	router.onError((err, c) => {
+		if (isValidationError(err)) {
+			return c.json(err.response, 400)
+		}
+		throw err
+	})
+
 	/**
 	 * POST /api/analyze
 	 * Analyze a Vinted article
 	 */
 	router.post('/analyze', async (c) => {
-		const body = (await c.req.json()) as ArticleInputDTO
+		const body = await validateBody(c, analyzeBodySchema)
 		const result = await controller.analyze(body)
 		return c.json(result, 201)
 	})
@@ -35,16 +52,7 @@ export function createAnalysisRoutes(container: Container): Hono {
 	 * Query params: limit, offset, minScore, status
 	 */
 	router.get('/analyses', async (c) => {
-		const query: ListAnalysesQueryDTO = {
-			limit: c.req.query('limit') ? Number.parseInt(c.req.query('limit') as string, 10) : undefined,
-			offset: c.req.query('offset')
-				? Number.parseInt(c.req.query('offset') as string, 10)
-				: undefined,
-			minScore: c.req.query('minScore')
-				? Number.parseInt(c.req.query('minScore') as string, 10)
-				: undefined,
-			status: c.req.query('status') as AnalysisStatus | undefined,
-		}
+		const query = validateQuery(c, listAnalysesQuerySchema)
 		const result = await controller.getAnalyses(query)
 		return c.json(result)
 	})
@@ -63,7 +71,7 @@ export function createAnalysisRoutes(container: Container): Hono {
 	 * Get a single analysis by Vinted ID
 	 */
 	router.get('/analyses/:vintedId', async (c) => {
-		const vintedId = c.req.param('vintedId')
+		const { vintedId } = validateParams(c, vintedIdParamSchema)
 		const result = await controller.getAnalysisByVintedId(vintedId)
 		return c.json(result)
 	})
@@ -73,8 +81,8 @@ export function createAnalysisRoutes(container: Container): Hono {
 	 * Update the status of an analysis
 	 */
 	router.patch('/analyses/:vintedId/status', async (c) => {
-		const vintedId = c.req.param('vintedId')
-		const body = (await c.req.json()) as { status: AnalysisStatus }
+		const { vintedId } = validateParams(c, vintedIdParamSchema)
+		const body = await validateBody(c, updateStatusBodySchema)
 		const result = await controller.updateStatus(vintedId, body.status)
 		return c.json(result)
 	})
@@ -84,7 +92,7 @@ export function createAnalysisRoutes(container: Container): Hono {
 	 * Export an analysis to markdown
 	 */
 	router.get('/analyses/:vintedId/export', async (c) => {
-		const vintedId = c.req.param('vintedId')
+		const { vintedId } = validateParams(c, vintedIdParamSchema)
 		const result = await controller.exportMarkdown(vintedId)
 
 		// Return as downloadable markdown file
