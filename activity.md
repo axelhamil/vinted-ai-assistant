@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 12/32
-**Current Task:** Task 13 - Implémenter Use Case ExportMarkdown
+**Tasks Completed:** 13/32
+**Current Task:** Task 14 - Implémenter Controller et Routes
 
 ---
 
@@ -493,3 +493,59 @@
 - getStats filters today's analyses in memory after fetching all (for simplicity in MVP)
 - Opportunity threshold is score >= 7 as per PRD specification
 - All methods are async and properly typed
+
+### 2026-01-18 - Task 13: Implémenter Use Case ExportMarkdown
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/backend/src/application/use-cases/export-markdown.use-case.ts` - Use case for exporting analysis to markdown format
+
+**Files Modified:**
+- `apps/backend/src/application/use-cases/index.ts` - Added export for ExportMarkdownUseCase
+- `apps/backend/src/container/container.ts` - Added ExportMarkdownUseCase binding to DI container
+
+**Commands Executed:**
+- `npx biome check --write .` - Fixed import ordering and formatting
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+
+**Use Case Methods Implemented:**
+
+**ExportMarkdownUseCase:**
+- `execute(vintedId)` - Main method that returns markdown content and filename
+  - Fetches analysis entity by Vinted ID
+  - Throws AnalysisNotFoundError if not found
+  - Returns ExportMarkdownResult with content and filename
+
+**Helper Methods:**
+- `generateFilename(entity)` - Generates filename in format: `{brand}_{title}_{date}.md`
+- `sanitizeForFilename(str)` - Sanitizes strings for safe use in filenames
+- `formatDateForFilename(date)` - Formats date as YYYY-MM-DD
+- `generateMarkdown(entity)` - Generates full markdown content following PRD template
+- `getSignalEmoji(type)` - Returns emoji for signal types (✅/❌/ℹ️)
+- `formatDate(date)` - Formats date for display in French locale
+
+**Markdown Template Sections:**
+- Title (article title)
+- Infos Article (URL, price, brand, size, condition, seller)
+- Analyse IA
+  - Score Opportunité
+  - Prix Marché (fourchette, moyenne, marge potentielle)
+  - Signaux (with type emojis)
+  - Authenticité (score + flags)
+- Négociation (offre suggérée, script, arguments)
+- Revente (prix recommandé, délai estimé, plateformes, tips)
+- Footer with analysis date
+
+**Technical Details:**
+- Constructor injection of IAnalysisRepository via Inversify
+- Returns ExportMarkdownResult interface with content and filename
+- Registered in DI container as singleton
+- Uses entity value objects for type-safe access to prices, scores, margins
+
+**Notes:**
+- Filename format matches PRD: `{brand}_{title}_{date}.md`
+- Markdown template matches PRD specification exactly
+- French locale used for date formatting
+- Emojis used for signal visualization (✅ positive, ❌ negative, ℹ️ neutral)

@@ -2,6 +2,7 @@ import { Container } from 'inversify'
 import type { IAIProvider } from '../application/interfaces/providers/ai.provider.interface'
 import type { IAnalysisRepository } from '../application/interfaces/repositories/analysis.repository.interface'
 import { AnalyzeArticleUseCase } from '../application/use-cases/analyze-article.use-case'
+import { ExportMarkdownUseCase } from '../application/use-cases/export-markdown.use-case'
 import { GetAnalysisUseCase } from '../application/use-cases/get-analysis.use-case'
 import { OpenAIProvider } from '../infrastructure/providers/ai/openai.provider'
 import { DrizzleAnalysisRepository } from '../infrastructure/repositories/drizzle-analysis.repository'
@@ -31,6 +32,11 @@ export function createContainer(): Container {
 	container
 		.bind<GetAnalysisUseCase>(TYPES.GetAnalysisUseCase)
 		.to(GetAnalysisUseCase)
+		.inSingletonScope()
+
+	container
+		.bind<ExportMarkdownUseCase>(TYPES.ExportMarkdownUseCase)
+		.to(ExportMarkdownUseCase)
 		.inSingletonScope()
 
 	return container

@@ -173,7 +173,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Générer le fichier .md formaté",
       "Retourner le contenu string"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 14,
