@@ -1,8 +1,16 @@
 import type { AnalysisResult, AnalysisStatus, VintedArticleData } from '@vinted-ai/shared'
 import { useCallback, useEffect, useState } from 'react'
 import { cacheAnalysis, getCacheTimeRemaining, getCachedAnalysis, invalidateCache } from '../db'
-import { Badge, Sidebar } from './components'
+import {
+	Badge,
+	ErrorDisplay,
+	Sidebar,
+	SkeletonSidebar,
+	ToastContainer,
+	useToast,
+} from './components'
 import { parseVintedArticle, waitForPageLoad } from './lib/parser'
+import { formatRelativeTime } from './lib/time'
 
 interface ApiResponse<T> {
 	success: boolean
@@ -29,6 +37,8 @@ export function App() {
 	const [cacheInfo, setCacheInfo] = useState<{ fromCache: boolean; timeRemaining: number } | null>(
 		null
 	)
+	const [isRetrying, setIsRetrying] = useState(false)
+	const { toasts, dismissToast, success, error: showError } = useToast()
 
 	// Send message to background service worker
 	const sendMessage = useCallback(
@@ -46,6 +56,7 @@ export function App() {
 	const analyzeArticle = useCallback(
 		async (data: VintedArticleData, forceRefresh = false): Promise<void> => {
 			setIsAnalyzing(true)
+			setError(null)
 			setCacheInfo(null)
 			try {
 				// Invalidate cache if forcing refresh
@@ -64,17 +75,35 @@ export function App() {
 					await cacheAnalysis(response.data)
 					setCacheInfo({ fromCache: false, timeRemaining: 0 })
 					console.log('[Vinted AI] Analysis complete:', response.data.opportunity.score)
+
+					// Show success toast
+					if (forceRefresh) {
+						success('Analyse mise à jour avec succès')
+					} else {
+						const scoreLabel =
+							response.data.opportunity.score >= 7
+								? 'Bonne opportunité !'
+								: response.data.opportunity.score >= 5
+									? 'Opportunité moyenne'
+									: 'Faible opportunité'
+						success(`Analyse terminée: ${scoreLabel} (${response.data.opportunity.score}/10)`)
+					}
 				} else {
 					console.error('[Vinted AI] Analysis failed:', response.error)
-					// Don't show error to user for analysis failure, just log it
+					setError(response.error ?? "Erreur lors de l'analyse de l'article")
+					showError(response.error ?? "Erreur lors de l'analyse")
 				}
 			} catch (err) {
+				const errorMessage =
+					err instanceof Error ? err.message : "Erreur inattendue lors de l'analyse"
 				console.error('[Vinted AI] Error analyzing article:', err)
+				setError(errorMessage)
+				showError(errorMessage)
 			} finally {
 				setIsAnalyzing(false)
 			}
 		},
-		[sendMessage]
+		[sendMessage, success, showError]
 	)
 
 	// Check for locally cached analysis (IndexedDB) first, then backend
@@ -179,12 +208,25 @@ export function App() {
 
 			if (response.success && response.data) {
 				setAnalysis(response.data)
+				// Cache updated analysis
+				await cacheAnalysis(response.data)
 				console.log('[Vinted AI] Status updated to:', status)
+
+				// Show success toast with status-specific message
+				const statusMessages: Record<AnalysisStatus, string> = {
+					ANALYZED: 'Statut réinitialisé',
+					WATCHING: 'Article ajouté à la surveillance',
+					BOUGHT: 'Article marqué comme acheté',
+					SOLD: 'Article marqué comme vendu',
+					ARCHIVED: 'Article archivé',
+				}
+				success(statusMessages[status])
 			} else {
 				console.error('[Vinted AI] Failed to update status:', response.error)
+				showError(response.error ?? 'Erreur lors de la mise à jour du statut')
 			}
 		},
-		[analysis, sendMessage]
+		[analysis, sendMessage, success, showError]
 	)
 
 	// Handle export to markdown
@@ -210,10 +252,12 @@ export function App() {
 			document.body.removeChild(link)
 			URL.revokeObjectURL(url)
 			console.log('[Vinted AI] Export downloaded:', filename)
+			success('Export téléchargé avec succès')
 		} else {
 			console.error('[Vinted AI] Export failed:', response.error)
+			showError(response.error ?? "Erreur lors de l'export")
 		}
-	}, [analysis, sendMessage])
+	}, [analysis, sendMessage, success, showError])
 
 	// Handle refresh analysis (force re-analysis, invalidate cache)
 	const handleRefresh = useCallback(async (): Promise<void> => {
@@ -222,44 +266,71 @@ export function App() {
 		await analyzeArticle(articleData, true)
 	}, [articleData, analyzeArticle])
 
-	// Loading state
+	// Handle retry after error
+	const handleRetry = useCallback(async (): Promise<void> => {
+		if (!articleData) return
+		setIsRetrying(true)
+		setError(null)
+		try {
+			await analyzeArticle(articleData, true)
+		} finally {
+			setIsRetrying(false)
+		}
+	}, [articleData, analyzeArticle])
+
+	// Get analyzed time ago text
+	const analyzedTimeAgo = analysis ? formatRelativeTime(analysis.analyzedAt) : null
+
+	// Loading state - show skeleton or minimal loader
 	if (isLoading) {
 		return (
-			<div className="fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 min-w-[200px]">
-				<div className="flex items-center gap-2">
-					<div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-					<span className="text-sm text-gray-600">Analyzing...</span>
+			<>
+				<div className="fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 min-w-[200px] z-[2147483647]">
+					<div className="flex items-center gap-2">
+						<div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+						<span className="text-sm text-gray-600">Chargement de l'article...</span>
+					</div>
 				</div>
-			</div>
+				<ToastContainer toasts={toasts} onDismiss={dismissToast} />
+			</>
 		)
 	}
 
-	// Error state
-	if (error) {
+	// Error state with retry
+	if (error && !analysis) {
 		return (
-			<div className="fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 min-w-[200px]">
-				<div className="flex items-center gap-2 text-red-500">
-					<span className="text-sm">{error}</span>
-				</div>
-			</div>
+			<>
+				<ErrorDisplay
+					message={error}
+					onRetry={articleData ? handleRetry : undefined}
+					isRetrying={isRetrying}
+				/>
+				<ToastContainer toasts={toasts} onDismiss={dismissToast} />
+			</>
 		)
 	}
 
 	// No data state
 	if (!articleData) {
-		return null
+		return <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 	}
 
-	// Main UI - Badge and Sidebar
+	// Main UI - Badge, Sidebar, Skeleton, and Toasts
 	return (
 		<div className="vinted-ai-container">
+			{/* Toast notifications container */}
+			<ToastContainer toasts={toasts} onDismiss={dismissToast} />
+
 			{/* Badge component - shows score on main photo */}
 			<Badge
 				score={analysis?.opportunity.score ?? 0}
 				marginPercent={analysis?.opportunity.marginPercent ?? 0}
 				onOpenSidebar={handleOpenSidebar}
-				isLoading={isAnalyzing}
+				isLoading={isAnalyzing && !analysis}
 			/>
+
+			{/* Skeleton sidebar during initial analysis */}
+			{isAnalyzing && !analysis && <SkeletonSidebar isOpen={sidebarOpen} />}
 
 			{/* Sidebar component - full analysis details panel */}
 			{analysis && (
@@ -272,6 +343,7 @@ export function App() {
 					onRefresh={handleRefresh}
 					cacheInfo={cacheInfo}
 					isRefreshing={isAnalyzing}
+					analyzedTimeAgo={analyzedTimeAgo}
 				/>
 			)}
 		</div>

@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 28/32
-**Current Task:** Task 29 - Implémenter états Loading/Error UI
+**Tasks Completed:** 29/32
+**Current Task:** Task 30 - Tester flow complet end-to-end
 
 ---
 
@@ -1334,3 +1334,66 @@
 - ExtensionSettings interface updated in all 3 files with consistent `openaiApiKey: string` field
 - Default value is empty string ('')
 - Settings are saved to chrome.storage.local via background worker
+
+### 2026-01-18 - Task 29: Implémenter états Loading/Error UI
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/extension/src/content/components/SkeletonSidebar.tsx` - Skeleton loader component for sidebar during analysis
+- `apps/extension/src/content/components/ErrorDisplay.tsx` - Error display component with retry button
+- `apps/extension/src/content/components/Toast.tsx` - Toast notification system with useToast hook
+- `apps/extension/src/content/lib/time.ts` - Utility functions for relative time formatting
+
+**Files Modified:**
+- `apps/extension/src/content/components/index.ts` - Added exports for new components (SkeletonSidebar, ErrorDisplay, ToastContainer, useToast)
+- `apps/extension/src/content/components/Sidebar.tsx` - Added analyzedTimeAgo prop and improved timestamp display
+- `apps/extension/src/content/App.tsx` - Integrated all new components with toast notifications and improved error handling
+
+**Commands Executed:**
+- `npx biome check --write .` - Fixed formatting issues
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+- `npm run build` (in apps/extension) - Verified extension builds successfully
+
+**Features Implemented:**
+
+**Skeleton Loader (SkeletonSidebar.tsx):**
+- Full sidebar skeleton with animated placeholder elements
+- Header section skeleton with score circle placeholder
+- Content sections with pulse animation
+- Footer skeleton with button placeholders
+- Shows during initial analysis when sidebar is open
+
+**Error Display (ErrorDisplay.tsx):**
+- User-friendly error message with error icon
+- Retry button with loading spinner during retry
+- Tips section suggesting to check backend status
+- Proper ARIA attributes for accessibility
+
+**Toast Notifications (Toast.tsx):**
+- Four toast types: success, error, warning, info
+- Auto-dismiss with configurable duration (default 4s, errors 6s)
+- Slide-in/slide-out animations
+- Manual dismiss button
+- useToast hook for easy integration
+- Type-safe with ToastType and ToastMessage interfaces
+
+**Relative Time Display (time.ts):**
+- formatRelativeTime() - Formats dates as "il y a X min", "il y a X heures", etc.
+- formatCacheTimeRemaining() - Formats cache expiration time
+- French locale support
+
+**App.tsx Integration:**
+- Toast notifications for analysis success/error
+- Toast notifications for status updates (Surveiller, Acheté, Vendu)
+- Toast notifications for export success/error
+- ErrorDisplay with retry button for analysis failures
+- SkeletonSidebar shown during initial analysis
+- "Analysé il y a X min" indicator in sidebar footer
+
+**Technical Notes:**
+- Toast container uses maximum z-index (2147483647) for visibility
+- Skeleton uses aria-busy="true" for accessibility
+- Error component has aria-live="assertive" for screen readers
+- All components follow existing design patterns and styling

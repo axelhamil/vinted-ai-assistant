@@ -16,6 +16,7 @@ interface SidebarProps {
 	onRefresh: () => Promise<void>
 	cacheInfo?: { fromCache: boolean; timeRemaining: number } | null
 	isRefreshing?: boolean
+	analyzedTimeAgo?: string | null
 }
 
 /**
@@ -151,6 +152,7 @@ export function Sidebar({
 	onRefresh,
 	cacheInfo,
 	isRefreshing = false,
+	analyzedTimeAgo,
 }: SidebarProps) {
 	const [isExporting, setIsExporting] = useState(false)
 	const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
@@ -665,6 +667,24 @@ export function Sidebar({
 						<div className="flex items-center justify-center gap-1">
 							<span className="inline-block w-2 h-2 bg-green-400 rounded-full" />
 							<span>Depuis le cache (expire dans {formatCacheTime(cacheInfo.timeRemaining)})</span>
+						</div>
+					) : analyzedTimeAgo ? (
+						<div className="flex items-center justify-center gap-1">
+							<svg
+								className="w-3 h-3"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+								aria-hidden="true"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+								/>
+							</svg>
+							<span>Analysé {analyzedTimeAgo}</span>
 						</div>
 					) : (
 						<span>

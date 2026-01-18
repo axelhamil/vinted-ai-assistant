@@ -375,7 +375,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Indicateur 'analysé il y a X min'",
       "Toast notifications"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 30,
