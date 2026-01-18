@@ -124,7 +124,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Implémenter generateNegotiation() avec prompt",
       "Implémenter scoreOpportunity() avec prompt"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 10,

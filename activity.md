@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 8/32
-**Current Task:** Task 9 - Implémenter provider IA (OpenAI)
+**Tasks Completed:** 9/32
+**Current Task:** Task 10 - Setup Inversify (DI Container)
 
 ---
 
@@ -315,3 +315,48 @@
 - Handles nullable fields with default values in toEntity()
 - Preserves domain entity immutability through entity.toProps()
 - Status transitions validated through entity.updateStatus()
+
+### 2026-01-18 - Task 9: Implémenter provider IA (OpenAI)
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/backend/src/infrastructure/providers/ai/openai.provider.ts` - OpenAI provider implementing IAIProvider interface
+- `apps/backend/src/infrastructure/providers/ai/index.ts` - AI provider exports
+- `apps/backend/src/infrastructure/providers/index.ts` - Main providers exports
+
+**Files Modified:**
+- `apps/backend/package.json` - Added ai, @ai-sdk/openai, zod dependencies
+
+**Commands Executed:**
+- `npm install ai @ai-sdk/openai zod` - Installed Vercel AI SDK and dependencies
+- `npx biome check --write .` - Fixed formatting and import order
+- `npx biome check .` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+
+**Provider Methods Implemented:**
+
+**OpenAIProvider:**
+- `analyzePhotos(input)` - Analyzes photos using GPT-4o vision capabilities
+  - Evaluates photo quality (score, lighting, background, hasModel, issues)
+  - Checks authenticity (score, flags, confidence)
+  - Detects brand and model from images
+  - Estimates real condition vs declared
+- `scoreOpportunity(input)` - Calculates opportunity score (1-10)
+  - Factors: margin (35%), photo quality (20%), listing age (15%), seller profile (15%), authenticity (15%)
+  - Returns signals (positive/negative/neutral) with details
+  - Calculates margin in € and %
+- `generateNegotiation(input)` - Generates negotiation script
+  - Suggests offer price (15-25% under asking)
+  - Generates ready-to-copy French script
+  - Provides 3-4 key arguments
+  - Selects appropriate tone (friendly/direct/urgent)
+- `getProviderName()` - Returns "openai"
+- `isAvailable()` - Checks if API key is configured
+
+**Technical Details:**
+- Uses Vercel AI SDK `generateObject` for structured JSON output
+- Zod schemas ensure type-safe responses from LLM
+- Supports image analysis via GPT-4o multimodal capabilities
+- API key configurable via constructor or OPENAI_API_KEY env var
+- Prompts in French matching PRD specifications
