@@ -288,7 +288,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Afficher prix offre suggéré",
       "Afficher arguments clés"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 23,

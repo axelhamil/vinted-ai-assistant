@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 21/32
-**Current Task:** Task 22 - Implémenter section Négociation dans Sidebar
+**Tasks Completed:** 22/32
+**Current Task:** Task 23 - Implémenter section Revente dans Sidebar
 
 ---
 
@@ -1000,3 +1000,47 @@
 - Maximum z-index (2147483647) ensures sidebar stays on top
 - Scrollable content area with fixed header and footer
 - Loading states for async operations (export, status update)
+
+### 2026-01-18 - Task 22: Implémenter section Négociation dans Sidebar
+
+**Status:** Completed
+
+**Files Modified:**
+- `apps/extension/src/content/components/Sidebar.tsx` - Added Negotiation section with all features
+
+**Commands Executed:**
+- `npx biome check --write .` - Fixed formatting issues
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+- `npm run build` (in apps/extension) - Verified extension builds successfully
+
+**Negotiation Section Features:**
+
+**Suggested Offer Display:**
+- Blue highlighted box with suggested offer price
+- Shows percentage reduction from asking price
+- Clear visual hierarchy with large price display
+
+**Tone Indicator:**
+- Shows recommended negotiation tone (Amical/Direct/Urgent)
+- Emoji + label format for quick recognition
+- Helper function `getToneInfo()` for tone mapping
+
+**Script Section:**
+- Full negotiation script ready to send
+- "Copier" button with clipboard API integration
+- Visual feedback on copy (button changes to "Copié !" with checkmark)
+- 2-second timeout to reset copy state
+- Script displayed in gray box with italic styling and quotes
+
+**Arguments Section:**
+- Lists key arguments for negotiation
+- Blue bullet points for visual consistency
+- Only displays when arguments are available
+
+**Technical Notes:**
+- Added `NegotiationTone` type import from @vinted-ai/shared
+- Added `isCopied` state for copy button feedback
+- Added `handleCopyScript` callback using navigator.clipboard API
+- Added `getToneInfo()` helper function for tone display
+- Uses Section component for consistent styling with other sections

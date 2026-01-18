@@ -1,4 +1,9 @@
-import type { AnalysisResult, AnalysisStatus, OpportunitySignal } from '@vinted-ai/shared'
+import type {
+	AnalysisResult,
+	AnalysisStatus,
+	NegotiationTone,
+	OpportunitySignal,
+} from '@vinted-ai/shared'
 import { useCallback, useState } from 'react'
 
 interface SidebarProps {
@@ -43,6 +48,20 @@ function getConfidenceBadge(confidence: 'low' | 'medium' | 'high'): {
 			return { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Moyenne' }
 		case 'low':
 			return { bg: 'bg-red-100', text: 'text-red-700', label: 'Faible' }
+	}
+}
+
+/**
+ * Gets the tone label and emoji based on negotiation tone
+ */
+function getToneInfo(tone: NegotiationTone): { emoji: string; label: string } {
+	switch (tone) {
+		case 'friendly':
+			return { emoji: '😊', label: 'Amical' }
+		case 'direct':
+			return { emoji: '💼', label: 'Direct' }
+		case 'urgent':
+			return { emoji: '⚡', label: 'Urgent' }
 	}
 }
 
@@ -112,6 +131,17 @@ export function Sidebar({
 }: SidebarProps) {
 	const [isExporting, setIsExporting] = useState(false)
 	const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+	const [isCopied, setIsCopied] = useState(false)
+
+	const handleCopyScript = useCallback(async (script: string) => {
+		try {
+			await navigator.clipboard.writeText(script)
+			setIsCopied(true)
+			setTimeout(() => setIsCopied(false), 2000)
+		} catch (error) {
+			console.error('Failed to copy script:', error)
+		}
+	}, [])
 
 	const handleExport = useCallback(async () => {
 		setIsExporting(true)
@@ -138,8 +168,9 @@ export function Sidebar({
 		return null
 	}
 
-	const { opportunity, marketPrice, authenticityCheck } = analysis
+	const { opportunity, marketPrice, authenticityCheck, negotiation } = analysis
 	const confidenceBadge = getConfidenceBadge(marketPrice.confidence)
+	const toneInfo = getToneInfo(negotiation.tone)
 
 	return (
 		<aside
@@ -321,6 +352,103 @@ export function Sidebar({
 					{authenticityCheck.flags.length === 0 && (
 						<div className="bg-green-50 border border-green-200 rounded p-2 text-xs text-green-700">
 							✓ Aucun problème d'authenticité détecté
+						</div>
+					)}
+				</Section>
+
+				{/* Négociation Section */}
+				<Section title="🤝 Négociation">
+					{/* Suggested Offer */}
+					<div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+						<div className="flex items-center justify-between mb-1">
+							<span className="text-sm text-gray-600">Offre suggérée</span>
+							<span className="text-xl font-bold text-blue-600">{negotiation.suggestedOffer}€</span>
+						</div>
+						<div className="text-xs text-gray-500">
+							{Math.round(((analysis.price - negotiation.suggestedOffer) / analysis.price) * 100)}%
+							de réduction par rapport au prix demandé
+						</div>
+					</div>
+
+					{/* Tone indicator */}
+					<div className="flex items-center gap-2 mb-3">
+						<span className="text-sm text-gray-600">Ton recommandé:</span>
+						<span className="px-2 py-1 bg-gray-100 rounded text-sm font-medium">
+							{toneInfo.emoji} {toneInfo.label}
+						</span>
+					</div>
+
+					{/* Script */}
+					<div className="mb-3">
+						<div className="flex items-center justify-between mb-2">
+							<span className="text-sm font-medium text-gray-700">Script prêt à envoyer:</span>
+							<button
+								type="button"
+								onClick={() => handleCopyScript(negotiation.script)}
+								className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+									isCopied
+										? 'bg-green-100 text-green-700'
+										: 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+								}`}
+							>
+								{isCopied ? (
+									<>
+										<svg
+											className="w-3.5 h-3.5"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+											aria-hidden="true"
+										>
+											<path
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												strokeWidth={2}
+												d="M5 13l4 4L19 7"
+											/>
+										</svg>
+										Copié !
+									</>
+								) : (
+									<>
+										<svg
+											className="w-3.5 h-3.5"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+											aria-hidden="true"
+										>
+											<path
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												strokeWidth={2}
+												d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+											/>
+										</svg>
+										Copier
+									</>
+								)}
+							</button>
+						</div>
+						<div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+							<p className="text-sm text-gray-700 whitespace-pre-wrap italic">
+								"{negotiation.script}"
+							</p>
+						</div>
+					</div>
+
+					{/* Arguments */}
+					{negotiation.arguments.length > 0 && (
+						<div>
+							<span className="text-sm font-medium text-gray-700 block mb-2">Arguments clés:</span>
+							<ul className="space-y-1.5">
+								{negotiation.arguments.map((argument) => (
+									<li key={argument} className="flex items-start gap-2 text-sm text-gray-600">
+										<span className="text-blue-500 mt-0.5">•</span>
+										<span>{argument}</span>
+									</li>
+								))}
+							</ul>
 						</div>
 					)}
 				</Section>
