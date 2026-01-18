@@ -1,6 +1,6 @@
-import type { AnalysisResult, VintedArticleData } from '@vinted-ai/shared'
+import type { AnalysisResult, AnalysisStatus, VintedArticleData } from '@vinted-ai/shared'
 import { useCallback, useEffect, useState } from 'react'
-import { Badge } from './components'
+import { Badge, Sidebar } from './components'
 import { parseVintedArticle, waitForPageLoad } from './lib/parser'
 
 interface ApiResponse<T> {
@@ -120,6 +120,65 @@ export function App() {
 		setSidebarOpen(true)
 	}, [])
 
+	// Handle sidebar close
+	const handleCloseSidebar = useCallback(() => {
+		setSidebarOpen(false)
+	}, [])
+
+	// Handle status update
+	const handleUpdateStatus = useCallback(
+		async (status: AnalysisStatus): Promise<void> => {
+			if (!analysis) return
+
+			const response = await sendMessage<AnalysisResult>({
+				type: 'UPDATE_STATUS',
+				vintedId: analysis.vintedId,
+				status,
+			})
+
+			if (response.success && response.data) {
+				setAnalysis(response.data)
+				console.log('[Vinted AI] Status updated to:', status)
+			} else {
+				console.error('[Vinted AI] Failed to update status:', response.error)
+			}
+		},
+		[analysis, sendMessage]
+	)
+
+	// Handle export to markdown
+	const handleExport = useCallback(async (): Promise<void> => {
+		if (!analysis) return
+
+		const response = await sendMessage<string>({
+			type: 'EXPORT_MARKDOWN',
+			vintedId: analysis.vintedId,
+		})
+
+		if (response.success && response.data) {
+			// Create and trigger download
+			const blob = new Blob([response.data], { type: 'text/markdown' })
+			const url = URL.createObjectURL(blob)
+			const link = document.createElement('a')
+			const filename = `${analysis.brand ?? 'vinted'}_${analysis.title.slice(0, 30).replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.md`
+			link.href = url
+			link.download = filename
+			document.body.appendChild(link)
+			link.click()
+			document.body.removeChild(link)
+			URL.revokeObjectURL(url)
+			console.log('[Vinted AI] Export downloaded:', filename)
+		} else {
+			console.error('[Vinted AI] Export failed:', response.error)
+		}
+	}, [analysis, sendMessage])
+
+	// Handle refresh analysis
+	const handleRefresh = useCallback(async (): Promise<void> => {
+		if (!articleData) return
+		await analyzeArticle(articleData)
+	}, [articleData, analyzeArticle])
+
 	// Loading state
 	if (isLoading) {
 		return (
@@ -159,62 +218,16 @@ export function App() {
 				isLoading={isAnalyzing}
 			/>
 
-			{/* Sidebar component will be rendered here (Task 21) */}
-			{sidebarOpen && (
-				<div className="fixed top-0 right-0 w-96 h-full bg-white shadow-2xl border-l border-gray-200 z-[2147483647] overflow-y-auto">
-					<div className="p-4">
-						<div className="flex items-center justify-between mb-4">
-							<h2 className="text-lg font-semibold text-gray-800">Analyse IA</h2>
-							<button
-								type="button"
-								onClick={() => setSidebarOpen(false)}
-								className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
-								aria-label="Fermer"
-							>
-								<svg
-									className="w-5 h-5"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-									aria-hidden="true"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M6 18L18 6M6 6l12 12"
-									/>
-								</svg>
-							</button>
-						</div>
-
-						{/* Placeholder content until Sidebar component is implemented in Task 21 */}
-						{analysis ? (
-							<div className="space-y-4">
-								<div className="text-center p-4 bg-gray-50 rounded-lg">
-									<div className="text-3xl font-bold text-gray-800">
-										{analysis.opportunity.score}/10
-									</div>
-									<div className="text-sm text-gray-600 mt-1">Score d'opportunité</div>
-								</div>
-
-								<div className="p-3 bg-green-50 rounded-lg border border-green-200">
-									<div className="text-sm font-medium text-green-800">Marge potentielle</div>
-									<div className="text-lg font-bold text-green-600">
-										+{analysis.opportunity.margin.toFixed(0)}€ (
-										{analysis.opportunity.marginPercent.toFixed(0)}%)
-									</div>
-								</div>
-
-								<div className="text-xs text-gray-500 text-center">
-									Sidebar complète à venir (Task 21)
-								</div>
-							</div>
-						) : (
-							<div className="text-center text-gray-500">Analyse en cours...</div>
-						)}
-					</div>
-				</div>
+			{/* Sidebar component - full analysis details panel */}
+			{analysis && (
+				<Sidebar
+					analysis={analysis}
+					isOpen={sidebarOpen}
+					onClose={handleCloseSidebar}
+					onUpdateStatus={handleUpdateStatus}
+					onExport={handleExport}
+					onRefresh={handleRefresh}
+				/>
 			)}
 		</div>
 	)

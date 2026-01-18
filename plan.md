@@ -276,7 +276,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Section signaux (liste)",
       "Toggle open/close"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 22,

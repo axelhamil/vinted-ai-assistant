@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 20/32
-**Current Task:** Task 21 - Implémenter composant Sidebar
+**Tasks Completed:** 21/32
+**Current Task:** Task 22 - Implémenter section Négociation dans Sidebar
 
 ---
 
@@ -932,3 +932,71 @@
 - Maximum z-index ensures badge stays visible
 - Accessibility: aria-labels and aria-hidden for screen readers
 - Hover/click interactions with proper event handling
+
+### 2026-01-18 - Task 21: Implémenter composant Sidebar
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/extension/src/content/components/Sidebar.tsx` - Full Sidebar component with analysis details
+
+**Files Modified:**
+- `apps/extension/src/content/components/index.ts` - Added Sidebar export
+- `apps/extension/src/content/App.tsx` - Integrated Sidebar component with callbacks
+
+**Commands Executed:**
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+- `npm run build` (in apps/extension) - Verified extension builds successfully
+
+**Sidebar Component Features:**
+
+**Header Section:**
+- Gradient blue header with branding
+- Large circular score display with color coding
+- Opportunity level label (Excellente affaire/Opportunité moyenne/Prudence conseillée)
+- Confidence badge showing market price confidence level
+- Close button to dismiss sidebar
+
+**Prix Marché Section:**
+- Estimated price range (low - high)
+- Average market price
+- Sources list when available
+
+**Marge Potentielle Section:**
+- Estimated margin in euros
+- Margin percentage
+- Color-coded based on opportunity score
+- Explanatory text comparing market vs asking price
+
+**Signaux Section:**
+- List of positive/negative/neutral signals
+- Each signal shows type icon (✅/❌/ℹ️), label, and detail
+- Color-coded backgrounds by signal type
+
+**Authenticité Section:**
+- Authenticity score with color coding
+- Warning flags when detected (yellow warning box)
+- Green confirmation when no issues
+
+**Footer Actions:**
+- Export .md button with loading state
+- Refresh analysis button
+- Status update buttons (Surveiller, Acheté, Vendu)
+- Dynamic button visibility based on current status
+- Analyzed timestamp
+
+**App Component Updates:**
+- Added handleCloseSidebar callback
+- Added handleUpdateStatus for status transitions
+- Added handleExport for markdown download
+- Added handleRefresh to re-trigger analysis
+- Replaced placeholder sidebar with Sidebar component
+
+**Technical Notes:**
+- Uses semantic `<aside>` element instead of `<div role="dialog">`
+- Unique keys for mapped lists using content instead of index
+- Proper formatting for biome linter compliance
+- Maximum z-index (2147483647) ensures sidebar stays on top
+- Scrollable content area with fixed header and footer
+- Loading states for async operations (export, status update)
