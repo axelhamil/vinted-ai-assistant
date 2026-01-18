@@ -113,6 +113,11 @@ interface StatsResponse {
 	sold: number
 }
 
+interface ExportMarkdownResponse {
+	content: string
+	filename: string
+}
+
 // ============================================================================
 // Constants
 // ============================================================================
@@ -268,8 +273,45 @@ async function updateAnalysisStatus(
 	})
 }
 
-async function exportMarkdown(vintedId: string): Promise<ApiResponse<string>> {
-	return apiRequest<string>(`/api/analyses/${vintedId}/export`)
+async function exportMarkdown(vintedId: string): Promise<ApiResponse<ExportMarkdownResponse>> {
+	const settings = await getSettings()
+	const url = `${settings.backendUrl}/api/analyses/${vintedId}/export`
+
+	try {
+		const response = await fetch(url, {
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		})
+
+		if (!response.ok) {
+			const errorData = await response.json().catch(() => ({}))
+			return {
+				success: false,
+				error:
+					errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`,
+			}
+		}
+
+		const content = await response.text()
+
+		// Extract filename from Content-Disposition header
+		const contentDisposition = response.headers.get('Content-Disposition')
+		let filename = 'analysis.md'
+
+		if (contentDisposition) {
+			// Parse filename from Content-Disposition: attachment; filename="something.md"
+			const filenameMatch = contentDisposition.match(/filename="?([^";\n]+)"?/i)
+			if (filenameMatch?.[1]) {
+				filename = filenameMatch[1]
+			}
+		}
+
+		return { success: true, data: { content, filename } }
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+		return { success: false, error: `Network error: ${errorMessage}` }
+	}
 }
 
 async function getStats(): Promise<ApiResponse<StatsResponse>> {
@@ -374,4 +416,11 @@ chrome.runtime.onStartup.addListener(async () => {
 
 console.log('Vinted AI Assistant - Background service worker loaded')
 
-export type { ExtensionMessage, ExtensionSettings, ExtensionState, ApiResponse, StatsResponse }
+export type {
+	ExtensionMessage,
+	ExtensionSettings,
+	ExtensionState,
+	ApiResponse,
+	StatsResponse,
+	ExportMarkdownResponse,
+}

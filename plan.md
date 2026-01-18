@@ -312,7 +312,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Déclencher téléchargement fichier",
       "Nommer fichier: {brand}_{title}_{date}.md"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 25,

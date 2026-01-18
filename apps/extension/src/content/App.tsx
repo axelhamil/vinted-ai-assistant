@@ -9,6 +9,11 @@ interface ApiResponse<T> {
 	error?: string
 }
 
+interface ExportMarkdownResponse {
+	content: string
+	filename: string
+}
+
 /**
  * Main content script App component
  * Renders the analysis UI (Badge and Sidebar) when on a Vinted article page
@@ -150,17 +155,18 @@ export function App() {
 	const handleExport = useCallback(async (): Promise<void> => {
 		if (!analysis) return
 
-		const response = await sendMessage<string>({
+		const response = await sendMessage<ExportMarkdownResponse>({
 			type: 'EXPORT_MARKDOWN',
 			vintedId: analysis.vintedId,
 		})
 
 		if (response.success && response.data) {
+			const { content, filename } = response.data
+
 			// Create and trigger download
-			const blob = new Blob([response.data], { type: 'text/markdown' })
+			const blob = new Blob([content], { type: 'text/markdown' })
 			const url = URL.createObjectURL(blob)
 			const link = document.createElement('a')
-			const filename = `${analysis.brand ?? 'vinted'}_${analysis.title.slice(0, 30).replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.md`
 			link.href = url
 			link.download = filename
 			document.body.appendChild(link)
