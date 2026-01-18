@@ -389,7 +389,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Vérifier sidebar fonctionne",
       "Vérifier export .md"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 31,

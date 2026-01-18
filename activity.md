@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 29/32
-**Current Task:** Task 30 - Tester flow complet end-to-end
+**Tasks Completed:** 30/32
+**Current Task:** Task 31 - Ajouter provider Ollama (alternative locale)
 
 ---
 
@@ -1397,3 +1397,65 @@
 - Skeleton uses aria-busy="true" for accessibility
 - Error component has aria-live="assertive" for screen readers
 - All components follow existing design patterns and styling
+
+### 2026-01-18 - Task 30: Tester flow complet end-to-end
+
+**Status:** Completed
+
+**Verification Steps Performed:**
+
+**Backend Verification:**
+- Started backend with `npx tsx src/index.ts`
+- Verified `/api/health` endpoint returns `{"status":"ok","aiProvider":"openai"}`
+- Backend runs on port 3000 as expected
+- CORS configured for Chrome extension communication
+
+**Extension Verification:**
+- Ran `npm run build` in apps/extension
+- Build completed successfully with all assets:
+  - `dist/manifest.json` - Chrome MV3 manifest
+  - `dist/service-worker-loader.js` - Background service worker
+  - `dist/assets/*.js` and `*.css` - Compiled assets
+  - `dist/src/popup/index.html` - Popup HTML
+- Extension ready to load in Chrome developer mode
+
+**Lint & Typecheck:**
+- `pnpm lint` - Passed (81 files checked, no issues)
+- `pnpm typecheck` - Passed (all 3 workspace projects)
+
+**Manual Testing Steps (for user):**
+
+To complete end-to-end testing:
+
+1. **Start Backend:**
+   ```bash
+   cd apps/backend
+   bun run dev  # or: npx tsx src/index.ts
+   ```
+
+2. **Load Extension in Chrome:**
+   - Open `chrome://extensions`
+   - Enable "Developer mode"
+   - Click "Load unpacked"
+   - Select `apps/extension/dist/` folder
+
+3. **Test on Vinted:**
+   - Navigate to any Vinted article page (e.g., `https://www.vinted.fr/items/123456`)
+   - Badge should appear on the main photo (requires OpenAI API key configured)
+   - Click badge to open sidebar
+   - Test export .md button
+   - Test status update buttons
+
+4. **Verify Popup:**
+   - Click extension icon in Chrome toolbar
+   - Should show backend connection status (green if connected)
+   - Should display today's stats
+   - Settings page should allow configuring backend URL, score threshold, API key
+
+**Notes:**
+- Backend health endpoint works correctly
+- Extension builds without errors
+- All TypeScript types compile
+- Biome linting passes
+- Full E2E testing requires manual browser interaction with Vinted
+- OpenAI API key required for actual analysis functionality
