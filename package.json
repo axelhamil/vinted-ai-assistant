@@ -1,0 +1,21 @@
+{
+	"name": "vinted-ai-assistant",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "pnpm --parallel -r dev",
+		"build": "pnpm -r build",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"typecheck": "pnpm -r typecheck"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"typescript": "^5.7.2"
+	},
+	"packageManager": "pnpm@9.15.4",
+	"engines": {
+		"node": ">=20.0.0"
+	}
+}
