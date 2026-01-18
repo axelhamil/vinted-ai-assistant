@@ -49,7 +49,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Ajouter route GET /api/health",
       "Vérifier que bun run dev démarre"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 4,

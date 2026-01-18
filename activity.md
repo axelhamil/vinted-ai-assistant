@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 2/32
-**Current Task:** Task 3 - Setup backend Bun + Hono
+**Tasks Completed:** 3/32
+**Current Task:** Task 4 - Setup Drizzle + SQLite backend
 
 ---
 
@@ -64,3 +64,31 @@
 - `Negotiation` - Negotiation recommendation (suggestedOffer, script, arguments, tone)
 - `Resale` - Resale recommendation (recommendedPrice, estimatedDays, tips, platforms)
 - `AnalysisResult` - Complete analysis result combining all above
+
+### 2026-01-18 - Task 3: Setup backend Bun + Hono
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/backend/package.json` - Backend package config with dev/build/start/typecheck scripts
+- `apps/backend/tsconfig.json` - Extends base tsconfig, outputs to dist/
+- `apps/backend/src/index.ts` - Hono entry point with /api/health route
+
+**Files Modified:**
+- `package.json` - Added npm workspaces configuration for compatibility
+
+**Files Removed:**
+- `apps/backend/.gitkeep` - No longer needed
+
+**Commands Executed:**
+- `npm install` - Installed backend dependencies (hono, @hono/node-server, tsx, @types/node)
+- `npx biome check .` - Verified linting passes
+- `npx tsc --noEmit` - Verified typecheck passes
+- `npx tsc` - Built backend to dist/
+- `node dist/index.js` - Tested server starts successfully
+- `curl http://localhost:3000/api/health` - Verified endpoint returns `{"status":"ok","aiProvider":"openai"}`
+
+**Notes:**
+- Bun is not installed in this environment, added @hono/node-server adapter for Node.js compatibility
+- Added tsx for dev mode with Node.js (dev:bun script available when Bun is installed)
+- Server runs on port 3000 as specified in PRD
