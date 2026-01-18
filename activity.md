@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 17/32
-**Current Task:** Task 18 - Implémenter parser DOM Vinted
+**Tasks Completed:** 18/32
+**Current Task:** Task 19 - Setup React + Shadow DOM pour content script
 
 ---
 
@@ -764,3 +764,63 @@
 - Type-safe message handling with discriminated unions
 - All API responses wrapped in ApiResponse<T> interface
 - Exports types for use by content scripts and popup
+
+### 2026-01-18 - Task 18: Implémenter parser DOM Vinted
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/extension/src/content/lib/parser.ts` - Vinted DOM parser with all extraction functions
+
+**Commands Executed:**
+- `npx biome check --write .` - Fixed formatting issues
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+- `npm run build` (in apps/extension) - Verified extension builds successfully
+
+**Parser Functions Implemented:**
+
+**Core Extraction Functions:**
+- `extractVintedId()` - Extracts article ID from URL path `/items/{id}`
+- `extractTitle()` - Extracts title using multiple selectors (data-testid, itemprop, h1)
+- `extractPrice()` - Extracts price from DOM elements or JSON-LD structured data
+- `extractDescription()` - Extracts article description
+- `extractPhotos()` - Extracts photo URLs from image galleries and JSON-LD, with high-res URL resolution
+- `extractBrand()` - Extracts brand from dedicated elements, JSON-LD, or details text
+- `extractSize()` - Extracts size from dedicated elements or details text
+- `extractCondition()` - Extracts condition with schema.org mapping
+
+**Seller Extraction:**
+- `extractSeller()` - Extracts full VintedSeller object:
+  - username from profile links
+  - rating from rating elements
+  - salesCount from sales count text
+  - responseTime from seller info block
+  - lastSeen from activity indicators
+
+**Additional Extraction:**
+- `extractListedAt()` - Parses listing date from JSON-LD or relative date strings (French: "il y a X jours")
+- `extractViews()` - Extracts view count
+- `extractFavorites()` - Extracts favorites count
+
+**Utility Functions:**
+- `extractJsonLd()` - Parses JSON-LD Product structured data from page
+- `isValidPhotoUrl()` - Validates Vinted photo URLs
+- `getHighResolutionUrl()` - Removes size constraints from image URLs
+- `parseHighestResFromSrcset()` - Gets highest resolution from srcset attribute
+- `parseRelativeDate()` - Converts French relative dates to Date objects
+- `getItemDetailsText()` - Gets text from item details section
+
+**Main Functions:**
+- `parseVintedArticle()` - Main function combining all extractors, returns `VintedArticleData | null`
+- `waitForPageLoad()` - Promise-based wait for page load with 500ms delay for dynamic content
+- `observePageChanges()` - MutationObserver for re-parsing on DOM changes (debounced)
+
+**Technical Details:**
+- Typed VintedJsonLd interface for JSON-LD structured data
+- Uses optional chaining and nullish coalescing for safe property access
+- Multiple fallback selectors for each data type
+- French locale support for relative date parsing
+- High-resolution image URL extraction from srcset
+- Debounced DOM mutation observer (300ms)
+- Full TypeScript strict mode compliance (no `any`)

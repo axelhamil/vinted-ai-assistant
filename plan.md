@@ -237,7 +237,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Extraire infos vendeur",
       "Extraire marque, taille, état"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 19,
