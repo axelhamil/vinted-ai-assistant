@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 4/32
-**Current Task:** Task 5 - Setup extension Chrome avec Vite + CRXJS
+**Tasks Completed:** 5/32
+**Current Task:** Task 6 - Implémenter couche Domain
 
 ---
 
@@ -135,3 +135,43 @@
 - WAL mode enabled for better concurrent performance
 - All JSON columns properly typed with Drizzle's $type<> helper
 - Export types: Analysis (select) and NewAnalysis (insert)
+
+### 2026-01-18 - Task 5: Setup extension Chrome avec Vite + CRXJS
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/extension/package.json` - Extension package config with React 19, Vite, CRXJS, Tailwind, Zustand, Dexie
+- `apps/extension/tsconfig.json` - TypeScript config with JSX support and Chrome types
+- `apps/extension/vite.config.ts` - Vite config with CRXJS plugin for Chrome extension building
+- `apps/extension/manifest.json` - Chrome MV3 manifest with content scripts, background service worker, popup
+- `apps/extension/tailwind.config.ts` - Tailwind CSS configuration
+- `apps/extension/postcss.config.js` - PostCSS configuration for Tailwind
+- `apps/extension/src/background/index.ts` - Background service worker with message listeners
+- `apps/extension/src/content/index.tsx` - Content script entry point detecting Vinted article pages
+- `apps/extension/src/popup/index.html` - Popup HTML entry point
+- `apps/extension/src/popup/index.tsx` - Popup React entry point
+- `apps/extension/src/popup/App.tsx` - Main popup component
+- `apps/extension/src/popup/styles.css` - Tailwind CSS imports
+
+**Files Removed:**
+- `apps/extension/.gitkeep` - No longer needed
+
+**Commands Executed:**
+- `npm install` - Installed all workspace dependencies (React, Vite, CRXJS, Tailwind, etc.)
+- `npm run lint -- --write` - Fixed formatting issues
+- `npm run lint` - Verified linting passes
+- `npm run typecheck` - Verified TypeScript compiles
+- `npm run build` (in apps/extension) - Built extension, verified dist/ generation
+
+**Build Output:**
+- `dist/manifest.json` - Compiled MV3 manifest
+- `dist/service-worker-loader.js` - Background service worker loader
+- `dist/assets/` - Compiled JS and CSS assets
+- `dist/src/popup/index.html` - Popup HTML
+
+**Notes:**
+- Using @crxjs/vite-plugin beta for Vite 6 compatibility
+- Icons removed from manifest temporarily (optional for development)
+- Extension targets `https://www.vinted.fr/items/*` URLs
+- Build produces valid Chrome extension ready to load in developer mode

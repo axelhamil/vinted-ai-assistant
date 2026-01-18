@@ -1,0 +1,22 @@
+{
+	"manifest_version": 3,
+	"name": "Vinted AI Assistant",
+	"version": "1.0.0",
+	"description": "Analyse IA des opportunités de revente sur Vinted",
+	"permissions": ["storage", "activeTab"],
+	"host_permissions": ["https://www.vinted.fr/*"],
+	"background": {
+		"service_worker": "src/background/index.ts",
+		"type": "module"
+	},
+	"content_scripts": [
+		{
+			"matches": ["https://www.vinted.fr/items/*"],
+			"js": ["src/content/index.tsx"],
+			"run_at": "document_idle"
+		}
+	],
+	"action": {
+		"default_popup": "src/popup/index.html"
+	}
+}

@@ -75,7 +75,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Créer structure src/ (background, content, popup)",
       "Vérifier que pnpm build génère le dist/"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 6,
