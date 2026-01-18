@@ -111,7 +111,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Implémenter save(), findByVintedId(), findAll(), updateStatus()",
       "Implémenter le mapper entity <-> db record"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 9,

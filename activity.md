@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 7/32
-**Current Task:** Task 8 - Implémenter repository Drizzle
+**Tasks Completed:** 8/32
+**Current Task:** Task 9 - Implémenter provider IA (OpenAI)
 
 ---
 
@@ -280,3 +280,38 @@
 - Interfaces define contracts between layers
 - DTOs handle data transformation at boundaries
 - All types are strictly typed (no any)
+
+### 2026-01-18 - Task 8: Implémenter repository Drizzle
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/backend/src/infrastructure/repositories/drizzle-analysis.repository.ts` - Full Drizzle implementation of IAnalysisRepository
+- `apps/backend/src/infrastructure/repositories/index.ts` - Repository exports
+
+**Commands Executed:**
+- `pnpm lint` - Verified linting passes (fixed import order and unused imports)
+- `pnpm typecheck` - Verified TypeScript compiles
+
+**Repository Methods Implemented:**
+
+**DrizzleAnalysisRepository:**
+- `save(analysis)` - Insert or update analysis (upsert based on vintedId)
+- `findByVintedId(vintedId)` - Find by Vinted ID
+- `findById(id)` - Find by internal ID
+- `findAll(options)` - List with pagination, minScore filter, status filter, ordered by analyzedAt desc
+- `count(options)` - Count matching analyses with filters
+- `updateStatus(vintedId, status)` - Update analysis status using entity's status transition validation
+- `delete(vintedId)` - Delete analysis, returns boolean based on changes
+- `exists(vintedId)` - Check if analysis exists
+
+**Mapper Methods:**
+- `toDbRecord(entity)` - Convert AnalysisEntity to NewAnalysis database record
+- `toEntity(record)` - Convert Analysis database record to AnalysisEntity
+
+**Notes:**
+- Full entity-to-database mapping for all 38+ columns
+- Uses drizzle-orm operators: and, count, desc, eq, gte
+- Handles nullable fields with default values in toEntity()
+- Preserves domain entity immutability through entity.toProps()
+- Status transitions validated through entity.updateStatus()
