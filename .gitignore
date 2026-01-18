@@ -13,6 +13,8 @@ build/
 # Database
 *.db
 *.db-journal
+*.db-shm
+*.db-wal
 
 # Environment
 .env
@@ -39,3 +41,12 @@ drizzle/
 
 # Extension build
 apps/extension/dist/
+
+# pnpm store
+.pnpm-store/
+
+# Playwright
+.playwright-mcp/
+
+# Claude settings
+.claude/settings.json
