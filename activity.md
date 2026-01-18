@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 15/32
-**Current Task:** Task 16 - Ajouter CORS et error handling global
+**Tasks Completed:** 16/32
+**Current Task:** Task 17 - Implémenter Background Service Worker
 
 ---
 
@@ -655,3 +655,49 @@
 - Route-level error handler catches ValidationError and returns 400 with formatted response
 - All validators return typed data matching Zod schema inferences
 - Uses ZodError.issues for detailed error messages
+
+### 2026-01-18 - Task 16: Ajouter CORS et error handling global
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/backend/src/routes/middleware/error-handler.middleware.ts` - Global error handler middleware with logging
+
+**Files Modified:**
+- `apps/backend/src/routes/middleware/index.ts` - Added export for error handler middleware
+- `apps/backend/src/index.ts` - Added CORS middleware and global error handler
+
+**Commands Executed:**
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+
+**CORS Configuration:**
+- Uses Hono's built-in `cors()` middleware
+- Configured to allow all origins (`*`) - necessary for Chrome extensions which have unique `chrome-extension://` origins
+- Allowed methods: GET, POST, PATCH, DELETE, OPTIONS
+- Allowed headers: Content-Type, Authorization
+- Exposed headers: Content-Disposition (for file downloads)
+- Max age: 86400 seconds (24 hours) for preflight caching
+
+**Error Handler Middleware:**
+- Global error handler catches all errors in the middleware chain
+- Handles ValidationError → 400 Bad Request with formatted details
+- Handles AnalysisNotFoundError → 404 Not Found
+- Handles other DomainErrors → 400 Bad Request
+- Handles unknown errors → 500 Internal Server Error
+- Logs all errors with timestamp, error name, message, and stack trace
+
+**Error Response Format:**
+```json
+{
+  "error": "Error Type",
+  "message": "Error description",
+  "details": [{ "field": "fieldName", "message": "Detail message" }]
+}
+```
+
+**Technical Details:**
+- Error handler uses `logError()` helper for consistent logging format
+- Creates formatted error responses with `createErrorResponse()` helper
+- Middleware order: CORS → Error Handler → Routes
+- Error handler wraps `await next()` in try-catch to catch all downstream errors

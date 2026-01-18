@@ -212,7 +212,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Logger les erreurs",
       "Retourner JSON formaté pour toutes les erreurs"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 17,
