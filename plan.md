@@ -161,7 +161,7 @@ Extension Chrome + Backend local pour analyser les opportunités de revente sur 
       "Implémenter getAll() avec pagination",
       "Implémenter getStats()"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": 13,

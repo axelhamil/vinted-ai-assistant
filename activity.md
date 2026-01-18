@@ -3,8 +3,8 @@
 ## Current Status
 
 **Last Updated:** 2026-01-18
-**Tasks Completed:** 11/32
-**Current Task:** Task 12 - Implémenter Use Case GetAnalysis
+**Tasks Completed:** 12/32
+**Current Task:** Task 13 - Implémenter Use Case ExportMarkdown
 
 ---
 
@@ -452,3 +452,44 @@
 - Resale recommendation is generated locally with business logic
 - All AI calls are delegated to the IAIProvider interface
 - Cache TTL is 1 hour (managed by AnalysisEntity)
+
+### 2026-01-18 - Task 12: Implémenter Use Case GetAnalysis
+
+**Status:** Completed
+
+**Files Created:**
+- `apps/backend/src/application/use-cases/get-analysis.use-case.ts` - Use case for retrieving analyses with three methods
+
+**Files Modified:**
+- `apps/backend/src/container/container.ts` - Added GetAnalysisUseCase binding to DI container
+- `apps/backend/src/application/use-cases/index.ts` - Added export for GetAnalysisUseCase
+
+**Commands Executed:**
+- `npx biome check --write .` - Fixed formatting
+- `pnpm lint` - Verified linting passes
+- `pnpm typecheck` - Verified TypeScript compiles
+
+**Use Case Methods Implemented:**
+
+**GetAnalysisUseCase:**
+- `getByVintedId(vintedId)` - Get a single analysis by Vinted article ID
+  - Returns AnalysisResponseDTO
+  - Throws AnalysisNotFoundError if not found
+- `getAll(query)` - List analyses with pagination and filtering
+  - Supports limit, offset, minScore, and status filters
+  - Returns AnalysisListResponseDTO with pagination info
+  - Parallel fetch of analyses and count for performance
+- `getStats()` - Get analysis statistics
+  - Returns today's count, opportunities (score >= 7), bought count, sold count
+  - Uses parallel queries for efficiency
+
+**Technical Details:**
+- Constructor injection of IAnalysisRepository via Inversify
+- Uses existing DTOs: AnalysisResponseDTO, AnalysisListResponseDTO, AnalysisStatsDTO, ListAnalysesQueryDTO
+- Uses toAnalysisResponseDTO helper for entity-to-DTO conversion
+- Registered in DI container as singleton
+
+**Notes:**
+- getStats filters today's analyses in memory after fetching all (for simplicity in MVP)
+- Opportunity threshold is score >= 7 as per PRD specification
+- All methods are async and properly typed
