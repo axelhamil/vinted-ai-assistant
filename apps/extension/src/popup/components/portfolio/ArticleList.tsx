@@ -12,6 +12,7 @@ interface ArticleListProps {
 	isLoading: boolean
 	error: string | null
 	activeTab: PortfolioTab
+	onDeleteArticle?: (vintedId: string) => void
 }
 
 function getEmptyMessage(tab: PortfolioTab): { title: string; description: string } {
@@ -39,7 +40,13 @@ function getEmptyMessage(tab: PortfolioTab): { title: string; description: strin
 	}
 }
 
-export function ArticleList({ articles, isLoading, error, activeTab }: ArticleListProps) {
+export function ArticleList({
+	articles,
+	isLoading,
+	error,
+	activeTab,
+	onDeleteArticle,
+}: ArticleListProps) {
 	if (isLoading) {
 		return (
 			<div className="flex flex-col gap-2 p-3">
@@ -87,7 +94,7 @@ export function ArticleList({ articles, isLoading, error, activeTab }: ArticleLi
 	return (
 		<div className="flex flex-col gap-2 p-3">
 			{articles.map((article) => (
-				<ArticleCard key={article.id} article={article} />
+				<ArticleCard key={article.id} article={article} onDelete={onDeleteArticle} />
 			))}
 		</div>
 	)

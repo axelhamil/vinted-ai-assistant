@@ -15,7 +15,8 @@ interface PortfolioViewProps {
 
 export function PortfolioView({ onBack, scoreThreshold = 7 }: PortfolioViewProps) {
 	const [activeTab, setActiveTab] = useState<PortfolioTab>('watching')
-	const { articles, stats, isLoading, error, fetchArticles, fetchStats } = usePortfolio()
+	const { articles, stats, isLoading, error, fetchArticles, fetchStats, deleteArticle } =
+		usePortfolio()
 
 	// Fetch stats on mount
 	useEffect(() => {
@@ -61,6 +62,7 @@ export function PortfolioView({ onBack, scoreThreshold = 7 }: PortfolioViewProps
 					isLoading={isLoading}
 					error={error}
 					activeTab={activeTab}
+					onDeleteArticle={deleteArticle}
 				/>
 			</div>
 

@@ -49,6 +49,7 @@ export type MessageType =
 	| 'REGENERATE_NEGOTIATION'
 	| 'GET_PORTFOLIO'
 	| 'GET_PORTFOLIO_STATS'
+	| 'DELETE_PORTFOLIO_ITEM'
 
 interface BaseMessage {
 	type: MessageType
@@ -121,6 +122,11 @@ export interface GetPortfolioStatsMessage extends BaseMessage {
 	type: 'GET_PORTFOLIO_STATS'
 }
 
+export interface DeletePortfolioItemMessage extends BaseMessage {
+	type: 'DELETE_PORTFOLIO_ITEM'
+	vintedId: string
+}
+
 export type ExtensionMessage =
 	| AnalyzeArticleMessage
 	| GetAnalysisMessage
@@ -135,6 +141,7 @@ export type ExtensionMessage =
 	| RegenerateNegotiationMessage
 	| GetPortfolioMessage
 	| GetPortfolioStatsMessage
+	| DeletePortfolioItemMessage
 
 // ============================================================================
 // API Response Types

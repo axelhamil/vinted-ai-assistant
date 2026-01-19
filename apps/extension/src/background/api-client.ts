@@ -197,3 +197,11 @@ export async function getPortfolio(filter: {
 export async function getPortfolioStats(): Promise<ApiResponse<PortfolioStatsResponse>> {
 	return apiRequest<PortfolioStatsResponse>('/api/portfolio/stats')
 }
+
+export async function deletePortfolioItem(
+	vintedId: string
+): Promise<ApiResponse<{ success: boolean }>> {
+	return apiRequest<{ success: boolean }>(`/api/portfolio/${vintedId}`, {
+		method: 'DELETE',
+	})
+}

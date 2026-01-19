@@ -1,11 +1,15 @@
 import type { AnalysisStatus, Negotiation, NegotiationTone } from '@vinted-ai/shared/analysis'
+import type { Context } from 'hono'
 import type { Container } from 'inversify'
 import type {
 	AnalysisListResponseDTO,
 	AnalysisResponseDTO,
 	AnalysisStatsDTO,
 	ListAnalysesQueryDTO,
+	PortfolioListResponseDTO,
+	PortfolioStatsDTO,
 } from '../../application/dtos/analysis.dto'
+import { toPortfolioItemDTO } from '../../application/dtos/analysis.dto'
 import type { ArticleInputDTO } from '../../application/dtos/article.dto'
 import type { IAIProvider } from '../../application/interfaces/providers/ai.provider.interface'
 import type { IAnalysisRepository } from '../../application/interfaces/repositories/analysis.repository.interface'
@@ -141,5 +145,59 @@ export class AnalysisController {
 		})
 
 		return negotiation
+	}
+
+	/**
+	 * GET /api/portfolio
+	 * List items for the portfolio view
+	 */
+	async getPortfolio(query: ListAnalysesQueryDTO): Promise<PortfolioListResponseDTO> {
+		const { limit = 50, offset = 0, minScore, status } = query
+
+		const [analyses, total] = await Promise.all([
+			this.analysisRepository.findAll({ limit, offset, minScore, status }),
+			this.analysisRepository.count({ minScore, status }),
+		])
+
+		const items = analyses.map(toPortfolioItemDTO)
+
+		return {
+			items,
+			total,
+		}
+	}
+
+	/**
+	 * GET /api/portfolio/stats
+	 * Get portfolio statistics
+	 */
+	async getPortfolioStats(): Promise<PortfolioStatsDTO> {
+		const [watchingCount, boughtCount, soldCount, opportunitiesCount] = await Promise.all([
+			this.analysisRepository.count({ status: 'WATCHING' }),
+			this.analysisRepository.count({ status: 'BOUGHT' }),
+			this.analysisRepository.count({ status: 'SOLD' }),
+			this.analysisRepository.count({ minScore: 7 }),
+		])
+
+		return {
+			watching: watchingCount,
+			bought: boughtCount,
+			sold: soldCount,
+			opportunities: opportunitiesCount,
+		}
+	}
+
+	/**
+	 * DELETE /api/portfolio/:vintedId
+	 * Delete an article from the portfolio
+	 */
+	async deletePortfolioItem(c: Context, vintedId: string): Promise<Response> {
+		const deleted = await this.analysisRepository.delete(vintedId)
+
+		if (!deleted) {
+			return c.json({ error: 'Article not found' }, 404)
+		}
+
+		return c.json({ success: true })
 	}
 }

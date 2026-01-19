@@ -119,30 +119,33 @@ export function Sidebar({
 			{/* Header */}
 			<SidebarHeader onClose={onClose} />
 
-			{/* Hero Score */}
-			<HeroScore
-				score={opportunity.score}
-				confidence={marketPrice.confidence}
-				marginPercent={opportunity.marginPercent}
-			/>
-
-			{/* Article Context */}
-			<ArticleContext
-				title={analysis.title}
-				price={analysis.price}
-				brand={analysis.brand}
-				imageUrl={articleImage}
-			/>
-
-			{/* Tab Navigation */}
+			{/* Tab Navigation - fixed at top */}
 			<TabNavigation activeTab={activeTab} onChange={setActiveTab} />
 
-			{/* Scrollable Tab Content */}
-			<div className="flex-1 overflow-y-auto p-5 light-scrollbar bg-surface-secondary">
-				{activeTab === 'insight' && <InsightTab analysis={analysis} photos={photos} seller={seller} />}
-				{activeTab === 'negotiate' && <NegotiateTab analysis={analysis} />}
-				{activeTab === 'resell' && <ResellTab analysis={analysis} />}
-				{activeTab === 'sources' && <SourcesTab sources={analysis.marketPrice.sources} />}
+			{/* Scrollable content area */}
+			<div className="flex-1 overflow-y-auto light-scrollbar">
+				{/* Hero Score */}
+				<HeroScore
+					score={opportunity.score}
+					confidence={marketPrice.confidence}
+					marginPercent={opportunity.marginPercent}
+				/>
+
+				{/* Article Context */}
+				<ArticleContext
+					title={analysis.title}
+					price={analysis.price}
+					brand={analysis.brand}
+					imageUrl={articleImage}
+				/>
+
+				{/* Tab Content */}
+				<div className="p-5 bg-surface-secondary">
+					{activeTab === 'insight' && <InsightTab analysis={analysis} photos={photos} seller={seller} />}
+					{activeTab === 'negotiate' && <NegotiateTab analysis={analysis} />}
+					{activeTab === 'resell' && <ResellTab analysis={analysis} />}
+					{activeTab === 'sources' && <SourcesTab sources={analysis.marketPrice.sources} />}
+				</div>
 			</div>
 
 			{/* Action Bar */}

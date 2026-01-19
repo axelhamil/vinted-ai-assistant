@@ -384,14 +384,16 @@ export function App() {
 			{/* Toast notifications container */}
 			<ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
-			{/* Badge component - shows score on main photo */}
-			<Badge
-				score={analysis?.opportunity.score ?? 0}
-				marginPercent={analysis?.opportunity.marginPercent ?? 0}
-				onOpenSidebar={handleOpenSidebar}
-				isLoading={isAnalyzing && !analysis}
-				loadingMessage={getPhaseMessage()}
-			/>
+			{/* Badge component - shows score on main photo (only when analyzing or has result) */}
+			{(analysis || isAnalyzing) && (
+				<Badge
+					score={analysis?.opportunity.score ?? 0}
+					marginPercent={analysis?.opportunity.marginPercent ?? 0}
+					onOpenSidebar={handleOpenSidebar}
+					isLoading={isAnalyzing && !analysis}
+					loadingMessage={getPhaseMessage()}
+				/>
+			)}
 
 			{/* Floating button - always visible on the right side when sidebar is closed */}
 			<FloatingButton

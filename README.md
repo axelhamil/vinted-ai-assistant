@@ -1,27 +1,27 @@
 # Vinted AI Assistant
 
-> Extension Chrome intelligente qui utilise l'IA pour analyser les annonces Vinted en temps réel.
+> Smart Chrome extension that uses AI to analyze Vinted listings in real-time.
 
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![Bun](https://img.shields.io/badge/Bun-runtime-f9f1e1)
 
-## Fonctionnalités
+## Features
 
-- **Score d'Opportunité (1-10)** — Évaluation instantanée basée sur le prix, la valeur marché, et des signaux clés
-- **Estimation Prix Marché** — Recherche Google en temps réel pour comparer avec 8-10 sources
-- **Scripts de Négociation** — Messages personnalisables (amical, direct, urgent) générés par IA
-- **Conseils Revente** — Prix recommandé et plateformes suggérées
-- **Vérification Authenticité** — Analyse visuelle pour les articles de marque
-- **Analyse Photos** — Évaluation de la qualité et détection des défauts
+- **Opportunity Score (1-10)** — Instant evaluation based on price, market value, and key signals
+- **Market Price Estimation** — Real-time Google search comparing 8-10 sources
+- **Negotiation Scripts** — Customizable AI-generated messages (friendly, direct, urgent)
+- **Resale Tips** — Recommended price and suggested platforms
+- **Authenticity Check** — Visual analysis for branded items
+- **Photo Analysis** — Quality assessment and defect detection
 
 ## Architecture
 
 ```
 vinted-ai-assistant/
 ├── apps/
-│   ├── backend/          # API Hono + Bun
+│   ├── backend/          # Hono + Bun API
 │   │   ├── src/
 │   │   │   ├── adapters/       # Controllers
 │   │   │   ├── application/    # Use cases, DTOs
@@ -37,60 +37,60 @@ vinted-ai-assistant/
 │           └── stores/         # Zustand State
 │
 └── packages/
-    └── shared/           # Types partagés
+    └── shared/           # Shared types
 ```
 
-## Stack Technique
+## Tech Stack
 
-| Composant | Technologies |
+| Component | Technologies |
 |-----------|-------------|
 | **Backend** | Bun, Hono, Drizzle ORM, SQLite |
 | **Extension** | React 19, Vite, Tailwind CSS, Zustand |
-| **IA** | Google Gemini (avec Google Search grounding), OpenAI |
+| **AI** | Google Gemini (with Google Search grounding), OpenAI |
 | **Monorepo** | pnpm workspaces, Turborepo |
 
 ## Installation
 
-### Prérequis
+### Prerequisites
 
 - [Bun](https://bun.sh/) >= 1.0
 - [pnpm](https://pnpm.io/) >= 8.0
-- Clé API Gemini ou OpenAI
+- Gemini or OpenAI API key
 
 ### Setup
 
 ```bash
-# Cloner le repo
+# Clone the repo
 git clone https://github.com/your-username/vinted-ai-assistant.git
 cd vinted-ai-assistant
 
-# Installer les dépendances
+# Install dependencies
 pnpm install
 
-# Configurer l'environnement
+# Configure environment
 cp apps/backend/.env.example apps/backend/.env
-# Éditer .env avec votre clé API
+# Edit .env with your API key
 
-# Lancer le backend
+# Start the backend
 pnpm --filter backend dev
 
-# Builder l'extension
+# Build the extension
 pnpm --filter extension build
 ```
 
-### Charger l'extension dans Chrome
+### Load extension in Chrome
 
-1. Ouvrir `chrome://extensions/`
-2. Activer le "Mode développeur"
-3. Cliquer "Charger l'extension non empaquetée"
-4. Sélectionner le dossier `apps/extension/dist/`
+1. Open `chrome://extensions/`
+2. Enable "Developer mode"
+3. Click "Load unpacked"
+4. Select the `apps/extension/dist/` folder
 
 ## Configuration
 
-### Variables d'environnement (Backend)
+### Environment Variables (Backend)
 
 ```env
-# AI Provider (choisir un)
+# AI Provider (choose one)
 GEMINI_API_KEY=your_gemini_api_key
 OPENAI_API_KEY=your_openai_api_key
 
@@ -98,32 +98,32 @@ OPENAI_API_KEY=your_openai_api_key
 PORT=3000
 ```
 
-### Paramètres Extension
+### Extension Settings
 
-Accessible via le popup de l'extension :
-- **URL Backend** — Par défaut `http://localhost:3000`
-- **Seuil Score** — Score minimum pour notification (défaut: 7)
-- **Auto-open Sidebar** — Ouvrir automatiquement la sidebar
+Accessible via the extension popup:
+- **Backend URL** — Default `http://localhost:3000`
+- **Score Threshold** — Minimum score for notification (default: 7)
+- **Auto-open Sidebar** — Automatically open the sidebar
 
-## Utilisation
+## Usage
 
-1. Naviguer sur une page article Vinted (ex: `vinted.fr/items/123456`)
-2. L'extension analyse automatiquement l'article
-3. Un badge apparaît sur la photo avec le score
-4. Cliquer pour ouvrir la sidebar avec l'analyse complète
-5. Naviguer entre les onglets : Insight, Négocier, Revendre, Sources
+1. Navigate to a Vinted item page (e.g., `vinted.fr/items/123456`)
+2. The extension automatically analyzes the item
+3. A badge appears on the photo with the score
+4. Click to open the sidebar with the full analysis
+5. Navigate between tabs: Insight, Negotiate, Resell, Sources
 
-## Captures d'écran
+## Screenshots
 
 *Coming soon*
 
-## Développement
+## Development
 
 ```bash
-# Lancer tout en dev
+# Run everything in dev mode
 pnpm dev
 
-# Build production
+# Production build
 pnpm build
 
 # Type check
@@ -135,16 +135,16 @@ pnpm lint
 
 ## Roadmap
 
-- [ ] Support multi-pays (DE, IT, ES, etc.)
-- [ ] Historique des prix
-- [ ] Alertes prix
-- [ ] Export CSV/Excel
-- [ ] Mode sombre
+- [ ] Multi-country support (DE, IT, ES, etc.)
+- [ ] Price history
+- [ ] Price alerts
+- [ ] CSV/Excel export
+- [ ] Dark mode
 
-## Licence
+## License
 
-Ce projet est sous licence [AGPL-3.0](./LICENSE). Toute utilisation du code (y compris en SaaS) oblige à partager les modifications sous la même licence.
+This project is licensed under [AGPL-3.0](./LICENSE). Any use of the code (including SaaS) requires sharing modifications under the same license.
 
 ---
 
-**Disclaimer**: Ce projet n'est pas affilié à Vinted. Utilisez de manière responsable et respectez les conditions d'utilisation de Vinted.
+**Disclaimer**: This project is not affiliated with Vinted. Use responsibly and respect Vinted's terms of service.

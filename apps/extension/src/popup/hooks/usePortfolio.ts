@@ -25,6 +25,7 @@ export interface PortfolioActions {
 	fetchArticles: (status?: ArticleStatus, minScore?: number) => Promise<void>
 	fetchStats: () => Promise<void>
 	refresh: () => Promise<void>
+	deleteArticle: (vintedId: string) => Promise<boolean>
 }
 
 export function usePortfolio(): PortfolioData & PortfolioActions {
@@ -42,7 +43,7 @@ export function usePortfolio(): PortfolioData & PortfolioActions {
 		setError(null)
 		setCurrentFilter({ status, minScore })
 
-		const response = await sendMessage<PortfolioArticle[]>({
+		const response = await sendMessage<{ items: PortfolioArticle[]; total: number }>({
 			type: 'GET_PORTFOLIO',
 			filter: {
 				status,
@@ -53,7 +54,7 @@ export function usePortfolio(): PortfolioData & PortfolioActions {
 		})
 
 		if (response.success && response.data) {
-			setArticles(response.data)
+			setArticles(response.data.items)
 		} else {
 			setError(response.error || 'Erreur lors du chargement')
 			setArticles([])
@@ -76,6 +77,23 @@ export function usePortfolio(): PortfolioData & PortfolioActions {
 		await Promise.all([fetchArticles(currentFilter.status, currentFilter.minScore), fetchStats()])
 	}, [fetchArticles, fetchStats, currentFilter])
 
+	const deleteArticle = useCallback(
+		async (vintedId: string): Promise<boolean> => {
+			const response = await sendMessage<{ success: boolean }>({
+				type: 'DELETE_PORTFOLIO_ITEM',
+				vintedId,
+			})
+
+			if (response.success && response.data?.success) {
+				setArticles((prev) => prev.filter((a) => a.vintedId !== vintedId))
+				await fetchStats()
+				return true
+			}
+			return false
+		},
+		[fetchStats]
+	)
+
 	return {
 		articles,
 		stats,
@@ -84,5 +102,6 @@ export function usePortfolio(): PortfolioData & PortfolioActions {
 		fetchArticles,
 		fetchStats,
 		refresh,
+		deleteArticle,
 	}
 }

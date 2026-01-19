@@ -6,6 +6,7 @@ import type { ApiResponse, ExtensionMessage } from './message-types'
 import {
 	analyzeArticle,
 	checkBackendStatus,
+	deletePortfolioItem,
 	exportMarkdown,
 	getAnalysis,
 	getPortfolio,
@@ -78,6 +79,9 @@ export async function handleMessage(message: ExtensionMessage): Promise<ApiRespo
 
 		case 'GET_PORTFOLIO_STATS':
 			return getPortfolioStats()
+
+		case 'DELETE_PORTFOLIO_ITEM':
+			return deletePortfolioItem(message.vintedId)
 
 		default:
 			return { success: false, error: 'Unknown message type' }

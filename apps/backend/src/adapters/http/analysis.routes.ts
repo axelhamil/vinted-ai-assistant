@@ -25,6 +25,9 @@ import {
  * - POST /api/analyses/:vintedId/regenerate-negotiation
  * - GET /api/analyses/:vintedId/export
  * - GET /api/stats
+ * - GET /api/portfolio
+ * - GET /api/portfolio/stats
+ * - DELETE /api/portfolio/:vintedId
  */
 export function createAnalysisRoutes(container: Container): Hono {
 	const router = new Hono()
@@ -79,6 +82,34 @@ export function createAnalysisRoutes(container: Container): Hono {
 	router.get('/stats', async (c) => {
 		const result = await controller.getStats()
 		return c.json(result)
+	})
+
+	/**
+	 * GET /api/portfolio
+	 * List items for the portfolio view
+	 */
+	router.get('/portfolio', async (c) => {
+		const query = validateQuery(c, listAnalysesQuerySchema)
+		const result = await controller.getPortfolio(query)
+		return c.json(result)
+	})
+
+	/**
+	 * GET /api/portfolio/stats
+	 * Get portfolio statistics
+	 */
+	router.get('/portfolio/stats', async (c) => {
+		const result = await controller.getPortfolioStats()
+		return c.json(result)
+	})
+
+	/**
+	 * DELETE /api/portfolio/:vintedId
+	 * Delete an article from the portfolio
+	 */
+	router.delete('/portfolio/:vintedId', async (c) => {
+		const { vintedId } = validateParams(c, vintedIdParamSchema)
+		return controller.deletePortfolioItem(c, vintedId)
 	})
 
 	/**
