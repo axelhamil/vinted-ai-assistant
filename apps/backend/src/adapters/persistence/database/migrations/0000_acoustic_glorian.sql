@@ -1,4 +1,4 @@
-CREATE TABLE `analyses` (
+CREATE TABLE IF NOT EXISTS `analyses` (
 	`id` text PRIMARY KEY NOT NULL,
 	`vinted_id` text NOT NULL,
 	`url` text NOT NULL,
@@ -39,4 +39,4 @@ CREATE TABLE `analyses` (
 	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `analyses_vinted_id_unique` ON `analyses` (`vinted_id`);
+CREATE UNIQUE INDEX IF NOT EXISTS `analyses_vinted_id_unique` ON `analyses` (`vinted_id`);

@@ -20,7 +20,7 @@ export function BackendStatus({ status, aiProvider }: BackendStatusProps) {
 								: 'bg-red-500'
 					}`}
 				/>
-				<span className="text-sm text-gray-700">
+					<span className="text-base text-gray-700">
 					{status === 'connected'
 						? 'Backend connecté'
 						: status === 'checking'
@@ -29,7 +29,7 @@ export function BackendStatus({ status, aiProvider }: BackendStatusProps) {
 				</span>
 			</div>
 			{status === 'connected' && aiProvider && (
-				<span className="rounded bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
+				<span className="rounded bg-indigo-100 px-2 py-0.5 text-base font-medium text-indigo-700">
 					{aiProvider}
 				</span>
 			)}

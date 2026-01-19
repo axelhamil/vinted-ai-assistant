@@ -28,7 +28,7 @@ export function SettingsView({ settings, onBack, onUpdate }: SettingsViewProps) 
 	if (!localSettings) {
 		return (
 			<div className="w-80 p-4">
-				<p className="text-sm text-gray-500">Erreur de chargement des paramètres</p>
+				<p className="text-base text-gray-500">Erreur de chargement des paramètres</p>
 			</div>
 		)
 	}
@@ -52,7 +52,7 @@ export function SettingsView({ settings, onBack, onUpdate }: SettingsViewProps) 
 			<div className="p-4">
 				{/* Backend URL */}
 				<div className="mb-4">
-					<label htmlFor="backendUrl" className="mb-1 block text-sm font-medium text-gray-700">
+					<label htmlFor="backendUrl" className="mb-1 block text-base font-medium text-gray-700">
 						URL Backend
 					</label>
 					<input
@@ -60,14 +60,14 @@ export function SettingsView({ settings, onBack, onUpdate }: SettingsViewProps) 
 						id="backendUrl"
 						value={localSettings.backendUrl}
 						onChange={(e) => setLocalSettings({ ...localSettings, backendUrl: e.target.value })}
-						className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+						className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
 						placeholder="http://localhost:3000"
 					/>
 				</div>
 
 				{/* AI Provider Selection */}
 				<div className="mb-4">
-					<label htmlFor="aiProvider" className="mb-1 block text-sm font-medium text-gray-700">
+					<label htmlFor="aiProvider" className="mb-1 block text-base font-medium text-gray-700">
 						Fournisseur IA
 					</label>
 					<select
@@ -76,7 +76,7 @@ export function SettingsView({ settings, onBack, onUpdate }: SettingsViewProps) 
 						onChange={(e) =>
 							setLocalSettings({ ...localSettings, aiProvider: e.target.value as AIProvider })
 						}
-						className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+						className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
 					>
 						<option value="openai">OpenAI (GPT-4o)</option>
 						<option value="gemini">Google Gemini</option>
@@ -85,7 +85,7 @@ export function SettingsView({ settings, onBack, onUpdate }: SettingsViewProps) 
 
 				{/* API Key based on selected provider */}
 				<div className="mb-4">
-					<label htmlFor="apiKey" className="mb-1 block text-sm font-medium text-gray-700">
+					<label htmlFor="apiKey" className="mb-1 block text-base font-medium text-gray-700">
 						Clé API {localSettings.aiProvider === 'openai' ? 'OpenAI' : 'Gemini'}{' '}
 						<span className="font-normal text-gray-400">(optionnel)</span>
 					</label>
@@ -105,7 +105,7 @@ export function SettingsView({ settings, onBack, onUpdate }: SettingsViewProps) 
 										e.target.value,
 								})
 							}
-							className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+							className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
 							placeholder={localSettings.aiProvider === 'openai' ? 'sk-...' : 'AIza...'}
 							autoComplete="off"
 						/>
@@ -128,7 +128,7 @@ export function SettingsView({ settings, onBack, onUpdate }: SettingsViewProps) 
 							</button>
 						)}
 					</div>
-					<p className="mt-1 text-xs text-gray-500">
+					<p className="mt-1 text-base text-gray-500">
 						Si non renseigné, utilise la clé configurée sur le backend
 					</p>
 				</div>
@@ -137,7 +137,7 @@ export function SettingsView({ settings, onBack, onUpdate }: SettingsViewProps) 
 				<div className="mb-4">
 					<label
 						htmlFor="scoreThreshold"
-						className="mb-1 block text-sm font-medium text-gray-700"
+						className="mb-1 block text-base font-medium text-gray-700"
 					>
 						Seuil score opportunité
 					</label>
@@ -156,11 +156,11 @@ export function SettingsView({ settings, onBack, onUpdate }: SettingsViewProps) 
 							}
 							className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 accent-indigo-600"
 						/>
-						<span className="w-8 text-center text-sm font-semibold text-indigo-600">
+						<span className="w-8 text-center text-lg font-semibold text-indigo-600">
 							{localSettings.scoreThreshold}
 						</span>
 					</div>
-					<p className="mt-1 text-xs text-gray-500">
+					<p className="mt-1 text-base text-gray-500">
 						Les articles avec un score &ge; {localSettings.scoreThreshold} seront mis en évidence
 					</p>
 				</div>
@@ -168,8 +168,8 @@ export function SettingsView({ settings, onBack, onUpdate }: SettingsViewProps) 
 				{/* Auto-open Sidebar */}
 				<div className="mb-4 flex items-center justify-between">
 					<div>
-						<p className="text-sm font-medium text-gray-700">Ouvrir sidebar auto</p>
-						<p className="text-xs text-gray-500">Ouvre la sidebar après analyse</p>
+						<p className="text-base font-medium text-gray-700">Ouvrir sidebar auto</p>
+						<p className="text-base text-gray-500">Ouvre la sidebar après analyse</p>
 					</div>
 					<button
 						type="button"
@@ -199,7 +199,7 @@ export function SettingsView({ settings, onBack, onUpdate }: SettingsViewProps) 
 					type="button"
 					onClick={handleSave}
 					disabled={isSaving}
-					className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+					className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-base font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					{isSaving ? 'Enregistrement...' : 'Enregistrer'}
 				</button>

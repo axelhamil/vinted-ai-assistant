@@ -118,7 +118,7 @@ apps/extension/src/
 
 Backend requires `.env` file:
 ```env
-GEMINI_API_KEY=your_key  # or OPENAI_API_KEY
+GOOGLE_GENERATIVE_AI_API_KEY=your_key  # or OPENAI_API_KEY
 PORT=3000
 ```
 

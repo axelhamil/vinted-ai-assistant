@@ -91,7 +91,7 @@ pnpm --filter extension build
 
 ```env
 # AI Provider (choose one)
-GEMINI_API_KEY=your_gemini_api_key
+GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_api_key
 OPENAI_API_KEY=your_openai_api_key
 
 # Server

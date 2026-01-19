@@ -71,7 +71,7 @@ export function MainView({
 
 				{/* Stats */}
 				<div className="mb-4">
-					<h2 className="mb-2 text-sm font-semibold text-gray-900">Statistiques du jour</h2>
+					<h2 className="mb-2 text-base font-semibold text-gray-900">Statistiques du jour</h2>
 					<div className="grid grid-cols-2 gap-2">
 						<StatCard
 							label="Articles analysés"
@@ -92,15 +92,15 @@ export function MainView({
 				{/* Backend disconnected warning */}
 				{backendStatus === 'disconnected' && (
 					<div className="rounded-lg border border-red-200 bg-red-50 p-3">
-						<p className="text-sm font-medium text-red-800">Backend non disponible</p>
-						<p className="mt-1 text-xs text-red-600">
+						<p className="text-base font-medium text-red-800">Backend non disponible</p>
+						<p className="mt-1 text-base text-red-600">
 							Lancez le backend avec <code className="rounded bg-red-100 px-1">bun run dev</code>{' '}
 							dans apps/backend
 						</p>
 						<button
 							type="button"
 							onClick={onRetry}
-							className="mt-2 text-xs font-medium text-red-700 hover:text-red-800"
+							className="mt-2 text-base font-medium text-red-700 hover:text-red-800"
 						>
 							Réessayer
 						</button>
@@ -110,7 +110,7 @@ export function MainView({
 
 			{/* Footer */}
 			<div className="border-t border-gray-100 px-4 py-2">
-				<p className="text-center text-xs text-gray-400">
+				<p className="text-center text-base text-gray-400">
 					Score seuil: {settings?.scoreThreshold ?? 7} / 10
 				</p>
 			</div>

@@ -50,6 +50,14 @@ export type MessageType =
 	| 'GET_PORTFOLIO'
 	| 'GET_PORTFOLIO_STATS'
 	| 'DELETE_PORTFOLIO_ITEM'
+	// Studio messages
+	| 'STUDIO_GET_PRESETS'
+	| 'STUDIO_EDIT_PHOTO'
+	| 'STUDIO_EDIT_PHOTO_BATCH'
+	| 'STUDIO_EDIT_PHOTO_CUSTOM'
+	| 'STUDIO_ANALYZE_FORM'
+	| 'STUDIO_CREATE_PRESET'
+	| 'STUDIO_DELETE_PRESET'
 
 interface BaseMessage {
 	type: MessageType
@@ -127,6 +135,59 @@ export interface DeletePortfolioItemMessage extends BaseMessage {
 	vintedId: string
 }
 
+// ============================================================================
+// Studio Messages
+// ============================================================================
+
+export interface StudioGetPresetsMessage extends BaseMessage {
+	type: 'STUDIO_GET_PRESETS'
+	filter?: 'system' | 'custom' | 'all'
+}
+
+export interface StudioEditPhotoMessage extends BaseMessage {
+	type: 'STUDIO_EDIT_PHOTO'
+	image: string
+	presetId: string
+	variables?: Record<string, string>
+	stripMetadata?: boolean
+}
+
+export interface StudioEditPhotoBatchMessage extends BaseMessage {
+	type: 'STUDIO_EDIT_PHOTO_BATCH'
+	images: string[]
+	presetId: string
+	variables?: Record<string, string>
+	stripMetadata?: boolean
+}
+
+export interface StudioEditPhotoCustomMessage extends BaseMessage {
+	type: 'STUDIO_EDIT_PHOTO_CUSTOM'
+	image: string
+	promptTemplate: string
+	variables?: Record<string, string>
+	stripMetadata?: boolean
+}
+
+export interface StudioAnalyzeFormMessage extends BaseMessage {
+	type: 'STUDIO_ANALYZE_FORM'
+	photos: string[]
+	existingTitle?: string
+	language?: string
+}
+
+export interface StudioCreatePresetMessage extends BaseMessage {
+	type: 'STUDIO_CREATE_PRESET'
+	name: string
+	description?: string
+	promptTemplate: string
+	previewImage?: string
+}
+
+export interface StudioDeletePresetMessage extends BaseMessage {
+	type: 'STUDIO_DELETE_PRESET'
+	presetId: string
+}
+
 export type ExtensionMessage =
 	| AnalyzeArticleMessage
 	| GetAnalysisMessage
@@ -142,6 +203,14 @@ export type ExtensionMessage =
 	| GetPortfolioMessage
 	| GetPortfolioStatsMessage
 	| DeletePortfolioItemMessage
+	// Studio messages
+	| StudioGetPresetsMessage
+	| StudioEditPhotoMessage
+	| StudioEditPhotoBatchMessage
+	| StudioEditPhotoCustomMessage
+	| StudioAnalyzeFormMessage
+	| StudioCreatePresetMessage
+	| StudioDeletePresetMessage
 
 // ============================================================================
 // API Response Types
@@ -192,6 +261,65 @@ export interface PortfolioStatsResponse {
 	bought: number
 	sold: number
 	opportunities: number
+}
+
+// ============================================================================
+// Studio Response Types
+// ============================================================================
+
+export interface StudioPreset {
+	id: string
+	name: string
+	description: string | null
+	promptTemplate: string
+	type: 'system' | 'custom'
+	previewImage: string | null
+	sortOrder: number
+	createdAt: string
+	updatedAt: string
+}
+
+export interface StudioPresetListResponse {
+	presets: StudioPreset[]
+	total: number
+}
+
+export interface StudioEditedPhotoResponse {
+	imageBase64: string
+	mimeType: string
+	dataUrl: string
+}
+
+export interface StudioBatchEditResult {
+	success: boolean
+	imageBase64?: string
+	mimeType?: string
+	dataUrl?: string
+	error?: string
+}
+
+export interface StudioBatchEditResponse {
+	results: StudioBatchEditResult[]
+	successCount: number
+	failedCount: number
+}
+
+export interface StudioFormSuggestionsResponse {
+	suggestedTitle: string
+	suggestedDescription: string
+	suggestedCondition: 'new_with_tags' | 'new' | 'very_good' | 'good' | 'satisfactory'
+	suggestedBrand: string | null
+	suggestedColors: string[]
+	suggestedCategory: string | null
+	suggestedSize: string | null
+	suggestedMaterial: string | null
+	suggestedPrice: number
+	priceRange: {
+		low: number
+		high: number
+	}
+	priceConfidence: 'low' | 'medium' | 'high'
+	priceReasoning: string
 }
 
 // Re-export for convenience

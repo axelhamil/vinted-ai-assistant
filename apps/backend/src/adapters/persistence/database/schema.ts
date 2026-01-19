@@ -101,3 +101,22 @@ export const analyses = sqliteTable('analyses', {
 
 export type Analysis = typeof analyses.$inferSelect
 export type NewAnalysis = typeof analyses.$inferInsert
+
+// ============================================================================
+// PHOTO STUDIO PRESETS
+// ============================================================================
+
+export const studioPresets = sqliteTable('studio_presets', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(),
+	description: text('description'),
+	promptTemplate: text('prompt_template').notNull(),
+	type: text('type').$type<'system' | 'custom'>().notNull().default('custom'),
+	previewImage: text('preview_image'),
+	sortOrder: integer('sort_order').notNull().default(0),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+})
+
+export type StudioPreset = typeof studioPresets.$inferSelect
+export type NewStudioPreset = typeof studioPresets.$inferInsert

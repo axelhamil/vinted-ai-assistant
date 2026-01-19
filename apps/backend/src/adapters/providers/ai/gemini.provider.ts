@@ -132,7 +132,7 @@ async function downloadImageAsBase64(url: string): Promise<string | null> {
 @injectable()
 export class GeminiProvider implements IAIProvider {
 	private readonly model = 'gemini-3-flash-preview'
-	private readonly apiKey: string | undefined = process.env.GEMINI_API_KEY
+	private readonly apiKey: string | undefined = process.env.GOOGLE_GENERATIVE_AI_API_KEY
 
 	getProviderName(): string {
 		return 'gemini'

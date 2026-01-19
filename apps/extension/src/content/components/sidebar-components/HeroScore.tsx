@@ -46,8 +46,8 @@ export function HeroScore({ score, confidence, marginPercent }: HeroScoreProps) 
 			{/* Score Ring */}
 			<ScoreRing score={score} size="lg" animated showLabel={false} />
 
-			{/* Score label */}
-			<h2 className="text-4xl font-semibold text-content-primary text-center">
+				{/* Score label */}
+			<h2 className="text-5xl font-semibold text-content-primary text-center">
 				{scoreLabel}
 			</h2>
 

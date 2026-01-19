@@ -67,8 +67,8 @@ export function PortfolioView({ onBack, scoreThreshold = 7 }: PortfolioViewProps
 			</div>
 
 			{/* Footer */}
-			<div className="border-t border-gray-100 px-4 py-2">
-				<p className="text-center text-xs text-gray-400">
+				<div className="border-t border-gray-100 px-4 py-2">
+				<p className="text-center text-base text-gray-400">
 					{articles.length} article{articles.length !== 1 ? 's' : ''}
 				</p>
 			</div>

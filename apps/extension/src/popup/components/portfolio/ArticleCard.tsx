@@ -77,26 +77,26 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
 
 				{/* Content */}
 				<div className="min-w-0 flex-1">
-					<p className="truncate text-sm font-medium text-gray-900">{article.title}</p>
+					<p className="truncate text-base font-medium text-gray-900">{article.title}</p>
 					<div className="mt-1 flex items-center gap-2">
-						<span className="text-sm font-semibold text-gray-900">
+						<span className="text-base font-semibold text-gray-900">
 							{formatPrice(article.price)}
 						</span>
-						<span className="text-xs text-gray-400">{formatDate(article.analyzedAt)}</span>
+						<span className="text-base text-gray-400">{formatDate(article.analyzedAt)}</span>
 					</div>
 				</div>
 
 				{/* Score badge */}
 				<div className="flex flex-col items-end gap-1">
 					<span
-						className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${getScoreColor(article.score)}`}
+						className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-base font-semibold ${getScoreColor(article.score)}`}
 					>
 						<StarIcon />
 						{article.score}
 					</span>
 					{article.marginPercent !== undefined && (
 						<span
-							className={`text-xs font-medium ${
+							className={`text-base font-medium ${
 								article.marginPercent > 30
 									? 'text-green-600'
 									: article.marginPercent > 15

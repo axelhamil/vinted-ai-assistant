@@ -12,7 +12,11 @@
 		"build": "turbo build",
 		"lint": "turbo lint",
 		"lint:fix": "biome check --write .",
-		"typecheck": "turbo typecheck"
+		"typecheck": "turbo typecheck",
+		"db:push": "pnpm --filter backend db:push",
+		"db:generate": "pnpm --filter backend db:generate",
+		"db:migrate": "pnpm --filter backend db:migrate",
+		"db:studio": "pnpm --filter backend db:studio"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",

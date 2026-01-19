@@ -14,6 +14,15 @@
 			"matches": ["https://www.vinted.fr/items/*"],
 			"js": ["src/content/index.tsx"],
 			"run_at": "document_idle"
+		},
+		{
+			"matches": [
+				"https://www.vinted.fr/items/new*",
+				"https://www.vinted.fr/member/items/new*",
+				"https://www.vinted.fr/members/*/items/new*"
+			],
+			"js": ["src/content/form-filling/index.tsx"],
+			"run_at": "document_idle"
 		}
 	],
 	"action": {

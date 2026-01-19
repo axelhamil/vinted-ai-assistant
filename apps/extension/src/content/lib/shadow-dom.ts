@@ -3,7 +3,7 @@
  * This isolates our styles from Vinted's styles and vice versa
  */
 
-const CONTAINER_ID = 'vinted-ai-assistant-root'
+const DEFAULT_CONTAINER_ID = 'vinted-ai-assistant-root'
 
 interface ShadowContainerResult {
 	container: HTMLElement
@@ -13,11 +13,12 @@ interface ShadowContainerResult {
 
 /**
  * Creates a Shadow DOM container for mounting the React app
+ * @param containerId - Custom container ID (optional)
  * @returns The shadow root and react root elements
  */
-export function createShadowContainer(): ShadowContainerResult {
+export function createShadowContainer(containerId: string = DEFAULT_CONTAINER_ID): ShadowContainerResult {
 	// Check if container already exists
-	const existingContainer = document.getElementById(CONTAINER_ID)
+	const existingContainer = document.getElementById(containerId)
 	if (existingContainer) {
 		const shadowRoot = existingContainer.shadowRoot
 		if (shadowRoot) {
@@ -32,7 +33,7 @@ export function createShadowContainer(): ShadowContainerResult {
 
 	// Create host element
 	const container = document.createElement('div')
-	container.id = CONTAINER_ID
+	container.id = containerId
 	container.style.cssText = `
 		position: fixed;
 		top: 0;
@@ -71,8 +72,8 @@ export function injectStyles(shadowRoot: ShadowRoot, css: string): void {
 /**
  * Removes the shadow container from the DOM
  */
-export function removeShadowContainer(): void {
-	const container = document.getElementById(CONTAINER_ID)
+export function removeShadowContainer(containerId: string = DEFAULT_CONTAINER_ID): void {
+	const container = document.getElementById(containerId)
 	if (container) {
 		container.remove()
 	}
@@ -81,6 +82,6 @@ export function removeShadowContainer(): void {
 /**
  * Checks if the shadow container exists
  */
-export function shadowContainerExists(): boolean {
-	return document.getElementById(CONTAINER_ID) !== null
+export function shadowContainerExists(containerId: string = DEFAULT_CONTAINER_ID): boolean {
+	return document.getElementById(containerId) !== null
 }

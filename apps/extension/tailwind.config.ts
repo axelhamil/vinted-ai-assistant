@@ -58,6 +58,7 @@ export default {
 				shimmer: 'shimmer 1.5s infinite linear',
 				'tab-slide': 'tabSlide 200ms ease-out',
 				'spin-slow': 'spin 1.5s linear infinite',
+				'slide-up': 'slideUp 200ms ease-out',
 			},
 			keyframes: {
 				slideIn: {
@@ -88,6 +89,10 @@ export default {
 				tabSlide: {
 					'0%': { transform: 'translateX(var(--tab-from))' },
 					'100%': { transform: 'translateX(var(--tab-to))' },
+				},
+				slideUp: {
+					'0%': { opacity: '0', transform: 'translateY(20px)' },
+					'100%': { opacity: '1', transform: 'translateY(0)' },
 				},
 			},
 		},

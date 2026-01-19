@@ -10,9 +10,9 @@ interface ExtensionToggleProps {
 export function ExtensionToggle({ enabled, onToggle }: ExtensionToggleProps) {
 	return (
 		<div className="mb-4 flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
-			<div>
-				<p className="text-sm font-medium text-gray-900">Extension active</p>
-				<p className="text-xs text-gray-500">
+				<div>
+				<p className="text-base font-medium text-gray-900">Extension active</p>
+				<p className="text-base text-gray-500">
 					{enabled ? 'Analyse automatique activée' : 'Extension en pause'}
 				</p>
 			</div>

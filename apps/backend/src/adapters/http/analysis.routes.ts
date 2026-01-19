@@ -19,7 +19,6 @@ import {
  * Create analysis routes
  * Endpoints:
  * - POST /api/analyze
- * - GET /api/analyses
  * - GET /api/analyses/:vintedId
  * - PATCH /api/analyses/:vintedId/status
  * - POST /api/analyses/:vintedId/regenerate-negotiation
@@ -62,17 +61,6 @@ export function createAnalysisRoutes(container: Container): Hono {
 
 		const result = await controller.analyze(validation.data)
 		return c.json(result, 201)
-	})
-
-	/**
-	 * GET /api/analyses
-	 * List analyses with pagination and filtering
-	 * Query params: limit, offset, minScore, status
-	 */
-	router.get('/analyses', async (c) => {
-		const query = validateQuery(c, listAnalysesQuerySchema)
-		const result = await controller.getAnalyses(query)
-		return c.json(result)
 	})
 
 	/**

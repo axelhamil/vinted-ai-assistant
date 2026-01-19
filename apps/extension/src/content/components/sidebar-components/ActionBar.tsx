@@ -64,10 +64,10 @@ export function ActionBar({
 		<footer className="flex-shrink-0 px-6 py-5 bg-white border-t border-border space-y-4">
 			{/* Status indicator */}
 			<div className="flex items-center justify-between">
-				<span className="text-sm text-content-secondary">Statut:</span>
+				<span className="text-base text-content-secondary">Statut:</span>
 				<div className="flex items-center gap-2">
 					<span className={`w-2.5 h-2.5 rounded-full ${statusInfo.color}`} />
-					<span className="text-sm font-medium text-content-primary">{statusInfo.label}</span>
+					<span className="text-base font-medium text-content-primary">{statusInfo.label}</span>
 				</div>
 			</div>
 
@@ -164,12 +164,12 @@ export function ActionBar({
 			{/* Cache/timestamp info */}
 			<div className="text-center">
 				{cacheInfo?.fromCache && cacheInfo.timeRemaining > 0 ? (
-					<div className="flex items-center justify-center gap-2 text-sm text-content-muted">
+					<div className="flex items-center justify-center gap-2 text-base text-content-muted">
 						<span className="w-2 h-2 rounded-full bg-profit animate-pulse" />
 						<span>Cache • expire dans {formatCacheTime(cacheInfo.timeRemaining)}</span>
 					</div>
 				) : analyzedTimeAgo ? (
-					<div className="flex items-center justify-center gap-2 text-sm text-content-muted">
+					<div className="flex items-center justify-center gap-2 text-base text-content-muted">
 						<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
 						</svg>

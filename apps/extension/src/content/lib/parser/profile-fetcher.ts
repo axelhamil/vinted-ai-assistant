@@ -88,7 +88,7 @@ export async function fetchSellerProfile(username: string): Promise<SellerProfil
 				// Try to extract date or text like "Membre depuis 2021"
 				const text = el.textContent.trim()
 				const yearMatch = text.match(/(\d{4})/)
-				profileData.memberSince = yearMatch ? yearMatch[1] : text
+				profileData.memberSince = yearMatch ? (yearMatch[1] ?? null) : text
 				break
 			}
 		}
