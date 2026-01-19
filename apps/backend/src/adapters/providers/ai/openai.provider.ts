@@ -209,7 +209,7 @@ Génère un script de négociation:
 IMPORTANT: Sois précis et réaliste. Base-toi sur ta connaissance du marché de la mode d'occasion en France.`
 
 		// Download images
-		const imagePromises = photoUrls.slice(0, 4).map(downloadImageAsBase64)
+		const imagePromises = photoUrls.map(downloadImageAsBase64)
 		const base64Images = await Promise.all(imagePromises)
 		const validImages = base64Images.filter((img): img is string => img !== null)
 
@@ -320,7 +320,7 @@ Contexte article:
 IMPORTANT: Sois précis et réaliste dans ton estimation de prix. Base-toi sur ta connaissance du marché de la mode d'occasion en France.`
 
 		// Download images and convert to base64 (OpenAI cannot access Vinted CDN directly)
-		const imagePromises = photoUrls.slice(0, 4).map(downloadImageAsBase64)
+		const imagePromises = photoUrls.map(downloadImageAsBase64)
 		const base64Images = await Promise.all(imagePromises)
 		const validImages = base64Images.filter((img): img is string => img !== null)
 

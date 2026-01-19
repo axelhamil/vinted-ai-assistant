@@ -399,7 +399,7 @@ Article: Nike Air Max 90, état "Bon", 45€, en ligne 23 jours
 
 Analyse maintenant les photos fournies avec cette méthodologie. Utilise Google Search de manière intensive pour trouver un maximum de sources de prix comparables.`
 
-		const imagePromises = photoUrls.slice(0, 4).map(downloadImageAsBase64)
+		const imagePromises = photoUrls.map(downloadImageAsBase64)
 		const base64Images = await Promise.all(imagePromises)
 		const validImages = base64Images.filter((img): img is string => img !== null)
 
@@ -538,7 +538,7 @@ Renseigne: flags (éléments observés ✓ ou suspects ⚠), confidence (low/med
 
 Analyse les photos fournies.`
 
-		const imagePromises = photoUrls.slice(0, 4).map(downloadImageAsBase64)
+		const imagePromises = photoUrls.map(downloadImageAsBase64)
 		const base64Images = await Promise.all(imagePromises)
 		const validImages = base64Images.filter((img): img is string => img !== null)
 

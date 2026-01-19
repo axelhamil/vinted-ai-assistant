@@ -3,8 +3,15 @@ import { useState, useCallback } from 'react'
 import { ScriptCard } from '../cards/ScriptCard'
 import { Card, CardRow } from '../primitives/Card'
 import { Pill } from '../primitives/Pill'
-import { Button } from '../primitives/Button'
-import { useAnalysisStore } from '../../../stores/analysis.store'
+
+/**
+ * Helper to send messages to the background service worker
+ */
+const sendMessage = <T,>(message: Record<string, unknown>): Promise<{ success: boolean; data?: T; error?: string }> => {
+	return new Promise((resolve) => {
+		chrome.runtime.sendMessage(message, resolve)
+	})
+}
 
 interface NegotiateTabProps {
 	analysis: AnalysisResult
@@ -23,8 +30,7 @@ const TONE_OPTIONS: { value: NegotiationTone; label: string; emoji: string; desc
  * Negotiate tab displaying negotiation script and offer suggestions
  */
 export function NegotiateTab({ analysis }: NegotiateTabProps) {
-	const { negotiation: originalNegotiation, price, marketPrice } = analysis
-	const regenerateNegotiation = useAnalysisStore((state) => state.regenerateNegotiation)
+	const { negotiation: originalNegotiation, price, marketPrice, vintedId } = analysis
 
 	// Local state for the current negotiation (can be overridden by regenerated one)
 	const [currentNegotiation, setCurrentNegotiation] = useState<Negotiation>(originalNegotiation)
@@ -41,12 +47,17 @@ export function NegotiateTab({ analysis }: NegotiateTabProps) {
 		setIsRegenerating(true)
 
 		try {
-			const newNegotiation = await regenerateNegotiation(tone)
-			console.log('[NegotiateTab] Received new negotiation:', newNegotiation)
-			if (newNegotiation) {
-				setCurrentNegotiation(newNegotiation)
+			const response = await sendMessage<Negotiation>({
+				type: 'REGENERATE_NEGOTIATION',
+				vintedId,
+				tone,
+			})
+			console.log('[NegotiateTab] Received response:', response)
+			if (response.success && response.data) {
+				setCurrentNegotiation(response.data)
 			} else {
 				// Reset selection if regeneration failed
+				console.error('[NegotiateTab] Regeneration failed:', response.error)
 				setSelectedTone(currentNegotiation.tone)
 			}
 		} catch (error) {
@@ -55,7 +66,7 @@ export function NegotiateTab({ analysis }: NegotiateTabProps) {
 		} finally {
 			setIsRegenerating(false)
 		}
-	}, [isRegenerating, currentNegotiation.tone, regenerateNegotiation])
+	}, [isRegenerating, currentNegotiation.tone, vintedId])
 
 	const negotiation = currentNegotiation
 	const suggestedDiscount = Math.round(((price - negotiation.suggestedOffer) / price) * 100)
