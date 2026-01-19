@@ -33,7 +33,7 @@ export function PortfolioTabs({ activeTab, onTabChange, stats }: PortfolioTabsPr
 					key={tab.id}
 					type="button"
 					onClick={() => onTabChange(tab.id)}
-					className={`flex-1 px-2 py-2 text-xs font-medium transition-colors ${
+					className={`flex-1 px-2 py-2 text-base font-medium transition-colors ${
 						activeTab === tab.id
 							? 'border-b-2 border-indigo-600 text-indigo-600'
 							: 'text-gray-500 hover:text-gray-700'
@@ -42,7 +42,7 @@ export function PortfolioTabs({ activeTab, onTabChange, stats }: PortfolioTabsPr
 					{tab.label}
 					{tab.count > 0 && (
 						<span
-							className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${
+							className={`ml-1 rounded-full px-1.5 py-0.5 text-sm ${
 								activeTab === tab.id
 									? 'bg-indigo-100 text-indigo-700'
 									: 'bg-gray-100 text-gray-600'

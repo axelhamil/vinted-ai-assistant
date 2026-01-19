@@ -50,9 +50,14 @@ function cleanupUI(): void {
 	}
 }
 
-// Check if we're on a Vinted article page
+// Check if we're on a Vinted article page (viewing an existing item, not creating new)
 function isVintedArticlePage(): boolean {
-	return window.location.pathname.startsWith('/items/')
+	const path = window.location.pathname
+	// Exclude /items/new (item creation page)
+	if (path === '/items/new' || path.startsWith('/items/new/')) {
+		return false
+	}
+	return path.startsWith('/items/')
 }
 
 // Initialize when the page is ready

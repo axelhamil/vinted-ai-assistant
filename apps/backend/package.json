@@ -18,6 +18,7 @@
 	"dependencies": {
 		"@ai-sdk/google": "^3.0.10",
 		"@ai-sdk/openai": "^3.0.12",
+		"@google/genai": "^1.37.0",
 		"@hono/node-server": "^1.13.7",
 		"@paralleldrive/cuid2": "^3.0.6",
 		"@vinted-ai/shared": "workspace:*",
@@ -28,11 +29,13 @@
 		"inversify": "^7.11.0",
 		"p-queue": "^8.0.1",
 		"reflect-metadata": "^0.2.2",
+		"sharp": "^0.33.5",
 		"zod": "^4.3.5"
 	},
 	"devDependencies": {
 		"@types/bun": "^1.1.14",
 		"@types/node": "^22.10.5",
+		"@types/sharp": "^0.32.0",
 		"drizzle-kit": "^0.31.8",
 		"typescript": "^5.7.2"
 	}

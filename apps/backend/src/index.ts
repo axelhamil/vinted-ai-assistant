@@ -4,6 +4,7 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { createAnalysisRoutes } from './adapters/http/analysis.routes'
+import { createStudioRoutes, initializeStudio } from './adapters/http/studio.routes'
 import { errorHandler } from './adapters/http/middleware/error-handler.middleware'
 import { container } from './application/container'
 import { TYPES } from './application/di-types'
@@ -41,11 +42,33 @@ app.get('/api/health', (c) => {
 const analysisRoutes = createAnalysisRoutes(container)
 app.route('/api', analysisRoutes)
 
+// Mount studio routes under /api/studio
+const studioRoutes = createStudioRoutes(container)
+app.route('/api/studio', studioRoutes)
+
 const port = 3000
 
-console.log(`🚀 Backend running on http://localhost:${port}`)
+// Initialize studio presets and start server
+async function start() {
+	try {
+		// Seed system presets if they don't exist
+		await initializeStudio(container)
+		console.log('✅ Studio presets initialized')
+	} catch (error) {
+		console.error('⚠️ Failed to initialize studio presets:', error)
+	}
 
-serve({
-	fetch: app.fetch,
-	port,
-})
+	console.log(`🚀 Backend running on http://localhost:${port}`)
+
+	const server = serve({
+		fetch: app.fetch,
+		port,
+	})
+
+	// Increase timeout for long-running AI requests (5 minutes)
+	const httpServer = server as import('http').Server
+	httpServer.timeout = 5 * 60 * 1000
+	httpServer.keepAliveTimeout = 5 * 60 * 1000
+}
+
+start()

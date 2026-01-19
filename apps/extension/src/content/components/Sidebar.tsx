@@ -10,6 +10,7 @@ import { InsightTab } from './tabs/InsightTab'
 import { NegotiateTab } from './tabs/NegotiateTab'
 import { ResellTab } from './tabs/ResellTab'
 import { SourcesTab } from './tabs/SourcesTab'
+import { StudioTab } from './tabs/StudioTab'
 
 interface SidebarProps {
 	analysis: AnalysisResult
@@ -145,6 +146,7 @@ export function Sidebar({
 					{activeTab === 'negotiate' && <NegotiateTab analysis={analysis} />}
 					{activeTab === 'resell' && <ResellTab analysis={analysis} />}
 					{activeTab === 'sources' && <SourcesTab sources={analysis.marketPrice.sources} />}
+					{activeTab === 'studio' && <StudioTab photos={photos} />}
 				</div>
 			</div>
 

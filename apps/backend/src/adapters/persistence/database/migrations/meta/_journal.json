@@ -15,6 +15,13 @@
       "when": 1768755937958,
       "tag": "0001_overjoyed_kylun",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1768860909384,
+      "tag": "0002_magenta_meggan",
+      "breakpoints": true
     }
   ]
 }

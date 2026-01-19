@@ -80,8 +80,8 @@ export function ArticleList({
 						/>
 					</svg>
 				</div>
-				<p className="text-sm font-medium text-gray-900">Erreur de chargement</p>
-				<p className="mt-1 text-xs text-gray-500">{error}</p>
+					<p className="text-base font-medium text-gray-900">Erreur de chargement</p>
+				<p className="mt-1 text-base text-gray-500">{error}</p>
 			</div>
 		)
 	}

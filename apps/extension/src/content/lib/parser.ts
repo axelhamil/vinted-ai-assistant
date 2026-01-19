@@ -16,8 +16,13 @@ import {
 	extractViews,
 	extractFavorites,
 } from './parser/article-parser'
-import { extractSeller } from './parser/seller-parser'
+import { extractSeller, mergeSellerWithProfile } from './parser/seller-parser'
 import { extractPhotos } from './parser/photo-parser'
+import { detectLanguage } from './parser/language-detector'
+import { fetchSellerProfile } from './parser/profile-fetcher'
+
+// Re-export utilities for external use
+export { detectLanguage, fetchSellerProfile, mergeSellerWithProfile }
 
 /**
  * Main function to parse all article data from the page

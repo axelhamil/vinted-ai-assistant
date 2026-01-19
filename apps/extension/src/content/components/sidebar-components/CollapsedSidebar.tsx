@@ -50,7 +50,7 @@ export function CollapsedSidebar({ score, isOpen, onExpand }: CollapsedSidebarPr
 						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
 					</svg>
 				}
-				variant="glass"
+				variant="ghost"
 				size="sm"
 				onClick={onExpand}
 				ariaLabel="Agrandir le panneau"

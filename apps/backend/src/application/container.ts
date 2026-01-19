@@ -1,11 +1,17 @@
 import { Container } from 'inversify'
-import { GeminiProvider } from '../adapters/providers/ai/gemini.provider'
 import { DrizzleAnalysisRepository } from '../adapters/persistence/drizzle-analysis.repository'
+import { DrizzleStudioPresetRepository } from '../adapters/persistence/drizzle-studio-preset.repository'
+import { GeminiImageEditorProvider } from '../adapters/providers/ai/gemini-image-editor.provider'
+import { GeminiProvider } from '../adapters/providers/ai/gemini.provider'
 import { TYPES } from './di-types'
 import type { IAIProvider } from './interfaces/providers/ai.provider.interface'
+import type { IImageEditorProvider } from './interfaces/providers/image-editor.provider.interface'
 import type { IAnalysisRepository } from './interfaces/repositories/analysis.repository.interface'
+import type { IStudioPresetRepository } from './interfaces/repositories/studio-preset.repository.interface'
 import { AnalyzeArticleUseCase } from './use-cases/analyze-article.use-case'
+import { EditPhotoUseCase } from './use-cases/edit-photo.use-case'
 import { ExportMarkdownUseCase } from './use-cases/export-markdown.use-case'
+import { FormFillingUseCase } from './use-cases/form-filling.use-case'
 import { GetAnalysisUseCase } from './use-cases/get-analysis.use-case'
 
 /**
@@ -20,10 +26,17 @@ export function createContainer(): Container {
 		.to(DrizzleAnalysisRepository)
 		.inSingletonScope()
 
-	// Bind AI provider
+	container
+		.bind<IStudioPresetRepository>(TYPES.StudioPresetRepository)
+		.to(DrizzleStudioPresetRepository)
+		.inSingletonScope()
+
+	// Bind AI providers
 	container.bind<IAIProvider>(TYPES.AIProvider).to(GeminiProvider).inSingletonScope()
 
-	// Bind use cases
+	container.bind<IImageEditorProvider>(TYPES.ImageEditorProvider).to(GeminiImageEditorProvider).inSingletonScope()
+
+	// Bind use cases - Analysis
 	container
 		.bind<AnalyzeArticleUseCase>(TYPES.AnalyzeArticleUseCase)
 		.to(AnalyzeArticleUseCase)
@@ -38,6 +51,11 @@ export function createContainer(): Container {
 		.bind<ExportMarkdownUseCase>(TYPES.ExportMarkdownUseCase)
 		.to(ExportMarkdownUseCase)
 		.inSingletonScope()
+
+	// Bind use cases - Studio
+	container.bind<EditPhotoUseCase>(TYPES.EditPhotoUseCase).to(EditPhotoUseCase).inSingletonScope()
+
+	container.bind<FormFillingUseCase>(TYPES.FormFillingUseCase).to(FormFillingUseCase).inSingletonScope()
 
 	return container
 }

@@ -13,6 +13,13 @@ import {
 	getPortfolioStats,
 	getStats,
 	regenerateNegotiation,
+	studioAnalyzeForm,
+	studioCreatePreset,
+	studioDeletePreset,
+	studioEditPhoto,
+	studioEditPhotoBatch,
+	studioEditPhotoCustom,
+	studioGetPresets,
 	updateAnalysisStatus,
 } from './api-client'
 import { getSettings, getState, saveSettings, toggleExtension } from './state-manager'
@@ -24,6 +31,14 @@ const BYPASS_ENABLED_CHECK = [
 	'GET_STATE',
 	'TOGGLE_EXTENSION',
 	'CHECK_BACKEND_STATUS',
+	// Studio messages work independently of main extension toggle
+	'STUDIO_GET_PRESETS',
+	'STUDIO_EDIT_PHOTO',
+	'STUDIO_EDIT_PHOTO_BATCH',
+	'STUDIO_EDIT_PHOTO_CUSTOM',
+	'STUDIO_ANALYZE_FORM',
+	'STUDIO_CREATE_PRESET',
+	'STUDIO_DELETE_PRESET',
 ] as const
 
 /**
@@ -82,6 +97,45 @@ export async function handleMessage(message: ExtensionMessage): Promise<ApiRespo
 
 		case 'DELETE_PORTFOLIO_ITEM':
 			return deletePortfolioItem(message.vintedId)
+
+		// Studio messages
+		case 'STUDIO_GET_PRESETS':
+			return studioGetPresets(message.filter)
+
+		case 'STUDIO_EDIT_PHOTO':
+			return studioEditPhoto(message.image, message.presetId, {
+				variables: message.variables,
+				stripMetadata: message.stripMetadata,
+			})
+
+		case 'STUDIO_EDIT_PHOTO_BATCH':
+			return studioEditPhotoBatch(message.images, message.presetId, {
+				variables: message.variables,
+				stripMetadata: message.stripMetadata,
+			})
+
+		case 'STUDIO_EDIT_PHOTO_CUSTOM':
+			return studioEditPhotoCustom(message.image, message.promptTemplate, {
+				variables: message.variables,
+				stripMetadata: message.stripMetadata,
+			})
+
+		case 'STUDIO_ANALYZE_FORM':
+			return studioAnalyzeForm(message.photos, {
+				existingTitle: message.existingTitle,
+				language: message.language,
+			})
+
+		case 'STUDIO_CREATE_PRESET':
+			return studioCreatePreset({
+				name: message.name,
+				description: message.description,
+				promptTemplate: message.promptTemplate,
+				previewImage: message.previewImage,
+			})
+
+		case 'STUDIO_DELETE_PRESET':
+			return studioDeletePreset(message.presetId)
 
 		default:
 			return { success: false, error: 'Unknown message type' }

@@ -20,8 +20,8 @@ export function EmptyState({ title, description }: EmptyStateProps) {
 					/>
 				</svg>
 			</div>
-			<p className="text-sm font-medium text-gray-600">{title}</p>
-			<p className="mt-1 text-xs text-gray-400">{description}</p>
+				<p className="text-base font-medium text-gray-600">{title}</p>
+			<p className="mt-1 text-base text-gray-400">{description}</p>
 		</div>
 	)
 }

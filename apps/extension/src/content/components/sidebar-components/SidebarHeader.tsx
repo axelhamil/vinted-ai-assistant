@@ -34,9 +34,9 @@ export function SidebarHeader({ onClose, onCollapse }: SidebarHeaderProps) {
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
 						</svg>
 					</div>
-					<div>
-						<span className="text-base font-semibold text-content-primary">Vinted</span>
-						<span className="text-base font-semibold text-brand">AI</span>
+						<div>
+						<span className="text-lg font-semibold text-content-primary">Vinted</span>
+						<span className="text-lg font-semibold text-brand">AI</span>
 					</div>
 				</div>
 			</div>

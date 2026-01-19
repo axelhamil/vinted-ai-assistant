@@ -5,14 +5,20 @@
 export const TYPES = {
 	// Repositories
 	AnalysisRepository: Symbol.for('AnalysisRepository'),
+	StudioPresetRepository: Symbol.for('StudioPresetRepository'),
 
 	// Providers
 	AIProvider: Symbol.for('AIProvider'),
+	ImageEditorProvider: Symbol.for('ImageEditorProvider'),
 
-	// Use Cases (will be added in future tasks)
+	// Use Cases - Analysis
 	AnalyzeArticleUseCase: Symbol.for('AnalyzeArticleUseCase'),
 	GetAnalysisUseCase: Symbol.for('GetAnalysisUseCase'),
 	ExportMarkdownUseCase: Symbol.for('ExportMarkdownUseCase'),
+
+	// Use Cases - Photo Studio
+	EditPhotoUseCase: Symbol.for('EditPhotoUseCase'),
+	FormFillingUseCase: Symbol.for('FormFillingUseCase'),
 
 	// Infrastructure
 	Database: Symbol.for('Database'),

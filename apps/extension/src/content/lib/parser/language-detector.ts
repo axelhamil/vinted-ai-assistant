@@ -43,14 +43,14 @@ export function detectLanguage(): string {
 	const htmlLang = document.documentElement.lang
 	if (htmlLang) {
 		// Extract primary language code (e.g., 'fr-FR' -> 'fr')
-		const primaryLang = htmlLang.split('-')[0].toLowerCase()
+		const primaryLang = (htmlLang.split('-')[0] ?? '').toLowerCase()
 		if (Object.values(domainLanguageMap).includes(primaryLang)) {
 			return primaryLang
 		}
 	}
 
 	// Fallback: use browser language
-	const browserLang = navigator.language.split('-')[0].toLowerCase()
+	const browserLang = (navigator.language.split('-')[0] ?? '').toLowerCase()
 	if (Object.values(domainLanguageMap).includes(browserLang)) {
 		return browserLang
 	}

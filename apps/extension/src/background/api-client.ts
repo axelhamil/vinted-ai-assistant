@@ -12,6 +12,11 @@ import type {
 	PortfolioResponse,
 	PortfolioStatsResponse,
 	StatsResponse,
+	StudioBatchEditResponse,
+	StudioEditedPhotoResponse,
+	StudioFormSuggestionsResponse,
+	StudioPreset,
+	StudioPresetListResponse,
 	VintedArticleData,
 } from './message-types'
 import { getSettings, incrementAnalyzedCount } from './state-manager'
@@ -202,6 +207,102 @@ export async function deletePortfolioItem(
 	vintedId: string
 ): Promise<ApiResponse<{ success: boolean }>> {
 	return apiRequest<{ success: boolean }>(`/api/portfolio/${vintedId}`, {
+		method: 'DELETE',
+	})
+}
+
+// ============================================================================
+// Studio API
+// ============================================================================
+
+export async function studioGetPresets(
+	filter?: 'system' | 'custom' | 'all'
+): Promise<ApiResponse<StudioPresetListResponse>> {
+	const params = new URLSearchParams()
+	if (filter) params.set('type', filter)
+	const queryString = params.toString()
+	const endpoint = `/api/studio/presets${queryString ? `?${queryString}` : ''}`
+	return apiRequest<StudioPresetListResponse>(endpoint)
+}
+
+export async function studioEditPhoto(
+	image: string,
+	presetId: string,
+	options?: { variables?: Record<string, string>; stripMetadata?: boolean }
+): Promise<ApiResponse<StudioEditedPhotoResponse>> {
+	return apiRequest<StudioEditedPhotoResponse>('/api/studio/edit', {
+		method: 'POST',
+		body: JSON.stringify({
+			image,
+			presetId,
+			variables: options?.variables,
+			stripMetadata: options?.stripMetadata ?? true,
+		}),
+	})
+}
+
+export async function studioEditPhotoBatch(
+	images: string[],
+	presetId: string,
+	options?: { variables?: Record<string, string>; stripMetadata?: boolean }
+): Promise<ApiResponse<StudioBatchEditResponse>> {
+	return apiRequest<StudioBatchEditResponse>('/api/studio/edit-batch', {
+		method: 'POST',
+		body: JSON.stringify({
+			images,
+			presetId,
+			variables: options?.variables,
+			stripMetadata: options?.stripMetadata ?? true,
+		}),
+	})
+}
+
+export async function studioEditPhotoCustom(
+	image: string,
+	promptTemplate: string,
+	options?: { variables?: Record<string, string>; stripMetadata?: boolean }
+): Promise<ApiResponse<StudioEditedPhotoResponse>> {
+	return apiRequest<StudioEditedPhotoResponse>('/api/studio/edit-custom', {
+		method: 'POST',
+		body: JSON.stringify({
+			image,
+			promptTemplate,
+			variables: options?.variables,
+			stripMetadata: options?.stripMetadata ?? true,
+		}),
+	})
+}
+
+export async function studioAnalyzeForm(
+	photos: string[],
+	options?: { existingTitle?: string; language?: string }
+): Promise<ApiResponse<StudioFormSuggestionsResponse>> {
+	return apiRequest<StudioFormSuggestionsResponse>('/api/studio/analyze-form', {
+		method: 'POST',
+		body: JSON.stringify({
+			photos,
+			existingTitle: options?.existingTitle,
+			language: options?.language ?? 'fr',
+		}),
+	})
+}
+
+export async function studioCreatePreset(data: {
+	name: string
+	description?: string
+	promptTemplate: string
+	previewImage?: string
+}): Promise<ApiResponse<StudioPreset>> {
+	return apiRequest<StudioPreset>('/api/studio/presets', {
+		method: 'POST',
+		body: JSON.stringify(data),
+	})
+}
+
+export async function studioDeletePreset(
+	presetId: string
+): Promise<ApiResponse<{ success: boolean }>> {
+	return apiRequest<{ success: boolean }>(`/api/studio/presets/${presetId}`, {
 		method: 'DELETE',
 	})
 }
