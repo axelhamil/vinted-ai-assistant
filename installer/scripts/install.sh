@@ -69,28 +69,49 @@ check_installation() {
     fi
 }
 
-# Install pnpm if not present
-install_pnpm() {
-    if command -v pnpm &> /dev/null; then
-        print_success "pnpm already installed ($(pnpm --version))"
+# Install nvm and Node.js LTS
+install_nvm_node() {
+    if command -v node &> /dev/null; then
+        print_success "Node.js already installed ($(node --version))"
         return 0
     fi
 
-    print_step "Installing pnpm..."
+    print_step "Installing nvm..."
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 
-    if command -v npm &> /dev/null; then
+    # Source nvm immediately (CRITICAL - otherwise nvm is not available)
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+    print_step "Installing Node.js LTS..."
+    nvm install --lts
+    nvm use --lts
+    nvm alias default 'lts/*'
+
+    print_success "Node.js $(node --version) installed"
+}
+
+# Install pnpm
+install_pnpm() {
+    print_step "Installing/updating pnpm..."
+
+    # Enable corepack (included with Node.js >= 16.9)
+    corepack enable 2>/dev/null || true
+
+    # Install pnpm via npm if corepack didn't work
+    if ! command -v pnpm &> /dev/null; then
         npm install -g pnpm
-    elif command -v curl &> /dev/null; then
-        curl -fsSL https://get.pnpm.io/install.sh | sh -
-        # Source the updated PATH
-        export PNPM_HOME="${HOME}/.local/share/pnpm"
-        export PATH="$PNPM_HOME:$PATH"
-    else
-        print_error "Cannot install pnpm. Please install npm or curl first."
-        exit 1
     fi
 
-    print_success "pnpm installed"
+    # Update to latest version
+    pnpm self-update 2>/dev/null || true
+
+    # Export PATH for pnpm
+    export PNPM_HOME="${HOME}/.local/share/pnpm"
+    export PATH="$PNPM_HOME:$PATH"
+
+    print_success "pnpm $(pnpm --version) installed"
 }
 
 # Install Bun if not present
@@ -152,6 +173,8 @@ EOF
 install_dependencies() {
     print_step "Installation des dépendances npm..."
     cd "$ROOT_DIR"
+    # Auto-approve builds for native dependencies (e.g., sharp)
+    export PNPM_APPROVE_BUILDS=true
     pnpm install
     print_success "Dépendances installées"
 }
@@ -160,7 +183,7 @@ install_dependencies() {
 setup_database() {
     print_step "Création de la base de données..."
     cd "$ROOT_DIR"
-    pnpm --filter backend db:push
+    pnpm --filter backend db:migrate
     print_success "Base de données créée"
 }
 
@@ -226,6 +249,7 @@ main() {
 
         # Step 1: Install system dependencies
         print_step "Vérification des dépendances système..."
+        install_nvm_node
         install_pnpm
         install_bun
 

@@ -57,37 +57,62 @@ function Check-Installation {
     return ($nodeModulesExists -and $envExists -and $dbExists)
 }
 
-# Install pnpm if not present
-function Install-Pnpm {
-    $pnpmExists = Get-Command pnpm -ErrorAction SilentlyContinue
+# Install Node.js LTS
+function Install-NodeJS {
+    $nodeExists = Get-Command node -ErrorAction SilentlyContinue
 
-    if ($pnpmExists) {
-        $version = pnpm --version
-        Print-Success "pnpm already installed ($version)"
+    if ($nodeExists) {
+        $version = node --version
+        Print-Success "Node.js already installed ($version)"
         return
     }
 
-    Print-Step "Installing pnpm..."
+    Print-Step "Installing Node.js LTS..."
 
-    $npmExists = Get-Command npm -ErrorAction SilentlyContinue
-
-    if ($npmExists) {
-        npm install -g pnpm
+    $wingetExists = Get-Command winget -ErrorAction SilentlyContinue
+    if ($wingetExists) {
+        winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
     } else {
-        # Try winget first
-        $wingetExists = Get-Command winget -ErrorAction SilentlyContinue
-        if ($wingetExists) {
-            winget install pnpm.pnpm
-        } else {
-            # Fallback to PowerShell installation
-            Invoke-WebRequest https://get.pnpm.io/install.ps1 -UseBasicParsing | Invoke-Expression
-        }
+        # Fallback: download and run Node.js installer
+        Print-Error "winget not found. Please install Node.js manually from https://nodejs.org/"
+        exit 1
+    }
+
+    # Refresh PATH immediately
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
+    Print-Success "Node.js installed"
+}
+
+# Install pnpm
+function Install-Pnpm {
+    Print-Step "Installing/updating pnpm..."
+
+    # Enable corepack (included with Node.js >= 16.9)
+    try {
+        corepack enable 2>$null
+    } catch {
+        # Ignore errors if corepack is not available
+    }
+
+    # Install pnpm via npm if not present
+    $pnpmExists = Get-Command pnpm -ErrorAction SilentlyContinue
+    if (-not $pnpmExists) {
+        npm install -g pnpm
+    }
+
+    # Update to latest version
+    try {
+        pnpm self-update 2>$null
+    } catch {
+        # Ignore errors if self-update fails
     }
 
     # Refresh PATH
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 
-    Print-Success "pnpm installed"
+    $version = pnpm --version
+    Print-Success "pnpm $version installed"
 }
 
 # Install Bun if not present
@@ -158,6 +183,8 @@ PORT=3000
 function Install-Dependencies {
     Print-Step "Installation des dependances npm..."
     Set-Location $RootDir
+    # Auto-approve builds for native dependencies (e.g., sharp)
+    $env:PNPM_APPROVE_BUILDS = "true"
     pnpm install
     Print-Success "Dependances installees"
 }
@@ -166,7 +193,7 @@ function Install-Dependencies {
 function Setup-Database {
     Print-Step "Creation de la base de donnees..."
     Set-Location $RootDir
-    pnpm --filter backend db:push
+    pnpm --filter backend db:migrate
     Print-Success "Base de donnees creee"
 }
 
@@ -222,6 +249,7 @@ function Main {
 
         # Step 1: Install system dependencies
         Print-Step "Verification des dependances systeme..."
+        Install-NodeJS
         Install-Pnpm
         Install-Bun
 
