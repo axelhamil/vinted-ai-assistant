@@ -17,7 +17,6 @@ export function ResellTab({ analysis, shippingCost = null }: ResellTabProps) {
 
 	// Calculate total cost including buyer protection and shipping
 	const priceWithProtection = totalPrice ?? price
-	const buyerProtection = totalPrice !== null ? totalPrice - price : null
 	const totalCost = priceWithProtection + (shippingCost ?? 0)
 
 	// Calculate profit after hypothetical purchase (using total cost)
@@ -60,7 +59,9 @@ export function ResellTab({ analysis, shippingCost = null }: ResellTabProps) {
 					<div className="grid grid-cols-3 gap-3">
 						<div className="text-center p-3 rounded-lg bg-surface-tertiary">
 							<div className="text-base text-content-muted mb-1">Achat</div>
-							<div className="text-2xl font-semibold text-content-primary">{totalCost.toFixed(2)}€</div>
+							<div className="text-2xl font-semibold text-content-primary">
+								{totalCost.toFixed(2)}€
+							</div>
 						</div>
 						<div className="flex items-center justify-center">
 							<svg

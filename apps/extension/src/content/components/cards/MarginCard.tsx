@@ -122,7 +122,8 @@ export function MarginCard({
 					{/* Sell price */}
 					<div className="flex items-center justify-between text-xl pt-2">
 						<span className="text-content-secondary">
-							Acheter <span className="text-content-primary font-medium">{totalCost.toFixed(2)}€</span>
+							Acheter{' '}
+							<span className="text-content-primary font-medium">{totalCost.toFixed(2)}€</span>
 						</span>
 						<svg
 							aria-hidden="true"

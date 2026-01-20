@@ -41,7 +41,17 @@ function buildPromptText(params: {
 	size?: string
 	languageName: string
 }): string {
-	const { title, brand, condition, price, totalPrice, shippingCost, daysListed, size, languageName } = params
+	const {
+		title,
+		brand,
+		condition,
+		price,
+		totalPrice,
+		shippingCost,
+		daysListed,
+		size,
+		languageName,
+	} = params
 	// Use totalPrice (includes buyer protection) if available, otherwise fallback to price
 	const totalCost = (totalPrice ?? price) + (shippingCost ?? 0)
 	const shippingDisplay = shippingCost !== null ? `${shippingCost}€` : 'Gratuit'
