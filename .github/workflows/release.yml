@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build extension
+        run: pnpm --filter extension build
+
+      - name: Generate version
+        id: version
+        run: |
+          VERSION=$(date +%Y.%m.%d)-$(git rev-parse --short HEAD)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Generated version: $VERSION"
+
+      - name: Create release archive
+        run: |
+          # Create a temporary directory for the release
+          mkdir -p release-temp/vinted-ai-assistant
+
+          # Copy all project files except node_modules, .git, and other dev files
+          rsync -av --progress . release-temp/vinted-ai-assistant \
+            --exclude node_modules \
+            --exclude .git \
+            --exclude .github \
+            --exclude release-temp \
+            --exclude '*.log' \
+            --exclude '.DS_Store' \
+            --exclude 'apps/backend/.env' \
+            --exclude 'apps/backend/data/*.db'
+
+          # Create ZIP archive
+          cd release-temp
+          zip -r ../vinted-ai-assistant-${{ steps.version.outputs.version }}.zip vinted-ai-assistant
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Vinted AI Assistant v${{ steps.version.outputs.version }}
+          body: |
+            ## Installation
+
+            1. Téléchargez le fichier ZIP ci-dessous
+            2. Extrayez l'archive
+            3. Double-cliquez sur le script d'installation correspondant à votre système :
+               - **Windows** : `installer/install-windows.bat`
+               - **macOS** : `installer/install-macos.command`
+               - **Linux** : `installer/install-linux.sh`
+            4. Suivez les instructions à l'écran
+
+            ## Prérequis
+
+            - Une clé API Google Gemini (gratuit) ou OpenAI
+            - Google Chrome
+
+            ## Notes de version
+
+            Commit: ${{ github.sha }}
+            Date: ${{ github.event.head_commit.timestamp }}
+          files: |
+            vinted-ai-assistant-${{ steps.version.outputs.version }}.zip
+          draft: false
+          prerelease: false

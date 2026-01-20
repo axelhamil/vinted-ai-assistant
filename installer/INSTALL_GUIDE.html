@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation Extension Chrome - Vinted AI Assistant</title>
+    <style>
+        :root {
+            --primary: #09B1BA;
+            --primary-dark: #078a91;
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #22d3ee 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .step {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .step-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .step-content {
+            margin-left: 56px;
+        }
+
+        .step-content p {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .copy-box {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .copy-box code {
+            flex: 1;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            word-break: break-all;
+            color: var(--primary);
+        }
+
+        .copy-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .copy-btn.copied {
+            background: var(--success);
+        }
+
+        .url-box {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .url-box a {
+            color: var(--primary);
+            text-decoration: none;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.95rem;
+        }
+
+        .url-box a:hover {
+            text-decoration: underline;
+        }
+
+        .tip {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--warning);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+        }
+
+        .tip-title {
+            font-weight: 600;
+            color: var(--warning);
+            margin-bottom: 0.5rem;
+        }
+
+        .success-box {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid var(--success);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .success-box h2 {
+            color: var(--success);
+            margin-bottom: 1rem;
+        }
+
+        .success-box p {
+            color: var(--text-muted);
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            margin-left: 0.5rem;
+        }
+
+        .screenshot-placeholder {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 3rem;
+            text-align: center;
+            color: var(--text-muted);
+            margin: 1rem 0;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .step-content {
+                margin-left: 0;
+                margin-top: 1rem;
+            }
+
+            .copy-box {
+                flex-direction: column;
+            }
+
+            .copy-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Vinted AI Assistant</h1>
+            <p class="subtitle">Guide d'installation de l'extension Chrome</p>
+        </header>
+
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <h3 class="step-title">Ouvre les extensions Chrome</h3>
+            </div>
+            <div class="step-content">
+                <p>Ouvre Chrome et accède à la page de gestion des extensions.</p>
+                <div class="url-box">
+                    <a href="chrome://extensions" onclick="copyToClipboard('chrome://extensions'); return false;">
+                        chrome://extensions
+                    </a>
+                </div>
+                <div class="tip">
+                    <div class="tip-title">Astuce</div>
+                    <p>Tu peux aussi y accéder via le menu Chrome → Plus d'outils → Extensions</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <h3 class="step-title">Active le mode développeur</h3>
+            </div>
+            <div class="step-content">
+                <p>En haut à droite de la page, active l'interrupteur <strong>"Mode développeur"</strong>.</p>
+                <div class="screenshot-placeholder">
+                    [Toggle "Mode développeur" en haut à droite]
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <h3 class="step-title">Charge l'extension</h3>
+            </div>
+            <div class="step-content">
+                <p>Clique sur <strong>"Charger l'extension non empaquetée"</strong> (bouton en haut à gauche).</p>
+                <p>Puis sélectionne le dossier de l'extension :</p>
+                <div class="copy-box">
+                    <code id="extension-path">apps/extension/dist</code>
+                    <button class="copy-btn" onclick="copyExtensionPath()">Copier le chemin</button>
+                </div>
+                <div class="tip">
+                    <div class="tip-title">Emplacement du dossier</div>
+                    <p>Le dossier <code>dist</code> se trouve dans le répertoire où tu as extrait le ZIP :</p>
+                    <code style="color: var(--text-muted); display: block; margin-top: 0.5rem;">
+                        [ton-dossier]/apps/extension/dist/
+                    </code>
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-header">
+                <div class="step-number">4</div>
+                <h3 class="step-title">Épingle l'extension <span class="badge">Recommandé</span></h3>
+            </div>
+            <div class="step-content">
+                <p>Clique sur l'icône puzzle (🧩) dans la barre d'outils Chrome, puis clique sur l'épingle à côté de "Vinted AI Assistant".</p>
+                <div class="screenshot-placeholder">
+                    [Épingle l'extension pour un accès rapide]
+                </div>
+            </div>
+        </div>
+
+        <div class="success-box">
+            <h2>🎉 Installation terminée !</h2>
+            <p>Rends-toi sur <a href="https://www.vinted.fr" target="_blank" style="color: var(--primary);">vinted.fr</a> et ouvre une page d'article pour voir l'assistant en action.</p>
+        </div>
+
+        <footer>
+            <p>Vinted AI Assistant - Analyseur de bonnes affaires</p>
+        </footer>
+    </div>
+
+    <script>
+        // Try to detect the actual path
+        function getExtensionPath() {
+            // This will be the relative path from where the user extracted the ZIP
+            return 'apps/extension/dist';
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Could show a toast notification here
+            }).catch(err => {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            });
+        }
+
+        function copyExtensionPath() {
+            const path = document.getElementById('extension-path').textContent;
+            const btn = document.querySelector('.copy-btn');
+
+            copyToClipboard(path);
+
+            // Visual feedback
+            const originalText = btn.textContent;
+            btn.textContent = 'Copié !';
+            btn.classList.add('copied');
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.classList.remove('copied');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

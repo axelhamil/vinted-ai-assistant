@@ -16,6 +16,27 @@
 - **Authenticity Check** — Visual analysis for branded items
 - **Photo Analysis** — Quality assessment and defect detection
 
+## Quick Start (Non-Developers)
+
+> **One-click installation** — No coding required!
+
+1. **Download** the latest release: [Releases](https://github.com/your-username/vinted-ai-assistant/releases/latest)
+2. **Extract** the ZIP file
+3. **Double-click** the installer for your system:
+   - **Windows**: `installer/install-windows.bat`
+   - **macOS**: `installer/install-macos.command`
+   - **Linux**: `installer/install-linux.sh`
+4. **Follow** the on-screen instructions (you'll need a free API key from [Google AI Studio](https://aistudio.google.com/apikey))
+
+The installer will:
+- Install all required tools (pnpm, Bun)
+- Configure your API key
+- Build the extension
+- Start the server
+- Guide you to install the Chrome extension
+
+**Subsequent launches**: Just double-click the same file — it will detect the existing installation and start the server directly.
+
 ## Architecture
 
 ```
@@ -49,7 +70,7 @@ vinted-ai-assistant/
 | **AI** | Google Gemini (with Google Search grounding), OpenAI |
 | **Monorepo** | pnpm workspaces, Turborepo |
 
-## Installation
+## Installation (Developers)
 
 ### Prerequisites
 
