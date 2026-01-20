@@ -19,6 +19,8 @@ export interface AnalysisProps {
 	title: string
 	description: string | null
 	price: number
+	/** Total price including buyer protection */
+	totalPrice: number | null
 	brand: string | null
 	size: string | null
 	condition: string | null

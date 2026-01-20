@@ -19,6 +19,8 @@ export interface AnalysisResponseDTO {
 	url: string
 	title: string
 	price: number
+	/** Total price including buyer protection (null if not available) */
+	totalPrice: number | null
 	brand: string | null
 
 	aiDetection: AIDetection
@@ -45,6 +47,7 @@ export function toAnalysisResponseDTO(entity: AnalysisEntity): AnalysisResponseD
 		url: entity.url,
 		title: entity.title,
 		price: entity.askingPrice.value,
+		totalPrice: entity.toProps().totalPrice,
 		brand: entity.brand,
 
 		aiDetection: {
@@ -97,6 +100,7 @@ export interface PortfolioItemDTO {
 	vintedId: string
 	title: string
 	price: number
+	totalPrice: number | null
 	score: number
 	status: AnalysisStatus
 	imageUrl: string | null
@@ -132,6 +136,7 @@ export function toPortfolioItemDTO(entity: AnalysisEntity): PortfolioItemDTO {
 		vintedId: entity.vintedId,
 		title: entity.title,
 		price: entity.askingPrice.value,
+		totalPrice: entity.toProps().totalPrice,
 		score: entity.opportunity.score,
 		status: entity.status,
 		imageUrl: entity.photos[0] ?? null,

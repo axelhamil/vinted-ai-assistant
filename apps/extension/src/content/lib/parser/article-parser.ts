@@ -78,6 +78,41 @@ export function extractPrice(): number {
 }
 
 /**
+ * Extracts the total price including buyer protection from the page
+ * Returns null if not found
+ */
+export function extractTotalPrice(): number | null {
+	// Method 1: aria-label on the button
+	const button = document.querySelector('button[aria-label*="Protection acheteurs"]')
+	if (button) {
+		const ariaLabel = button.getAttribute('aria-label') || ''
+		const match = ariaLabel.match(/(\d+[.,]?\d*)\s*€/)
+		if (match?.[1]) {
+			const price = Number.parseFloat(match[1].replace(',', '.'))
+			if (!Number.isNaN(price)) return price
+		}
+	}
+
+	// Method 2: element with data-testid service-fee
+	const serviceFeeTitle = document.querySelector('[data-testid="service-fee-included-title"]')
+	if (serviceFeeTitle) {
+		const container = serviceFeeTitle.closest('button')
+		if (container) {
+			const priceElement = container.querySelector('.web_ui__Text__title')
+			if (priceElement?.textContent) {
+				const match = priceElement.textContent.match(/(\d+[.,]?\d*)\s*€/)
+				if (match?.[1]) {
+					const price = Number.parseFloat(match[1].replace(',', '.'))
+					if (!Number.isNaN(price)) return price
+				}
+			}
+		}
+	}
+
+	return null
+}
+
+/**
  * Extracts the article description from the page
  */
 export function extractDescription(): string {

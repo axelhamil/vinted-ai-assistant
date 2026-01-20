@@ -5,6 +5,8 @@ interface MarginCardProps {
 	margin: number
 	marginPercent: number
 	buyPrice: number
+	/** Total price including buyer protection (null if not available) */
+	totalPrice: number | null
 	/** Shipping cost in euros (null = free shipping or not available) */
 	shippingCost: number | null
 	sellPrice: number
@@ -37,13 +39,17 @@ export function MarginCard({
 	margin,
 	marginPercent,
 	buyPrice,
+	totalPrice,
 	shippingCost,
 	sellPrice,
 }: MarginCardProps) {
 	const marginColor = getMarginColor(marginPercent)
 	const progressVariant = getProgressVariant(marginPercent)
 	const isPositive = margin > 0
-	const totalCost = buyPrice + (shippingCost ?? 0)
+	// Use totalPrice (includes buyer protection) if available, otherwise fallback to buyPrice
+	const priceWithProtection = totalPrice ?? buyPrice
+	const buyerProtection = totalPrice !== null ? totalPrice - buyPrice : null
+	const totalCost = priceWithProtection + (shippingCost ?? 0)
 
 	return (
 		<Card
@@ -95,6 +101,12 @@ export function MarginCard({
 							<span className="text-content-secondary">Prix article</span>
 							<span className="text-content-primary">{buyPrice}€</span>
 						</div>
+						{buyerProtection !== null && buyerProtection > 0 && (
+							<div className="flex justify-between">
+								<span className="text-content-secondary">Protection acheteur</span>
+								<span className="text-content-primary">{buyerProtection.toFixed(2)}€</span>
+							</div>
+						)}
 						<div className="flex justify-between">
 							<span className="text-content-secondary">Frais de port</span>
 							<span className="text-content-primary">
@@ -103,14 +115,14 @@ export function MarginCard({
 						</div>
 						<div className="flex justify-between font-medium border-t border-border pt-1">
 							<span className="text-content-primary">Coût total</span>
-							<span className="text-content-primary">{totalCost}€</span>
+							<span className="text-content-primary">{totalCost.toFixed(2)}€</span>
 						</div>
 					</div>
 
 					{/* Sell price */}
 					<div className="flex items-center justify-between text-xl pt-2">
 						<span className="text-content-secondary">
-							Acheter <span className="text-content-primary font-medium">{totalCost}€</span>
+							Acheter <span className="text-content-primary font-medium">{totalCost.toFixed(2)}€</span>
 						</span>
 						<svg
 							aria-hidden="true"

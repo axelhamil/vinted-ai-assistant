@@ -1,0 +1,1 @@
+ALTER TABLE `analyses` ADD `total_price` real;

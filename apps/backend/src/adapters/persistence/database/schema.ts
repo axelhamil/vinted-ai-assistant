@@ -8,6 +8,7 @@ export const analyses = sqliteTable('analyses', {
 	title: text('title').notNull(),
 	description: text('description'),
 	price: real('price').notNull(),
+	totalPrice: real('total_price'),
 	brand: text('brand'),
 	size: text('size'),
 	condition: text('condition'),

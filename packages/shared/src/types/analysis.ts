@@ -161,6 +161,8 @@ export interface AnalysisResult {
 	url: string
 	title: string
 	price: number
+	/** Total price including buyer protection (null if not available) */
+	totalPrice: number | null
 	brand: string | null
 
 	/** AI detection results */

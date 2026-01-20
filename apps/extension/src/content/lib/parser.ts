@@ -14,6 +14,7 @@ import {
 	extractShippingCost,
 	extractSize,
 	extractTitle,
+	extractTotalPrice,
 	extractViews,
 	extractVintedId,
 } from './parser/article-parser'
@@ -41,6 +42,7 @@ export function parseVintedArticle(): VintedArticleData | null {
 		title: extractTitle(),
 		description: extractDescription(),
 		price: extractPrice(),
+		totalPrice: extractTotalPrice(),
 		shippingCost: extractShippingCost(),
 		brand: extractBrand(),
 		size: extractSize(),

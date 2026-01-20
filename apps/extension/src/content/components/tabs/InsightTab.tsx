@@ -25,7 +25,7 @@ export function InsightTab({
 	seller,
 	shippingCost = null,
 }: InsightTabProps) {
-	const { opportunity, marketPrice, authenticityCheck, photoQuality, price } = analysis
+	const { opportunity, marketPrice, authenticityCheck, photoQuality, price, totalPrice } = analysis
 
 	return (
 		<div className="space-y-4 animate-fade-in">
@@ -37,6 +37,7 @@ export function InsightTab({
 				margin={opportunity.margin}
 				marginPercent={opportunity.marginPercent}
 				buyPrice={price}
+				totalPrice={totalPrice}
 				shippingCost={shippingCost}
 				sellPrice={marketPrice.average}
 			/>

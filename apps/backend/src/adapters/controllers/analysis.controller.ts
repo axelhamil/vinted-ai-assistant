@@ -84,6 +84,7 @@ export class AnalysisController {
 			url: entity.url,
 			title: entity.title,
 			price: entity.askingPrice.value,
+			totalPrice: entity.toProps().totalPrice,
 			brand: entity.brand,
 			aiDetection: {
 				detectedBrand: entity.brand,

@@ -66,6 +66,8 @@ export const analyzeBodySchema = z.object({
 	title: z.string().min(1, 'Title is required'),
 	description: z.string(),
 	price: z.number().positive('Price must be positive'),
+	/** Total price including buyer protection (null if not available) */
+	totalPrice: z.number().positive().nullable(),
 	/** Shipping cost in euros (null = free shipping or not available) */
 	shippingCost: z.number().min(0).nullable(),
 	brand: z.string().nullable(),

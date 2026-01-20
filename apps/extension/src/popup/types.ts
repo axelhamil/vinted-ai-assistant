@@ -43,6 +43,7 @@ export interface PortfolioArticle {
 	url: string
 	title: string
 	price: number
+	totalPrice?: number
 	score: number
 	status: ArticleStatus
 	imageUrl?: string

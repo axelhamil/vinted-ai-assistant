@@ -85,9 +85,16 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
 				<div className="min-w-0 flex-1">
 					<p className="truncate text-base font-medium text-gray-900">{article.title}</p>
 					<div className="mt-1 flex items-center gap-2">
-						<span className="text-base font-semibold text-gray-900">
-							{formatPrice(article.price)}
-						</span>
+						<div className="flex items-baseline gap-1">
+							<span className="text-base font-semibold text-gray-900">
+								{formatPrice(article.price)}
+							</span>
+							{article.totalPrice && (
+								<span className="text-xs text-gray-500">
+									({formatPrice(article.totalPrice)} total)
+								</span>
+							)}
+						</div>
 						<span className="text-base text-gray-400">{formatDate(article.analyzedAt)}</span>
 					</div>
 				</div>

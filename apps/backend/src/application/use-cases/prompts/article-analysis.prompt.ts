@@ -11,6 +11,8 @@ export interface ArticleAnalysisPromptInput {
 	brand: string | null
 	condition: string
 	price: number
+	/** Total price including buyer protection (null if not available) */
+	totalPrice?: number
 	/** Shipping cost in euros (null = free shipping or not available) */
 	shippingCost: number | null
 	daysListed: number
@@ -33,13 +35,15 @@ function buildPromptText(params: {
 	brand: string | null
 	condition: string
 	price: number
+	totalPrice?: number
 	shippingCost: number | null
 	daysListed: number
 	size?: string
 	languageName: string
 }): string {
-	const { title, brand, condition, price, shippingCost, daysListed, size, languageName } = params
-	const totalCost = price + (shippingCost ?? 0)
+	const { title, brand, condition, price, totalPrice, shippingCost, daysListed, size, languageName } = params
+	// Use totalPrice (includes buyer protection) if available, otherwise fallback to price
+	const totalCost = (totalPrice ?? price) + (shippingCost ?? 0)
 	const shippingDisplay = shippingCost !== null ? `${shippingCost}€` : 'Gratuit'
 
 	return `# RÔLE ET EXPERTISE
@@ -175,7 +179,7 @@ Les tailles M et L sont les plus demandées et se revendent mieux/plus vite.
 
 **Champs:**
 - \`score\`: Score final 1-10 (arrondi)
-- \`margin\`: marketPriceEstimation.average - coût total d'achat (prix + frais de port) (en €, peut être négatif)
+- \`margin\`: marketPriceEstimation.average - coût total d'achat (prix avec protection acheteur + frais de port) (en €, peut être négatif)
 - \`marginPercent\`: (margin / coût total d'achat) × 100
 - \`signals\`: 3-5 signaux avec:
   - \`type\`: "positive" (opportunité), "negative" (risque), "neutral" (info)
