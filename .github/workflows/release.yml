@@ -87,7 +87,7 @@ jobs:
 
             ## Prérequis
 
-            - Une clé API Google Gemini (gratuit) ou OpenAI
+            - Une clé API Google Gemini (gratuit) : https://aistudio.google.com/apikey
             - Google Chrome
 
             ## Notes de version
