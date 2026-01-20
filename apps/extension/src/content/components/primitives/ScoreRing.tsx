@@ -38,12 +38,17 @@ const sizeConfig = {
 /**
  * Animated SVG score ring with orange gradient - light theme
  */
-export function ScoreRing({ score, size = 'md', animated = true, showLabel = true }: ScoreRingProps) {
+export function ScoreRing({
+	score,
+	size = 'md',
+	animated = true,
+	showLabel = true,
+}: ScoreRingProps) {
 	const [displayScore, setDisplayScore] = useState(animated ? 0 : score)
 	const [offset, setOffset] = useState(animated ? 283 : 0)
 
 	const config = sizeConfig[size]
-	const { color, glow, bg } = getScoreColor(score)
+	const { color } = getScoreColor(score)
 	const label = getScoreLabel(score)
 	const isExceptional = score === 10
 
@@ -76,7 +81,7 @@ export function ScoreRing({ score, size = 'md', animated = true, showLabel = tru
 				setDisplayScore(Math.round(scoreIncrement * currentStep * 10) / 10)
 				const progress = currentStep / steps
 				// Ease out cubic
-				const eased = 1 - Math.pow(1 - progress, 3)
+				const eased = 1 - (1 - progress) ** 3
 				setOffset(circumference - eased * (score / 10) * circumference)
 			}
 		}, stepDuration)
@@ -94,6 +99,7 @@ export function ScoreRing({ score, size = 'md', animated = true, showLabel = tru
 				}}
 			>
 				<svg
+					aria-hidden="true"
 					width={config.width}
 					height={config.width}
 					viewBox={`0 0 ${config.width} ${config.width}`}
@@ -127,30 +133,24 @@ export function ScoreRing({ score, size = 'md', animated = true, showLabel = tru
 						strokeDasharray={circumference}
 						strokeDashoffset={offset}
 						style={{
-							transition: animated ? 'stroke-dashoffset 800ms cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
+							transition: animated
+								? 'stroke-dashoffset 800ms cubic-bezier(0.34, 1.56, 0.64, 1)'
+								: 'none',
 						}}
 					/>
 				</svg>
 
 				{/* Score number */}
 				<div className="absolute inset-0 flex flex-col items-center justify-center">
-					<span
-						className={`${config.fontSize} font-bold`}
-						style={{ color }}
-					>
+					<span className={`${config.fontSize} font-bold`} style={{ color }}>
 						{displayScore.toFixed(1).replace('.0', '')}
 					</span>
-					{size !== 'sm' && (
-						<span className="text-lg text-content-muted">/10</span>
-					)}
+					{size !== 'sm' && <span className="text-lg text-content-muted">/10</span>}
 				</div>
 			</div>
 
 			{showLabel && size !== 'sm' && (
-				<span
-					className={`${config.labelSize} font-medium`}
-					style={{ color }}
-				>
+				<span className={`${config.labelSize} font-medium`} style={{ color }}>
 					{label}
 				</span>
 			)}

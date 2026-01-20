@@ -48,7 +48,7 @@ export async function stripImageMetadata(
 
 	if (imageBase64.startsWith('data:')) {
 		const matches = imageBase64.match(/^data:([^;]+);base64,(.+)$/)
-		if (matches && matches[1] && matches[2]) {
+		if (matches?.[1] && matches[2]) {
 			detectedMimeType = matches[1]
 			rawBase64 = matches[2]
 		}

@@ -3,7 +3,7 @@
  */
 
 import type { CSSProperties } from 'react'
-import { getMarginColor, getScoreLabelColor, type ScoreStyle } from './badge-utils'
+import { type ScoreStyle, getMarginColor, getScoreLabelColor } from './badge-utils'
 
 // Base font family
 const fontFamily = 'Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
@@ -33,7 +33,11 @@ export function getContainerStyle(position: 'absolute' | 'fixed' = 'absolute'): 
 /**
  * Button base style
  */
-export function getButtonStyle(style: ScoreStyle, isHovered: boolean, isExceptional: boolean): CSSProperties {
+export function getButtonStyle(
+	style: ScoreStyle,
+	isHovered: boolean,
+	isExceptional: boolean
+): CSSProperties {
 	return {
 		display: 'flex',
 		alignItems: 'center',
@@ -97,7 +101,7 @@ export const labelStyle: CSSProperties = {
 }
 
 // Tooltip styles
-export function getTooltipStyle(score: number): CSSProperties {
+export function getTooltipStyle(_score: number): CSSProperties {
 	return {
 		position: 'absolute',
 		top: '100%',

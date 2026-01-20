@@ -1,6 +1,6 @@
 import type { AnalysisStatus, Negotiation, NegotiationTone } from '@vinted-ai/shared/analysis'
-import type { Context } from 'hono'
 import type { Container } from 'inversify'
+import { TYPES } from '../../application/di-types'
 import type {
 	AnalysisListResponseDTO,
 	AnalysisResponseDTO,
@@ -19,7 +19,8 @@ import type {
 	ExportMarkdownUseCase,
 } from '../../application/use-cases/export-markdown.use-case'
 import type { GetAnalysisUseCase } from '../../application/use-cases/get-analysis.use-case'
-import { TYPES } from '../../application/di-types'
+import { buildNegotiationMessage } from '../../application/use-cases/prompts/negotiation.prompt'
+import { negotiationSchema } from '../../application/use-cases/prompts/schemas/article-analysis.schema'
 import { AnalysisNotFoundError } from '../../domain/errors/domain.error'
 
 /**
@@ -134,8 +135,8 @@ export class AnalysisController {
 			(Date.now() - entity.analyzedAt.getTime()) / (1000 * 60 * 60 * 24)
 		)
 
-		// Generate new negotiation with requested tone
-		const negotiation = await this.aiProvider.generateNegotiation({
+		// Build the negotiation prompt
+		const message = buildNegotiationMessage({
 			price: entity.askingPrice.value,
 			marketPriceAvg: entity.marketPrice.average,
 			daysListed,
@@ -144,7 +145,17 @@ export class AnalysisController {
 			preferredTone: tone,
 		})
 
-		return negotiation
+		// Generate negotiation using the generic AI interface
+		const result = await this.aiProvider.generateText({
+			messages: [message],
+			schema: negotiationSchema,
+		})
+
+		if (!result.output) {
+			throw new Error('Failed to generate negotiation')
+		}
+
+		return result.output
 	}
 
 	/**
@@ -191,13 +202,11 @@ export class AnalysisController {
 	 * DELETE /api/portfolio/:vintedId
 	 * Delete an article from the portfolio
 	 */
-	async deletePortfolioItem(c: Context, vintedId: string): Promise<Response> {
+	async deletePortfolioItem(vintedId: string): Promise<void> {
 		const deleted = await this.analysisRepository.delete(vintedId)
 
 		if (!deleted) {
-			return c.json({ error: 'Article not found' }, 404)
+			throw new AnalysisNotFoundError(vintedId)
 		}
-
-		return c.json({ success: true })
 	}
 }

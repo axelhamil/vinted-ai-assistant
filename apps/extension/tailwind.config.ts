@@ -16,36 +16,36 @@ export default {
 				},
 				// Text colors for light theme
 				content: {
-					primary: '#1F2937',    // Gray 800
-					secondary: '#6B7280',  // Gray 500
-					muted: '#9CA3AF',      // Gray 400
+					primary: '#1F2937', // Gray 800
+					secondary: '#6B7280', // Gray 500
+					muted: '#9CA3AF', // Gray 400
 				},
 				// Brand orange colors
 				brand: {
-					DEFAULT: '#F97316',    // Orange 500
-					light: '#FDBA74',      // Orange 300
-					dark: '#EA580C',       // Orange 600
-					darker: '#C2410C',     // Orange 700
+					DEFAULT: '#F97316', // Orange 500
+					light: '#FDBA74', // Orange 300
+					dark: '#EA580C', // Orange 600
+					darker: '#C2410C', // Orange 700
 				},
 				// Semantic colors
-				profit: '#10B981',         // Emerald 500
-				caution: '#F59E0B',        // Amber 500
-				danger: '#EF4444',         // Red 500
-				info: '#3B82F6',           // Blue 500
-				exceptional: '#8B5CF6',    // Violet 500
+				profit: '#10B981', // Emerald 500
+				caution: '#F59E0B', // Amber 500
+				danger: '#EF4444', // Red 500
+				info: '#3B82F6', // Blue 500
+				exceptional: '#8B5CF6', // Violet 500
 				// Border colors
 				border: {
-					DEFAULT: '#E5E7EB',    // Gray 200
-					light: '#F3F4F6',      // Gray 100
-					dark: '#D1D5DB',       // Gray 300
+					DEFAULT: '#E5E7EB', // Gray 200
+					light: '#F3F4F6', // Gray 100
+					dark: '#D1D5DB', // Gray 300
 				},
 			},
 			boxShadow: {
-				'soft': '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-				'medium': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-				'card': '0 2px 8px rgba(0, 0, 0, 0.08)',
-				'elevated': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-				'sidebar': '0 0 40px rgba(0, 0, 0, 0.15)',
+				soft: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+				medium: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+				card: '0 2px 8px rgba(0, 0, 0, 0.08)',
+				elevated: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+				sidebar: '0 0 40px rgba(0, 0, 0, 0.15)',
 				'glow-orange': '0 0 20px rgba(249, 115, 22, 0.3)',
 				'glow-profit': '0 0 20px rgba(16, 185, 129, 0.3)',
 			},

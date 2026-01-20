@@ -49,14 +49,17 @@ export function createAnalysisRoutes(container: Container): Hono {
 
 		const validation = analyzeBodySchema.safeParse(rawBody)
 		if (!validation.success) {
-			return c.json({
-				error: 'Validation Error',
-				message: 'Request validation failed',
-				details: validation.error.issues.map(issue => ({
-					field: issue.path.join('.'),
-					message: issue.message,
-				})),
-			}, 400)
+			return c.json(
+				{
+					error: 'Validation Error',
+					message: 'Request validation failed',
+					details: validation.error.issues.map((issue) => ({
+						field: issue.path.join('.'),
+						message: issue.message,
+					})),
+				},
+				400
+			)
 		}
 
 		const result = await controller.analyze(validation.data)
@@ -97,7 +100,8 @@ export function createAnalysisRoutes(container: Container): Hono {
 	 */
 	router.delete('/portfolio/:vintedId', async (c) => {
 		const { vintedId } = validateParams(c, vintedIdParamSchema)
-		return controller.deletePortfolioItem(c, vintedId)
+		await controller.deletePortfolioItem(vintedId)
+		return c.json({ success: true })
 	})
 
 	/**

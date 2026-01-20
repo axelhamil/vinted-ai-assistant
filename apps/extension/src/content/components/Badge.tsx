@@ -77,6 +77,7 @@ function getScoreLabelColor(score: number): string {
 function SparklesIcon({ style }: { style?: CSSProperties }) {
 	return (
 		<svg
+			aria-hidden="true"
 			style={style}
 			viewBox="0 0 24 24"
 			fill="currentColor"
@@ -102,7 +103,13 @@ function getMarginColor(marginPercent: number): string {
  * Badge component displaying the opportunity score on the main Vinted photo
  * Light theme with orange accents
  */
-export function Badge({ score, marginPercent, onOpenSidebar, isLoading = false, loadingMessage = 'Analyse en cours...' }: BadgeProps) {
+export function Badge({
+	score,
+	marginPercent,
+	onOpenSidebar,
+	isLoading = false,
+	loadingMessage = 'Analyse en cours...',
+}: BadgeProps) {
 	const [showTooltip, setShowTooltip] = useState(false)
 	const [isHovered, setIsHovered] = useState(false)
 	const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
@@ -500,7 +507,13 @@ export function Badge({ score, marginPercent, onOpenSidebar, isLoading = false, 
 
 					<div style={tooltipCtaStyle}>
 						<span style={tooltipCtaTextStyle}>Cliquez pour l'analyse complète</span>
-						<svg style={tooltipCtaIconStyle} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg
+							aria-hidden="true"
+							style={tooltipCtaIconStyle}
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
 						</svg>
 					</div>
@@ -568,7 +581,13 @@ export function Badge({ score, marginPercent, onOpenSidebar, isLoading = false, 
 
 					<div style={tooltipCtaStyle}>
 						<span style={tooltipCtaTextStyle}>Cliquez pour l'analyse complète</span>
-						<svg style={tooltipCtaIconStyle} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg
+							aria-hidden="true"
+							style={tooltipCtaIconStyle}
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
 						</svg>
 					</div>

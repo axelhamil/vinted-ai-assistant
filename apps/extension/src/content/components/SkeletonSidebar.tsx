@@ -7,7 +7,10 @@ interface SkeletonSidebarProps {
  * Skeleton Sidebar component displayed during analysis loading
  * Light theme with shimmer animation and orange accent
  */
-export function SkeletonSidebar({ isOpen, loadingMessage = 'Analyse en cours...' }: SkeletonSidebarProps) {
+export function SkeletonSidebar({
+	isOpen,
+	loadingMessage = 'Analyse en cours...',
+}: SkeletonSidebarProps) {
 	if (!isOpen) {
 		return null
 	}

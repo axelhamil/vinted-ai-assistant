@@ -21,7 +21,10 @@ export type EditPhotoBody = z.infer<typeof editPhotoSchema>
  */
 export const editPhotoBatchSchema = z.object({
 	/** Array of base64 encoded images or URLs */
-	images: z.array(z.string().min(1)).min(1, 'At least one image is required').max(10, 'Maximum 10 images per batch'),
+	images: z
+		.array(z.string().min(1))
+		.min(1, 'At least one image is required')
+		.max(10, 'Maximum 10 images per batch'),
 	/** Preset ID to use for editing */
 	presetId: z.string().min(1, 'Preset ID is required'),
 	/** Optional custom variables to override in the template */
@@ -53,7 +56,10 @@ export type EditPhotoCustomBody = z.infer<typeof editPhotoCustomSchema>
  */
 export const analyzeFormSchema = z.object({
 	/** Array of photo URLs or base64 */
-	photos: z.array(z.string().min(1)).min(1, 'At least one photo is required').max(10, 'Maximum 10 photos'),
+	photos: z
+		.array(z.string().min(1))
+		.min(1, 'At least one photo is required')
+		.max(10, 'Maximum 10 photos'),
 	/** Optional existing title for context */
 	existingTitle: z.string().optional(),
 	/** Language for suggestions (ISO code) */
@@ -67,7 +73,10 @@ export type AnalyzeFormBody = z.infer<typeof analyzeFormSchema>
  */
 export const createPresetSchema = z.object({
 	/** Name of the preset */
-	name: z.string().min(2, 'Name must be at least 2 characters').max(50, 'Name must be at most 50 characters'),
+	name: z
+		.string()
+		.min(2, 'Name must be at least 2 characters')
+		.max(50, 'Name must be at most 50 characters'),
 	/** Description of the preset */
 	description: z.string().max(200, 'Description must be at most 200 characters').optional(),
 	/** Prompt template with optional {{variable}} placeholders */

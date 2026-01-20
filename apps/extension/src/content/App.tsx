@@ -422,6 +422,7 @@ export function App() {
 					analyzedTimeAgo={analyzedTimeAgo}
 					photos={articleData?.photos ?? []}
 					seller={articleData?.seller}
+					shippingCost={articleData?.shippingCost}
 				/>
 			)}
 		</div>

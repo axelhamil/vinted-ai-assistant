@@ -6,12 +6,6 @@ import type { AnalysisResult, Negotiation, NegotiationTone } from '@vinted-ai/sh
 import type { VintedArticleData } from '@vinted-ai/shared/article'
 
 // ============================================================================
-// AI Provider
-// ============================================================================
-
-export type AIProvider = 'openai' | 'gemini'
-
-// ============================================================================
 // Extension Settings & State
 // ============================================================================
 
@@ -20,9 +14,6 @@ export interface ExtensionSettings {
 	scoreThreshold: number
 	autoOpenSidebar: boolean
 	enabled: boolean
-	aiProvider: AIProvider
-	openaiApiKey: string
-	geminiApiKey: string
 }
 
 export interface ExtensionState {

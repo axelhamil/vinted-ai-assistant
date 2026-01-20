@@ -4,10 +4,10 @@
 
 import { useState } from 'react'
 import { usePopupData } from './hooks/usePopupData'
-import { MainView } from './views/MainView'
-import { SettingsView } from './views/SettingsView'
-import { PortfolioView } from './views/PortfolioView'
 import type { PopupView } from './types'
+import { MainView } from './views/MainView'
+import { PortfolioView } from './views/PortfolioView'
+import { SettingsView } from './views/SettingsView'
 
 export function App() {
 	const [view, setView] = useState<PopupView>('main')
@@ -36,20 +36,13 @@ export function App() {
 
 	if (view === 'settings') {
 		return (
-			<SettingsView
-				settings={settings}
-				onBack={() => setView('main')}
-				onUpdate={updateSettings}
-			/>
+			<SettingsView settings={settings} onBack={() => setView('main')} onUpdate={updateSettings} />
 		)
 	}
 
 	if (view === 'portfolio') {
 		return (
-			<PortfolioView
-				onBack={() => setView('main')}
-				scoreThreshold={settings?.scoreThreshold}
-			/>
+			<PortfolioView onBack={() => setView('main')} scoreThreshold={settings?.scoreThreshold} />
 		)
 	}
 

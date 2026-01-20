@@ -80,15 +80,15 @@ export function injectFilesIntoVintedUpload(files: File[]): boolean {
 
 		// Add existing files if any
 		if (fileInput.files) {
-			Array.from(fileInput.files).forEach((file) => {
+			for (const file of Array.from(fileInput.files)) {
 				dataTransfer.items.add(file)
-			})
+			}
 		}
 
 		// Add new files
-		files.forEach((file) => {
+		for (const file of files) {
 			dataTransfer.items.add(file)
-		})
+		}
 
 		// Set files on the input
 		fileInput.files = dataTransfer.files
@@ -99,7 +99,9 @@ export function injectFilesIntoVintedUpload(files: File[]): boolean {
 			new Event('change', { bubbles: true, cancelable: true }),
 		]
 
-		events.forEach((event) => fileInput.dispatchEvent(event))
+		for (const event of events) {
+			fileInput.dispatchEvent(event)
+		}
 
 		console.log(`[Vinted AI Studio] Injected ${files.length} file(s) into upload`)
 		return true
@@ -227,13 +229,13 @@ export function cleanupDropHandler(): void {
 	}
 
 	// Remove listeners from any zones we attached to
-	document.querySelectorAll('[data-vinted-ai-dropzone="true"]').forEach((el) => {
+	for (const el of document.querySelectorAll('[data-vinted-ai-dropzone="true"]')) {
 		const element = el as HTMLElement
 		element.removeEventListener('dragover', handleDragOver as EventListener)
 		element.removeEventListener('dragleave', handleDragLeave as EventListener)
 		element.removeEventListener('drop', handleDrop as EventListener)
 		delete element.dataset.vintedAiDropzone
-	})
+	}
 
 	isInitialized = false
 	console.log('[Vinted AI Studio] Drop handler cleaned up')

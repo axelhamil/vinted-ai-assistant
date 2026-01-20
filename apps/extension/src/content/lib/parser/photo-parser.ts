@@ -74,17 +74,18 @@ function extractFromScriptData(): string[] {
 		const content = script.textContent || ''
 
 		// Look for patterns like "full_size_url":"https://..." or photo URLs in JSON
-		const urlPattern = /"(?:full_size_url|url|image_url|photo_url|high_resolution\.url)":\s*"(https:\/\/[^"]+vinted[^"]+)"/g
-		let match: RegExpExecArray | null
-		while ((match = urlPattern.exec(content)) !== null) {
+		const urlPattern =
+			/"(?:full_size_url|url|image_url|photo_url|high_resolution\.url)":\s*"(https:\/\/[^"]+vinted[^"]+)"/g
+		for (const match of content.matchAll(urlPattern)) {
 			if (match[1] && !match[1].includes('avatar') && !match[1].includes('icon')) {
 				photos.push(match[1])
 			}
 		}
 
 		// Also look for image arrays in format ["https://..."]
-		const arrayPattern = /\["(https:\/\/images[^"]+vinted\.net[^"]+)"(?:,"(https:\/\/images[^"]+vinted\.net[^"]+)")*\]/g
-		while ((match = arrayPattern.exec(content)) !== null) {
+		const arrayPattern =
+			/\["(https:\/\/images[^"]+vinted\.net[^"]+)"(?:,"(https:\/\/images[^"]+vinted\.net[^"]+)")*\]/g
+		for (const match of content.matchAll(arrayPattern)) {
 			// Extract all URLs from the match
 			const urls = match[0].match(/https:\/\/images[^"]+vinted\.net[^"]+/g)
 			if (urls) {

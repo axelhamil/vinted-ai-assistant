@@ -1,5 +1,5 @@
 import type { StudioPreset } from '../../adapters/persistence/database/schema'
-import type { FormFillingResult } from '../interfaces/providers/image-editor.provider.interface'
+import type { FormFillingSuggestions } from '../use-cases/prompts/schemas/form-filling.schema'
 
 /**
  * DTO for a single edited photo response
@@ -103,9 +103,11 @@ export function toStudioPresetListDTO(presets: StudioPreset[]): StudioPresetList
 }
 
 /**
- * Convert FormFillingResult to DTO
+ * Convert FormFillingSuggestions to DTO
  */
-export function toFormFillingSuggestionsDTO(result: FormFillingResult): FormFillingSuggestionsDTO {
+export function toFormFillingSuggestionsDTO(
+	result: FormFillingSuggestions
+): FormFillingSuggestionsDTO {
 	return {
 		suggestedTitle: result.suggestedTitle,
 		suggestedDescription: result.suggestedDescription,

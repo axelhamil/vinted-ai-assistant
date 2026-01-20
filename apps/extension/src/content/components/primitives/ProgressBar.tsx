@@ -43,10 +43,16 @@ export function ProgressBar({
 			{(showLabel || label) && (
 				<div className="flex items-center justify-between mb-1.5">
 					{label && <span className="text-lg text-content-secondary">{label}</span>}
-					{showLabel && <span className="text-lg font-medium text-content-primary">{clampedValue.toFixed(0)}%</span>}
+					{showLabel && (
+						<span className="text-lg font-medium text-content-primary">
+							{clampedValue.toFixed(0)}%
+						</span>
+					)}
 				</div>
 			)}
-			<div className={`w-full rounded-full bg-surface-tertiary overflow-hidden ${sizeStyles[size]}`}>
+			<div
+				className={`w-full rounded-full bg-surface-tertiary overflow-hidden ${sizeStyles[size]}`}
+			>
 				<div
 					className={`h-full rounded-full ${variantColors[variant]} ${animated ? 'transition-all duration-500 ease-out' : ''}`}
 					style={{ width: `${clampedValue}%` }}
@@ -74,7 +80,8 @@ export function RangeBar({
 }) {
 	const range = max - min
 	const currentPosition = range > 0 ? ((current - min) / range) * 100 : 50
-	const averagePosition = average !== undefined && range > 0 ? ((average - min) / range) * 100 : undefined
+	const averagePosition =
+		average !== undefined && range > 0 ? ((average - min) / range) * 100 : undefined
 
 	// Determine if current price is good (below average)
 	const isGoodPrice = average !== undefined && current < average

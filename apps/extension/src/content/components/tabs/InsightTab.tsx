@@ -1,23 +1,30 @@
 import type { AnalysisResult } from '@vinted-ai/shared/analysis'
 import type { VintedSeller } from '@vinted-ai/shared/article'
+import { AuthenticityCard } from '../cards/AuthenticityCard'
 import { MarginCard } from '../cards/MarginCard'
 import { MarketPriceCard } from '../cards/MarketPriceCard'
-import { SignalsCard } from '../cards/SignalsCard'
-import { AuthenticityCard } from '../cards/AuthenticityCard'
-import { PhotoQualityCard } from '../cards/PhotoQualityCard'
 import { PhotoGalleryCard } from '../cards/PhotoGalleryCard'
+import { PhotoQualityCard } from '../cards/PhotoQualityCard'
 import { SellerCard } from '../cards/SellerCard'
+import { SignalsCard } from '../cards/SignalsCard'
 
 interface InsightTabProps {
 	analysis: AnalysisResult
 	photos?: string[]
 	seller?: VintedSeller
+	/** Shipping cost in euros (null = free shipping or not available) */
+	shippingCost?: number | null
 }
 
 /**
  * Insight tab displaying margin, market price, signals, authenticity, photo quality, and seller info
  */
-export function InsightTab({ analysis, photos = [], seller }: InsightTabProps) {
+export function InsightTab({
+	analysis,
+	photos = [],
+	seller,
+	shippingCost = null,
+}: InsightTabProps) {
 	const { opportunity, marketPrice, authenticityCheck, photoQuality, price } = analysis
 
 	return (
@@ -30,6 +37,7 @@ export function InsightTab({ analysis, photos = [], seller }: InsightTabProps) {
 				margin={opportunity.margin}
 				marginPercent={opportunity.marginPercent}
 				buyPrice={price}
+				shippingCost={shippingCost}
 				sellPrice={marketPrice.average}
 			/>
 

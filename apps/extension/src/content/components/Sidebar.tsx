@@ -1,11 +1,11 @@
 import type { AnalysisResult, AnalysisStatus } from '@vinted-ai/shared/analysis'
 import type { VintedSeller } from '@vinted-ai/shared/article'
-import { useCallback, useState, useEffect } from 'react'
-import { SidebarHeader } from './sidebar-components/SidebarHeader'
-import { HeroScore } from './sidebar-components/HeroScore'
-import { ArticleContext } from './sidebar-components/ArticleContext'
-import { TabNavigation, type TabId } from './sidebar-components/TabNavigation'
+import { useCallback, useEffect, useState } from 'react'
 import { ActionBar } from './sidebar-components/ActionBar'
+import { ArticleContext } from './sidebar-components/ArticleContext'
+import { HeroScore } from './sidebar-components/HeroScore'
+import { SidebarHeader } from './sidebar-components/SidebarHeader'
+import { type TabId, TabNavigation } from './sidebar-components/TabNavigation'
 import { InsightTab } from './tabs/InsightTab'
 import { NegotiateTab } from './tabs/NegotiateTab'
 import { ResellTab } from './tabs/ResellTab'
@@ -24,6 +24,8 @@ interface SidebarProps {
 	analyzedTimeAgo?: string | null
 	photos?: string[]
 	seller?: VintedSeller
+	/** Shipping cost in euros (null = free shipping or not available) */
+	shippingCost?: number | null
 }
 
 /**
@@ -68,6 +70,7 @@ export function Sidebar({
 	analyzedTimeAgo,
 	photos = [],
 	seller,
+	shippingCost = null,
 }: SidebarProps) {
 	const [isExporting, setIsExporting] = useState(false)
 	const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
@@ -108,6 +111,9 @@ export function Sidebar({
 
 	const { opportunity, marketPrice } = analysis
 
+	// Hide studio tab on item pages (only show during form filling)
+	const isItemPage = window.location.pathname.startsWith('/items')
+
 	return (
 		<aside
 			className="fixed top-0 right-0 w-[480px] h-full bg-white shadow-sidebar flex flex-col z-[2147483647] animate-slide-in overflow-hidden"
@@ -121,7 +127,7 @@ export function Sidebar({
 			<SidebarHeader onClose={onClose} />
 
 			{/* Tab Navigation - fixed at top */}
-			<TabNavigation activeTab={activeTab} onChange={setActiveTab} />
+			<TabNavigation activeTab={activeTab} onChange={setActiveTab} hideStudio={isItemPage} />
 
 			{/* Scrollable content area */}
 			<div className="flex-1 overflow-y-auto light-scrollbar">
@@ -142,7 +148,14 @@ export function Sidebar({
 
 				{/* Tab Content */}
 				<div className="p-5 bg-surface-secondary">
-					{activeTab === 'insight' && <InsightTab analysis={analysis} photos={photos} seller={seller} />}
+					{activeTab === 'insight' && (
+						<InsightTab
+							analysis={analysis}
+							photos={photos}
+							seller={seller}
+							shippingCost={shippingCost}
+						/>
+					)}
 					{activeTab === 'negotiate' && <NegotiateTab analysis={analysis} />}
 					{activeTab === 'resell' && <ResellTab analysis={analysis} />}
 					{activeTab === 'sources' && <SourcesTab sources={analysis.marketPrice.sources} />}

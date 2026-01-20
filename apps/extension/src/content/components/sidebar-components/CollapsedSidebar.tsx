@@ -1,5 +1,5 @@
-import { ScoreRing } from '../primitives/ScoreRing'
 import { IconButton } from '../primitives/Button'
+import { ScoreRing } from '../primitives/ScoreRing'
 
 interface CollapsedSidebarProps {
 	score: number
@@ -46,7 +46,13 @@ export function CollapsedSidebar({ score, isOpen, onExpand }: CollapsedSidebarPr
 			{/* Expand button */}
 			<IconButton
 				icon={
-					<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg
+						aria-hidden="true"
+						className="w-4 h-4"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
 						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
 					</svg>
 				}
@@ -59,8 +65,19 @@ export function CollapsedSidebar({ score, isOpen, onExpand }: CollapsedSidebarPr
 			{/* Logo at bottom */}
 			<div className="mt-auto">
 				<div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-indigo to-brand-violet flex items-center justify-center">
-					<svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+					<svg
+						aria-hidden="true"
+						className="w-4 h-4 text-white"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M13 10V3L4 14h7v7l9-11h-7z"
+						/>
 					</svg>
 				</div>
 			</div>

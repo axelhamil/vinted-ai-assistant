@@ -1,14 +1,16 @@
 import { inject, injectable } from 'inversify'
 import { stripImageMetadata } from '../../adapters/utils/image-metadata'
+import { BATCH_CONCURRENCY_LIMIT } from '../constants'
 import { TYPES } from '../di-types'
 import {
-	toBatchEditedPhotosDTO,
-	toEditedPhotoDTO,
 	type BatchEditedPhotosDTO,
 	type EditedPhotoDTO,
+	toBatchEditedPhotosDTO,
+	toEditedPhotoDTO,
 } from '../dtos/studio.dto'
-import type { IImageEditorProvider } from '../interfaces/providers/image-editor.provider.interface'
+import type { IAIProvider } from '../interfaces/providers/ai.provider.interface'
 import type { IStudioPresetRepository } from '../interfaces/repositories/studio-preset.repository.interface'
+import { buildImageEditingPrompt } from './prompts/image-editing.prompt'
 
 /**
  * Input for editing a single photo
@@ -46,8 +48,8 @@ export interface EditPhotoBatchInput {
 @injectable()
 export class EditPhotoUseCase {
 	constructor(
-		@inject(TYPES.ImageEditorProvider)
-		private readonly imageEditor: IImageEditorProvider,
+		@inject(TYPES.AIProvider)
+		private readonly aiProvider: IAIProvider,
 		@inject(TYPES.StudioPresetRepository)
 		private readonly presetRepository: IStudioPresetRepository
 	) {}
@@ -64,20 +66,20 @@ export class EditPhotoUseCase {
 			throw new Error(`Preset not found: ${presetId}`)
 		}
 
-		// Edit the image
-		const result = await this.imageEditor.editImage({
-			imageData: image,
-			promptTemplate: preset.promptTemplate,
-			variables,
+		// Build prompt and generate image
+		const prompt = buildImageEditingPrompt(preset.promptTemplate, variables)
+		const result = await this.aiProvider.generateImage({
+			prompt,
+			sourceImage: image,
 		})
 
 		// Strip metadata if requested
 		if (stripMetadata) {
-			const processed = await stripImageMetadata(result.editedImageBase64)
+			const processed = await stripImageMetadata(result.imageBase64)
 			return toEditedPhotoDTO(processed.data, processed.mimeType)
 		}
 
-		return toEditedPhotoDTO(result.editedImageBase64, result.mimeType)
+		return toEditedPhotoDTO(result.imageBase64, result.mimeType)
 	}
 
 	/**
@@ -86,20 +88,20 @@ export class EditPhotoUseCase {
 	async executeCustom(input: EditPhotoCustomInput): Promise<EditedPhotoDTO> {
 		const { image, promptTemplate, variables, stripMetadata = true } = input
 
-		// Edit the image
-		const result = await this.imageEditor.editImage({
-			imageData: image,
-			promptTemplate,
-			variables,
+		// Build prompt and generate image
+		const prompt = buildImageEditingPrompt(promptTemplate, variables)
+		const result = await this.aiProvider.generateImage({
+			prompt,
+			sourceImage: image,
 		})
 
 		// Strip metadata if requested
 		if (stripMetadata) {
-			const processed = await stripImageMetadata(result.editedImageBase64)
+			const processed = await stripImageMetadata(result.imageBase64)
 			return toEditedPhotoDTO(processed.data, processed.mimeType)
 		}
 
-		return toEditedPhotoDTO(result.editedImageBase64, result.mimeType)
+		return toEditedPhotoDTO(result.imageBase64, result.mimeType)
 	}
 
 	/**
@@ -114,17 +116,53 @@ export class EditPhotoUseCase {
 			throw new Error(`Preset not found: ${presetId}`)
 		}
 
-		// Edit all images
-		const batchResult = await this.imageEditor.editImageBatch({
-			images,
-			promptTemplate: preset.promptTemplate,
-			variables,
-		})
+		const prompt = buildImageEditingPrompt(preset.promptTemplate, variables)
+
+		// Process single image
+		const processImage = async (
+			image: string
+		): Promise<{
+			success: boolean
+			editedImageBase64?: string
+			mimeType?: string
+			error?: string
+		}> => {
+			try {
+				const result = await this.aiProvider.generateImage({
+					prompt,
+					sourceImage: image,
+				})
+				return {
+					success: true,
+					editedImageBase64: result.imageBase64,
+					mimeType: result.mimeType,
+				}
+			} catch (error) {
+				return {
+					success: false,
+					error: error instanceof Error ? error.message : 'Unknown error',
+				}
+			}
+		}
+
+		// Process images in batches with concurrency limit
+		const results: Array<{
+			success: boolean
+			editedImageBase64?: string
+			mimeType?: string
+			error?: string
+		}> = []
+
+		for (let i = 0; i < images.length; i += BATCH_CONCURRENCY_LIMIT) {
+			const batch = images.slice(i, i + BATCH_CONCURRENCY_LIMIT)
+			const batchResults = await Promise.all(batch.map(processImage))
+			results.push(...batchResults)
+		}
 
 		// Strip metadata if requested
 		if (stripMetadata) {
 			const processedResults = await Promise.all(
-				batchResult.results.map(async (r) => {
+				results.map(async (r) => {
 					if (r.success && r.editedImageBase64) {
 						try {
 							const processed = await stripImageMetadata(r.editedImageBase64)
@@ -146,6 +184,6 @@ export class EditPhotoUseCase {
 			return toBatchEditedPhotosDTO(processedResults)
 		}
 
-		return toBatchEditedPhotosDTO(batchResult.results)
+		return toBatchEditedPhotosDTO(results)
 	}
 }

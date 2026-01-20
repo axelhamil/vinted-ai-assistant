@@ -23,7 +23,14 @@ const iconColorStyles: Record<IconContainerColor, string> = {
 /**
  * Card component with light theme, subtle shadow and optional colored icon
  */
-export function Card({ children, className = '', title, icon, iconColor = 'orange', onClick }: CardProps) {
+export function Card({
+	children,
+	className = '',
+	title,
+	icon,
+	iconColor = 'orange',
+	onClick,
+}: CardProps) {
 	const isClickable = !!onClick
 
 	return (
@@ -44,11 +51,15 @@ export function Card({ children, className = '', title, icon, iconColor = 'orang
 			{title && (
 				<div className="flex items-center gap-3 mb-4">
 					{icon && (
-						<div className={`w-9 h-9 rounded-lg flex items-center justify-center ${iconColorStyles[iconColor]}`}>
+						<div
+							className={`w-9 h-9 rounded-lg flex items-center justify-center ${iconColorStyles[iconColor]}`}
+						>
 							{icon}
 						</div>
 					)}
-					<h4 className="text-xl font-semibold text-content-muted uppercase tracking-wider">{title}</h4>
+					<h4 className="text-xl font-semibold text-content-muted uppercase tracking-wider">
+						{title}
+					</h4>
 				</div>
 			)}
 			{children}

@@ -2,15 +2,27 @@
  * Main app component for form filling suggestions on Vinted listing creation page
  */
 
-import { useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import type { StudioFormSuggestionsResponse } from '../../background/message-types'
 import { PhotoStudio } from './PhotoStudio'
+import { InfoField, PriceSuggestionField, SuggestionField } from './components'
 
 type AnalysisState = 'idle' | 'extracting' | 'analyzing' | 'success' | 'error'
 type ActiveTab = 'suggestions' | 'studio'
 
 interface FormSuggestions extends StudioFormSuggestionsResponse {
 	// Extended with any local state if needed
+}
+
+/**
+ * Condition labels in French
+ */
+const conditionLabels: Record<string, string> = {
+	new_with_tags: 'Neuf avec étiquette',
+	new: 'Neuf sans étiquette',
+	very_good: 'Très bon état',
+	good: 'Bon état',
+	satisfactory: 'Satisfaisant',
 }
 
 /**
@@ -22,8 +34,17 @@ function applySuggestionToForm(field: string, value: string): void {
 
 	const fieldSelectors: Record<string, string[]> = {
 		title: ['input[name="title"]', '[data-testid="title-input"]', '#title'],
-		description: ['textarea[name="description"]', '[data-testid="description-input"]', '#description'],
-		price: ['input[name="price"]', '[data-testid="price-input"]', '#price', 'input[type="number"][name*="price"]'],
+		description: [
+			'textarea[name="description"]',
+			'[data-testid="description-input"]',
+			'#description',
+		],
+		price: [
+			'input[name="price"]',
+			'[data-testid="price-input"]',
+			'#price',
+			'input[type="number"][name*="price"]',
+		],
 	}
 
 	const selectors = fieldSelectors[field]
@@ -42,7 +63,7 @@ function applySuggestionToForm(field: string, value: string): void {
 			element.dispatchEvent(inputEvent)
 			element.dispatchEvent(changeEvent)
 
-			console.log(`[Vinted AI Studio] Applied ${field}:`, value.substring(0, 50) + '...')
+			console.log(`[Vinted AI Studio] Applied ${field}:`, `${value.substring(0, 50)}...`)
 			return
 		}
 	}
@@ -64,7 +85,7 @@ export function FormFillingApp() {
 	// Analyze photos for form suggestions
 	const handleAnalyze = useCallback(async () => {
 		if (sharedPhotos.length === 0) {
-			setError('Aucune photo. Importez des photos dans l\'onglet Studio.')
+			setError("Aucune photo. Importez des photos dans l'onglet Studio.")
 			return
 		}
 
@@ -86,7 +107,7 @@ export function FormFillingApp() {
 				throw new Error(response.error || 'Analyse failed')
 			}
 		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Erreur lors de l\'analyse')
+			setError(err instanceof Error ? err.message : "Erreur lors de l'analyse")
 			setAnalysisState('error')
 		}
 	}, [sharedPhotos])
@@ -114,8 +135,19 @@ export function FormFillingApp() {
 			<div className="p-5 border-b border-border bg-gradient-to-r from-brand/5 to-brand-dark/5">
 				<div className="flex items-center gap-3 mb-4">
 					<div className="w-10 h-10 rounded-lg bg-gradient-to-r from-brand to-brand-dark flex items-center justify-center">
-						<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+						<svg
+							aria-hidden="true"
+							className="w-5 h-5 text-white"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M13 10V3L4 14h7v7l9-11h-7z"
+							/>
 						</svg>
 					</div>
 					<div>
@@ -138,8 +170,19 @@ export function FormFillingApp() {
 						}`}
 					>
 						<span className="flex items-center justify-center gap-2">
-							<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+							<svg
+								aria-hidden="true"
+								className="w-5 h-5"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+								/>
 							</svg>
 							Studio
 						</span>
@@ -154,8 +197,19 @@ export function FormFillingApp() {
 						}`}
 					>
 						<span className="flex items-center justify-center gap-2">
-							<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+							<svg
+								aria-hidden="true"
+								className="w-5 h-5"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+								/>
 							</svg>
 							Suggestions
 						</span>
@@ -175,14 +229,25 @@ export function FormFillingApp() {
 					{analysisState === 'idle' && (
 						<div className="text-center py-8">
 							<div className="w-20 h-20 mx-auto mb-5 rounded-full bg-surface-secondary flex items-center justify-center">
-								<svg className="w-10 h-10 text-content-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+								<svg
+									aria-hidden="true"
+									className="w-10 h-10 text-content-secondary"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={2}
+										d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z"
+									/>
 								</svg>
 							</div>
 							<p className="text-lg text-content-secondary mb-3">
 								{photoCount > 0
 									? `${photoCount} photo${photoCount > 1 ? 's' : ''} prête${photoCount > 1 ? 's' : ''} pour l'analyse`
-									: 'Importez des photos dans l\'onglet Studio'}
+									: "Importez des photos dans l'onglet Studio"}
 							</p>
 							<p className="text-base text-content-secondary opacity-75">
 								L'IA analysera vos photos pour suggérer titre, description et autres détails
@@ -203,8 +268,19 @@ export function FormFillingApp() {
 					{analysisState === 'error' && error && (
 						<div className="p-5 bg-red-50 rounded-xl border border-red-200">
 							<div className="flex items-start gap-4">
-								<svg className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+								<svg
+									aria-hidden="true"
+									className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={2}
+										d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+									/>
 								</svg>
 								<div>
 									<p className="text-base font-medium text-red-800">Erreur</p>
@@ -228,13 +304,17 @@ export function FormFillingApp() {
 								label="Description suggérée"
 								value={suggestions.suggestedDescription}
 								isMultiline
-								onApply={() => handleApplySuggestion('description', suggestions.suggestedDescription)}
+								onApply={() =>
+									handleApplySuggestion('description', suggestions.suggestedDescription)
+								}
 							/>
 
 							{/* Condition */}
 							<InfoField
 								label="État"
-								value={conditionLabels[suggestions.suggestedCondition] || suggestions.suggestedCondition}
+								value={
+									conditionLabels[suggestions.suggestedCondition] || suggestions.suggestedCondition
+								}
 							/>
 
 							{/* Brand */}
@@ -268,7 +348,9 @@ export function FormFillingApp() {
 								priceRange={suggestions.priceRange}
 								priceConfidence={suggestions.priceConfidence}
 								priceReasoning={suggestions.priceReasoning}
-								onApply={() => handleApplySuggestion('price', suggestions.suggestedPrice.toString())}
+								onApply={() =>
+									handleApplySuggestion('price', suggestions.suggestedPrice.toString())
+								}
 							/>
 						</div>
 					)}
@@ -293,9 +375,10 @@ export function FormFillingApp() {
 							disabled={analysisState === 'analyzing' || photoCount === 0}
 							className={`
 								w-full py-3.5 text-lg font-medium rounded-xl transition-all
-								${photoCount === 0
-									? 'bg-surface-tertiary text-content-secondary cursor-not-allowed'
-									: 'bg-gradient-to-r from-brand to-brand-dark text-white hover:from-brand-dark hover:to-brand-darker'
+								${
+									photoCount === 0
+										? 'bg-surface-tertiary text-content-secondary cursor-not-allowed'
+										: 'bg-gradient-to-r from-brand to-brand-dark text-white hover:from-brand-dark hover:to-brand-darker'
 								}
 								${analysisState === 'analyzing' ? 'opacity-50 cursor-not-allowed' : ''}
 							`}
@@ -306,134 +389,5 @@ export function FormFillingApp() {
 				</div>
 			)}
 		</aside>
-	)
-}
-
-/**
- * Suggestion field with apply button
- */
-function SuggestionField({
-	label,
-	value,
-	isMultiline = false,
-	onApply,
-}: {
-	label: string
-	value: string
-	isMultiline?: boolean
-	onApply: () => void
-}) {
-	return (
-		<div className="p-4 bg-surface-secondary rounded-xl border border-border">
-			<div className="flex items-center justify-between mb-3">
-				<span className="text-base font-medium text-content-secondary">{label}</span>
-				<button
-					type="button"
-					onClick={onApply}
-					className="text-base text-brand hover:text-brand-dark font-medium transition-colors"
-				>
-					Appliquer
-				</button>
-			</div>
-			<p className={`text-base text-content-primary ${isMultiline ? 'line-clamp-6' : 'line-clamp-2'}`}>
-				{value}
-			</p>
-		</div>
-	)
-}
-
-/**
- * Info field (read-only)
- */
-function InfoField({ label, value }: { label: string; value: string }) {
-	return (
-		<div className="flex items-center justify-between py-3 border-b border-border last:border-0">
-			<span className="text-base text-content-secondary">{label}</span>
-			<span className="text-base font-medium text-content-primary">{value}</span>
-		</div>
-	)
-}
-
-/**
- * Condition labels in French
- */
-const conditionLabels: Record<string, string> = {
-	new_with_tags: 'Neuf avec étiquette',
-	new: 'Neuf sans étiquette',
-	very_good: 'Très bon état',
-	good: 'Bon état',
-	satisfactory: 'Satisfaisant',
-}
-
-/**
- * Confidence labels and colors
- */
-const confidenceConfig: Record<'low' | 'medium' | 'high', { label: string; color: string; bgColor: string }> = {
-	low: { label: 'Faible', color: 'text-orange-600', bgColor: 'bg-orange-100' },
-	medium: { label: 'Moyenne', color: 'text-yellow-600', bgColor: 'bg-yellow-100' },
-	high: { label: 'Élevée', color: 'text-green-600', bgColor: 'bg-green-100' },
-}
-
-/**
- * Price suggestion field with range and confidence indicator
- */
-function PriceSuggestionField({
-	suggestedPrice,
-	priceRange,
-	priceConfidence,
-	priceReasoning,
-	onApply,
-}: {
-	suggestedPrice: number
-	priceRange: { low: number; high: number }
-	priceConfidence: 'low' | 'medium' | 'high'
-	priceReasoning: string
-	onApply: () => void
-}) {
-	const confidence = confidenceConfig[priceConfidence]
-
-	return (
-		<div className="p-4 bg-gradient-to-r from-brand/5 to-brand-dark/5 rounded-xl border border-brand/20 mt-4">
-			<div className="flex items-center justify-between mb-3">
-				<span className="text-base font-medium text-content-secondary flex items-center gap-2">
-					<svg className="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-					</svg>
-					Prix suggéré
-				</span>
-				<button
-					type="button"
-					onClick={onApply}
-					className="text-base text-brand hover:text-brand-dark font-medium transition-colors"
-				>
-					Appliquer
-				</button>
-			</div>
-
-			{/* Main price */}
-			<div className="text-3xl font-bold text-content-primary mb-2">
-				{suggestedPrice} €
-			</div>
-
-			{/* Price range */}
-			<div className="flex items-center gap-2 mb-3">
-				<span className="text-base text-content-secondary">
-					Fourchette : {priceRange.low} € - {priceRange.high} €
-				</span>
-			</div>
-
-			{/* Confidence badge */}
-			<div className="flex items-center gap-2 mb-3">
-				<span className="text-sm text-content-secondary">Confiance :</span>
-				<span className={`text-sm font-medium px-2 py-0.5 rounded-full ${confidence.bgColor} ${confidence.color}`}>
-					{confidence.label}
-				</span>
-			</div>
-
-			{/* Reasoning */}
-			<p className="text-sm text-content-secondary italic border-t border-border/50 pt-3 mt-2">
-				{priceReasoning}
-			</p>
-		</div>
 	)
 }

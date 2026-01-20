@@ -4,8 +4,7 @@
 
 import { useState } from 'react'
 import { BackIcon } from '../icons/BackIcon'
-import { ClearIcon } from '../icons/ClearIcon'
-import type { AIProvider, ExtensionSettings } from '../types'
+import type { ExtensionSettings } from '../types'
 
 interface SettingsViewProps {
 	settings: ExtensionSettings | null
@@ -65,74 +64,6 @@ export function SettingsView({ settings, onBack, onUpdate }: SettingsViewProps) 
 					/>
 				</div>
 
-				{/* AI Provider Selection */}
-				<div className="mb-4">
-					<label htmlFor="aiProvider" className="mb-1 block text-base font-medium text-gray-700">
-						Fournisseur IA
-					</label>
-					<select
-						id="aiProvider"
-						value={localSettings.aiProvider}
-						onChange={(e) =>
-							setLocalSettings({ ...localSettings, aiProvider: e.target.value as AIProvider })
-						}
-						className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-					>
-						<option value="openai">OpenAI (GPT-4o)</option>
-						<option value="gemini">Google Gemini</option>
-					</select>
-				</div>
-
-				{/* API Key based on selected provider */}
-				<div className="mb-4">
-					<label htmlFor="apiKey" className="mb-1 block text-base font-medium text-gray-700">
-						Clé API {localSettings.aiProvider === 'openai' ? 'OpenAI' : 'Gemini'}{' '}
-						<span className="font-normal text-gray-400">(optionnel)</span>
-					</label>
-					<div className="relative">
-						<input
-							type="password"
-							id="apiKey"
-							value={
-								localSettings.aiProvider === 'openai'
-									? localSettings.openaiApiKey
-									: localSettings.geminiApiKey
-							}
-							onChange={(e) =>
-								setLocalSettings({
-									...localSettings,
-									[localSettings.aiProvider === 'openai' ? 'openaiApiKey' : 'geminiApiKey']:
-										e.target.value,
-								})
-							}
-							className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-							placeholder={localSettings.aiProvider === 'openai' ? 'sk-...' : 'AIza...'}
-							autoComplete="off"
-						/>
-						{(localSettings.aiProvider === 'openai'
-							? localSettings.openaiApiKey
-							: localSettings.geminiApiKey) && (
-							<button
-								type="button"
-								onClick={() =>
-									setLocalSettings({
-										...localSettings,
-										[localSettings.aiProvider === 'openai' ? 'openaiApiKey' : 'geminiApiKey']:
-											'',
-									})
-								}
-								className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-gray-400 hover:text-gray-600"
-								aria-label="Clear API key"
-							>
-								<ClearIcon />
-							</button>
-						)}
-					</div>
-					<p className="mt-1 text-base text-gray-500">
-						Si non renseigné, utilise la clé configurée sur le backend
-					</p>
-				</div>
-
 				{/* Score Threshold */}
 				<div className="mb-4">
 					<label
@@ -182,9 +113,7 @@ export function SettingsView({ settings, onBack, onUpdate }: SettingsViewProps) 
 						className={`relative h-6 w-11 rounded-full transition-colors ${
 							localSettings.autoOpenSidebar ? 'bg-indigo-600' : 'bg-gray-300'
 						}`}
-						aria-label={
-							localSettings.autoOpenSidebar ? 'Disable auto-open' : 'Enable auto-open'
-						}
+						aria-label={localSettings.autoOpenSidebar ? 'Disable auto-open' : 'Enable auto-open'}
 					>
 						<span
 							className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${

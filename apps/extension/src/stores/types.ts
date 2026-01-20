@@ -2,7 +2,12 @@
  * Store types and interfaces
  */
 
-import type { AnalysisResult, AnalysisStatus, Negotiation, NegotiationTone } from '@vinted-ai/shared/analysis'
+import type {
+	AnalysisResult,
+	AnalysisStatus,
+	Negotiation,
+	NegotiationTone,
+} from '@vinted-ai/shared/analysis'
 import type { VintedArticleData } from '@vinted-ai/shared/article'
 
 // ============================================================================
@@ -29,7 +34,6 @@ export interface ExtensionSettings {
 	scoreThreshold: number
 	autoOpenSidebar: boolean
 	enabled: boolean
-	openaiApiKey: string
 }
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {
@@ -37,7 +41,6 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
 	scoreThreshold: 7,
 	autoOpenSidebar: true,
 	enabled: true,
-	openaiApiKey: '',
 }
 
 // ============================================================================

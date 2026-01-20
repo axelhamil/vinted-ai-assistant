@@ -16,7 +16,9 @@ interface ShadowContainerResult {
  * @param containerId - Custom container ID (optional)
  * @returns The shadow root and react root elements
  */
-export function createShadowContainer(containerId: string = DEFAULT_CONTAINER_ID): ShadowContainerResult {
+export function createShadowContainer(
+	containerId: string = DEFAULT_CONTAINER_ID
+): ShadowContainerResult {
 	// Check if container already exists
 	const existingContainer = document.getElementById(containerId)
 	if (existingContainer) {

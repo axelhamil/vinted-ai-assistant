@@ -16,17 +16,26 @@ export function SignalsCard({ signals }: SignalsCardProps) {
 	if (signals.length === 0) {
 		return (
 			<Card
-				title={`Signaux (0)`}
+				title="Signaux (0)"
 				iconColor="blue"
 				icon={
-					<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+					<svg
+						aria-hidden="true"
+						className="w-4 h-4"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+						/>
 					</svg>
 				}
 			>
-				<p className="text-xl text-content-secondary text-center py-4">
-					Aucun signal détecté
-				</p>
+				<p className="text-xl text-content-secondary text-center py-4">Aucun signal détecté</p>
 			</Card>
 		)
 	}
@@ -45,8 +54,19 @@ export function SignalsCard({ signals }: SignalsCardProps) {
 			title={`Signaux (${signals.length})`}
 			iconColor="blue"
 			icon={
-				<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+				<svg
+					aria-hidden="true"
+					className="w-4 h-4"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						strokeWidth={2}
+						d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+					/>
 				</svg>
 			}
 		>
@@ -84,9 +104,7 @@ export function SignalsCard({ signals }: SignalsCardProps) {
 					<div className="p-3 rounded-lg bg-surface-secondary border border-border animate-fade-in">
 						<div className="flex items-start justify-between">
 							<div>
-								<h5 className="text-xl font-medium text-content-primary mb-1">
-									{expandedSignal}
-								</h5>
+								<h5 className="text-xl font-medium text-content-primary mb-1">{expandedSignal}</h5>
 								<p className="text-lg text-content-secondary">
 									{signals.find((s) => s.label === expandedSignal)?.detail}
 								</p>
@@ -96,8 +114,19 @@ export function SignalsCard({ signals }: SignalsCardProps) {
 								onClick={() => setExpandedSignal(null)}
 								className="text-content-muted hover:text-content-secondary transition-colors"
 							>
-								<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+								<svg
+									aria-hidden="true"
+									className="w-5 h-5"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={2}
+										d="M6 18L18 6M6 6l12 12"
+									/>
 								</svg>
 							</button>
 						</div>

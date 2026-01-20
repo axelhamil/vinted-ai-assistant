@@ -40,7 +40,20 @@ const sellerSchema = z.object({
  * Supported language codes
  */
 const languageEnum = z.enum([
-	'fr', 'en', 'de', 'es', 'it', 'nl', 'pl', 'pt', 'cs', 'sk', 'hu', 'ro', 'lt', 'hr'
+	'fr',
+	'en',
+	'de',
+	'es',
+	'it',
+	'nl',
+	'pl',
+	'pt',
+	'cs',
+	'sk',
+	'hu',
+	'ro',
+	'lt',
+	'hr',
 ])
 
 /**
@@ -53,6 +66,8 @@ export const analyzeBodySchema = z.object({
 	title: z.string().min(1, 'Title is required'),
 	description: z.string(),
 	price: z.number().positive('Price must be positive'),
+	/** Shipping cost in euros (null = free shipping or not available) */
+	shippingCost: z.number().min(0).nullable(),
 	brand: z.string().nullable(),
 	size: z.string().nullable(),
 	condition: z.string().min(1, 'Condition is required'),

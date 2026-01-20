@@ -32,8 +32,19 @@ export function ResellTab({ analysis }: ResellTabProps) {
 			<Card
 				title="Projection de profit"
 				icon={
-					<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+					<svg
+						aria-hidden="true"
+						className="w-4 h-4"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+						/>
 					</svg>
 				}
 			>
@@ -45,8 +56,19 @@ export function ResellTab({ analysis }: ResellTabProps) {
 							<div className="text-2xl font-semibold text-content-primary">{price}€</div>
 						</div>
 						<div className="flex items-center justify-center">
-							<svg className="w-6 h-6 text-content-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+							<svg
+								aria-hidden="true"
+								className="w-6 h-6 text-content-muted"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M17 8l4 4m0 0l-4 4m4-4H3"
+								/>
 							</svg>
 						</div>
 						<div className="text-center p-3 rounded-lg bg-profit/10 border border-profit/20">
@@ -67,11 +89,7 @@ export function ResellTab({ analysis }: ResellTabProps) {
 							value={`+${profitPercent.toFixed(0)}%`}
 							valueClassName="text-profit"
 						/>
-						<CardRow
-							label="ROI"
-							value={`${roi.toFixed(0)}%`}
-							valueClassName="text-exceptional"
-						/>
+						<CardRow label="ROI" value={`${roi.toFixed(0)}%`} valueClassName="text-exceptional" />
 					</div>
 
 					{/* Confidence bar */}
@@ -91,37 +109,56 @@ export function ResellTab({ analysis }: ResellTabProps) {
 			<Card
 				title="Contexte marché"
 				icon={
-					<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+					<svg
+						aria-hidden="true"
+						className="w-4 h-4"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+						/>
 					</svg>
 				}
 			>
 				<div className="space-y-3">
-					<CardRow
-						label="Prix plancher marché"
-						value={`${marketPrice.low}€`}
-					/>
+					<CardRow label="Prix plancher marché" value={`${marketPrice.low}€`} />
 					<CardRow
 						label="Prix moyen marché"
 						value={`${marketPrice.average}€`}
 						valueClassName="text-info"
 					/>
-					<CardRow
-						label="Prix plafond marché"
-						value={`${marketPrice.high}€`}
-					/>
+					<CardRow label="Prix plafond marché" value={`${marketPrice.high}€`} />
 
 					<div className="pt-3 border-t border-border">
 						<div className="flex items-center gap-2 text-base">
-							<svg className="w-5 h-5 text-info" fill="currentColor" viewBox="0 0 20 20">
-								<path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+							<svg
+								aria-hidden="true"
+								className="w-5 h-5 text-info"
+								fill="currentColor"
+								viewBox="0 0 20 20"
+							>
+								<path
+									fillRule="evenodd"
+									d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+									clipRule="evenodd"
+								/>
 							</svg>
 							<span className="text-content-secondary">
 								Le prix recommandé est positionné au{' '}
 								<span className="text-content-primary font-medium">
-									{Math.round(((resale.recommendedPrice - marketPrice.low) / (marketPrice.high - marketPrice.low)) * 100)}%
-								</span>
-								{' '}du range marché
+									{Math.round(
+										((resale.recommendedPrice - marketPrice.low) /
+											(marketPrice.high - marketPrice.low)) *
+											100
+									)}
+									%
+								</span>{' '}
+								du range marché
 							</span>
 						</div>
 					</div>

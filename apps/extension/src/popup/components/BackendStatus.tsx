@@ -20,7 +20,7 @@ export function BackendStatus({ status, aiProvider }: BackendStatusProps) {
 								: 'bg-red-500'
 					}`}
 				/>
-					<span className="text-base text-gray-700">
+				<span className="text-base text-gray-700">
 					{status === 'connected'
 						? 'Backend connecté'
 						: status === 'checking'
