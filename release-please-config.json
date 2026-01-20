@@ -1,0 +1,16 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "bump-minor-pre-major": true,
+      "changelog-sections": [
+        {"type": "feat", "section": "Features"},
+        {"type": "fix", "section": "Bug Fixes"},
+        {"type": "perf", "section": "Performance"},
+        {"type": "refactor", "section": "Code Refactoring"},
+        {"type": "docs", "section": "Documentation"},
+        {"type": "chore", "section": "Maintenance"}
+      ]
+    }
+  }
+}

@@ -16,7 +16,7 @@
 - **Authenticity Check** — Visual analysis for branded items
 - **Photo Analysis** — Quality assessment and defect detection
 
-## Quick Start (Non-Developers)
+## Quick Start (Non Developers)
 
 > **One-click installation** — No coding required!
 
