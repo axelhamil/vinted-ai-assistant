@@ -5,18 +5,25 @@ import { ProgressBar } from '../primitives/ProgressBar'
 
 interface ResellTabProps {
 	analysis: AnalysisResult
+	/** Shipping cost in euros (null = free shipping or not available) */
+	shippingCost?: number | null
 }
 
 /**
  * Resell tab displaying resale recommendations and platforms
  */
-export function ResellTab({ analysis }: ResellTabProps) {
-	const { resale, price, marketPrice, opportunity } = analysis
+export function ResellTab({ analysis, shippingCost = null }: ResellTabProps) {
+	const { resale, price, totalPrice, marketPrice, opportunity } = analysis
 
-	// Calculate profit after hypothetical purchase
-	const potentialProfit = resale.recommendedPrice - price
-	const profitPercent = (potentialProfit / price) * 100
-	const roi = (potentialProfit / price) * 100
+	// Calculate total cost including buyer protection and shipping
+	const priceWithProtection = totalPrice ?? price
+	const buyerProtection = totalPrice !== null ? totalPrice - price : null
+	const totalCost = priceWithProtection + (shippingCost ?? 0)
+
+	// Calculate profit after hypothetical purchase (using total cost)
+	const potentialProfit = resale.recommendedPrice - totalCost
+	const profitPercent = (potentialProfit / totalCost) * 100
+	const roi = (potentialProfit / totalCost) * 100
 
 	return (
 		<div className="space-y-4 animate-fade-in">
@@ -53,7 +60,7 @@ export function ResellTab({ analysis }: ResellTabProps) {
 					<div className="grid grid-cols-3 gap-3">
 						<div className="text-center p-3 rounded-lg bg-surface-tertiary">
 							<div className="text-base text-content-muted mb-1">Achat</div>
-							<div className="text-2xl font-semibold text-content-primary">{price}€</div>
+							<div className="text-2xl font-semibold text-content-primary">{totalCost.toFixed(2)}€</div>
 						</div>
 						<div className="flex items-center justify-center">
 							<svg

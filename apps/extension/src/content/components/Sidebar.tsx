@@ -157,7 +157,7 @@ export function Sidebar({
 						/>
 					)}
 					{activeTab === 'negotiate' && <NegotiateTab analysis={analysis} />}
-					{activeTab === 'resell' && <ResellTab analysis={analysis} />}
+					{activeTab === 'resell' && <ResellTab analysis={analysis} shippingCost={shippingCost} />}
 					{activeTab === 'sources' && <SourcesTab sources={analysis.marketPrice.sources} />}
 					{activeTab === 'studio' && <StudioTab photos={photos} />}
 				</div>
