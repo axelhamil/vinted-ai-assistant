@@ -22,7 +22,7 @@ export function StatCard({ label, value, icon, highlight }: StatCardProps) {
 					{value}
 				</span>
 			</div>
-				<p className="mt-0.5 text-base text-gray-500">{label}</p>
+			<p className="mt-0.5 text-base text-gray-500">{label}</p>
 		</div>
 	)
 }

@@ -34,8 +34,7 @@ export const selectIsHighOpportunity = (state: AnalysisStore) => {
 
 export const selectHasAnalysis = (state: AnalysisStore) => state.currentAnalysis !== null
 
-export const selectAnalysisStatus = (state: AnalysisStore) =>
-	state.currentAnalysis?.status ?? null
+export const selectAnalysisStatus = (state: AnalysisStore) => state.currentAnalysis?.status ?? null
 
 export const selectNegotiation = (state: AnalysisStore) =>
 	state.currentAnalysis?.negotiation ?? null

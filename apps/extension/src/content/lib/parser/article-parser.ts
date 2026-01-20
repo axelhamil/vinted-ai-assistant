@@ -2,8 +2,8 @@
  * Article data extraction utilities for Vinted pages
  */
 
-import { extractJsonLd } from './json-ld-parser'
 import { parseRelativeDate } from './date-utils'
+import { extractJsonLd } from './json-ld-parser'
 
 /**
  * Extracts the Vinted article ID from the current URL
@@ -269,6 +269,76 @@ export function extractFavorites(): number | null {
 			const match = element.textContent.match(/(\d+)/)
 			if (match?.[1]) {
 				return Number.parseInt(match[1], 10)
+			}
+		}
+	}
+
+	return null
+}
+
+/**
+ * Extracts shipping cost from the page
+ * Returns null if free shipping or if shipping cost not found
+ */
+export function extractShippingCost(): number | null {
+	const selectors = [
+		'[data-testid="item-shipping-banner-price"]',
+		'[data-testid="item-shipping-price"]',
+		'[data-testid="shipping-price"]',
+		'.item-shipping-info',
+		'.item-shipping-price',
+	]
+
+	for (const selector of selectors) {
+		const element = document.querySelector(selector)
+		if (element?.textContent) {
+			const text = element.textContent.trim().toLowerCase()
+
+			// Check for free shipping keywords
+			if (
+				text.includes('gratuit') ||
+				text.includes('free') ||
+				text.includes('offert') ||
+				text.includes('inclus')
+			) {
+				return null
+			}
+
+			// Parse the shipping cost from text (e.g., "2,95 €", "3.50€")
+			const match = text.match(/(\d+[.,]?\d*)\s*€?/)
+			if (match?.[1]) {
+				const cost = Number.parseFloat(match[1].replace(',', '.'))
+				if (!Number.isNaN(cost) && cost > 0) {
+					return cost
+				}
+			}
+		}
+	}
+
+	// Try to find shipping info in the item details section
+	const detailsSelectors = ['.item-details', '.item-attributes', '[data-testid="item-details"]']
+
+	for (const selector of detailsSelectors) {
+		const element = document.querySelector(selector)
+		if (element?.textContent) {
+			const text = element.textContent.toLowerCase()
+
+			// Look for shipping cost pattern in details
+			const shippingMatch = text.match(/(?:livraison|envoi|frais)\s*:?\s*(\d+[.,]?\d*)\s*€/i)
+			if (shippingMatch?.[1]) {
+				const cost = Number.parseFloat(shippingMatch[1].replace(',', '.'))
+				if (!Number.isNaN(cost) && cost > 0) {
+					return cost
+				}
+			}
+
+			// Check for free shipping mention in details
+			if (
+				text.includes('livraison gratuite') ||
+				text.includes('frais de port offerts') ||
+				text.includes('envoi gratuit')
+			) {
+				return null
 			}
 		}
 	}

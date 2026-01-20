@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify'
-import { TYPES } from '../di-types'
 import type { AnalysisEntity } from '../../domain/entities/analysis.entity'
 import { AnalysisNotFoundError } from '../../domain/errors/domain.error'
+import { TYPES } from '../di-types'
 import type { IAnalysisRepository } from '../interfaces/repositories/analysis.repository.interface'
 
 /**

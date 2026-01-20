@@ -1,4 +1,5 @@
 import type { MarketPriceSource } from '@vinted-ai/shared/analysis'
+import { useState } from 'react'
 import { Card } from '../primitives/Card'
 
 interface SourcesTabProps {
@@ -10,7 +11,7 @@ interface SourcesTabProps {
  */
 function GoogleIcon() {
 	return (
-		<svg className="w-6 h-6" viewBox="0 0 24 24">
+		<svg aria-hidden="true" className="w-6 h-6" viewBox="0 0 24 24">
 			<path
 				fill="#4285F4"
 				d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -38,8 +39,19 @@ function EmptyState({ message }: { message: string }) {
 	return (
 		<div className="flex flex-col items-center justify-center py-12 text-center">
 			<div className="w-16 h-16 rounded-full bg-surface-tertiary flex items-center justify-center mb-4">
-				<svg className="w-8 h-8 text-content-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+				<svg
+					aria-hidden="true"
+					className="w-8 h-8 text-content-muted"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						strokeWidth={2}
+						d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+					/>
 				</svg>
 			</div>
 			<p className="text-xl text-content-secondary">{message}</p>
@@ -54,6 +66,10 @@ function EmptyState({ message }: { message: string }) {
  * Source card component displaying a single source
  */
 function SourceCard({ source }: { source: MarketPriceSource }) {
+	const [isExpanded, setIsExpanded] = useState(false)
+	const displayedListings = isExpanded ? source.listings : source.listings?.slice(0, 3)
+	const hasMoreListings = (source.listings?.length ?? 0) > 3
+
 	return (
 		<Card>
 			{/* Header */}
@@ -68,8 +84,19 @@ function SourceCard({ source }: { source: MarketPriceSource }) {
 			{/* Search Query */}
 			{source.searchQuery && (
 				<div className="flex items-center gap-2 text-lg text-content-secondary mb-3 p-2 rounded-lg bg-surface-secondary">
-					<svg className="w-5 h-5 text-content-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+					<svg
+						aria-hidden="true"
+						className="w-5 h-5 text-content-muted flex-shrink-0"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+						/>
 					</svg>
 					<span className="truncate">"{source.searchQuery}"</span>
 				</div>
@@ -88,18 +115,29 @@ function SourceCard({ source }: { source: MarketPriceSource }) {
 			{/* Article count */}
 			{source.count !== undefined && source.count > 0 && (
 				<div className="flex items-center gap-2 text-lg text-content-secondary">
-					<svg className="w-5 h-5 text-content-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+					<svg
+						aria-hidden="true"
+						className="w-5 h-5 text-content-muted"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+						/>
 					</svg>
 					<span>{source.count} articles trouvés</span>
 				</div>
 			)}
 
 			{/* Listings */}
-			{source.listings && source.listings.length > 0 && (
+			{displayedListings && displayedListings.length > 0 && (
 				<div className="mt-4 space-y-2">
 					<h5 className="text-lg text-content-muted mb-2">Exemples trouvés:</h5>
-					{source.listings.slice(0, 3).map((listing, i) => (
+					{displayedListings.map((listing, i) => (
 						<a
 							key={`${listing.url}-${i}`}
 							href={listing.url}
@@ -120,11 +158,31 @@ function SourceCard({ source }: { source: MarketPriceSource }) {
 								</div>
 								<div className="text-xl font-semibold text-profit">{listing.price}€</div>
 							</div>
-							<svg className="w-5 h-5 text-content-muted group-hover:text-brand transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+							<svg
+								aria-hidden="true"
+								className="w-5 h-5 text-content-muted group-hover:text-brand transition-colors flex-shrink-0"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+								/>
 							</svg>
 						</a>
 					))}
+					{hasMoreListings && (
+						<button
+							type="button"
+							onClick={() => setIsExpanded(!isExpanded)}
+							className="text-base text-brand hover:text-brand-hover cursor-pointer transition-colors mt-2"
+						>
+							{isExpanded ? 'Voir moins' : `+${(source.listings?.length ?? 0) - 3} autres...`}
+						</button>
+					)}
 				</div>
 			)}
 
@@ -137,8 +195,19 @@ function SourceCard({ source }: { source: MarketPriceSource }) {
 					className="mt-4 flex items-center justify-center gap-2 p-3 rounded-xl bg-brand/10 border border-brand/20 text-brand hover:bg-brand/20 transition-colors"
 				>
 					<span className="text-lg font-medium">Voir la source</span>
-					<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+					<svg
+						aria-hidden="true"
+						className="w-5 h-5"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+						/>
 					</svg>
 				</a>
 			)}
@@ -157,9 +226,7 @@ export function SourcesTab({ sources }: SourcesTabProps) {
 		<div className="space-y-4 animate-fade-in">
 			{/* Header */}
 			<div className="flex items-center justify-between">
-				<h3 className="text-2xl font-semibold text-content-primary">
-					Sources de l'estimation
-				</h3>
+				<h3 className="text-2xl font-semibold text-content-primary">Sources de l'estimation</h3>
 				{sourcesArray.length > 0 && (
 					<span className="text-lg text-content-muted">
 						{sourcesArray.length} source{sourcesArray.length > 1 ? 's' : ''}
@@ -170,14 +237,23 @@ export function SourcesTab({ sources }: SourcesTabProps) {
 			{/* Info banner */}
 			<div className="p-4 rounded-xl bg-info/10 border border-info/20">
 				<div className="flex items-start gap-3">
-					<svg className="w-6 h-6 text-info flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-						<path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+					<svg
+						aria-hidden="true"
+						className="w-6 h-6 text-info flex-shrink-0 mt-0.5"
+						fill="currentColor"
+						viewBox="0 0 20 20"
+					>
+						<path
+							fillRule="evenodd"
+							d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+							clipRule="evenodd"
+						/>
 					</svg>
 					<div>
 						<p className="text-lg text-info font-medium mb-1">Sources Google Search</p>
 						<p className="text-base text-content-secondary">
-							Ces sources sont utilisées par l'IA pour estimer le prix marché de l'article.
-							Les prix sont basés sur des articles similaires trouvés en ligne.
+							Ces sources sont utilisées par l'IA pour estimer le prix marché de l'article. Les prix
+							sont basés sur des articles similaires trouvés en ligne.
 						</p>
 					</div>
 				</div>

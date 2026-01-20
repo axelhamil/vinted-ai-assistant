@@ -9,7 +9,6 @@ import { getSettings, getState, updateBadge } from './state-manager'
 
 // Re-export types for external use
 export type {
-	AIProvider,
 	ApiResponse,
 	ExportMarkdownResponse,
 	ExtensionMessage,

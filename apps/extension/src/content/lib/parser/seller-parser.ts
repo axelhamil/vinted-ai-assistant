@@ -84,7 +84,7 @@ function extractSellerBadges(): SellerBadge[] {
 			const id = label
 				.toLowerCase()
 				.normalize('NFD')
-				.replace(/[\u0300-\u036f]/g, '')
+				.replace(/\p{Mn}/gu, '')
 				.replace(/\s+/g, '_')
 
 			badges.push({ id, label, description })
@@ -127,7 +127,9 @@ export function extractSeller(): VintedSeller {
 		seller.profileUrl = sellerLink.href
 
 		// Extract avatar URL
-		const avatarImg = sellerLink.querySelector('img.web_ui__Image__content') as HTMLImageElement | null
+		const avatarImg = sellerLink.querySelector(
+			'img.web_ui__Image__content'
+		) as HTMLImageElement | null
 		if (avatarImg?.src) {
 			seller.avatarUrl = avatarImg.src
 		}
@@ -187,7 +189,9 @@ export function extractSeller(): VintedSeller {
 			const locationIcon = cell.querySelector('svg path[d*="M8 0a6.5"]')
 			if (locationIcon) {
 				// Get the text after the icon
-				const locationDiv = cell.querySelector('.web_ui__Cell__body div:not(.web_ui__Spacer__regular)')
+				const locationDiv = cell.querySelector(
+					'.web_ui__Cell__body div:not(.web_ui__Spacer__regular)'
+				)
 				if (locationDiv?.textContent?.trim()) {
 					seller.location = locationDiv.textContent.trim()
 				}
@@ -201,7 +205,9 @@ export function extractSeller(): VintedSeller {
 					seller.lastSeen = lastSeenMatch[1].trim()
 				} else {
 					// Try to find any time-related text in the cell
-					const timeDiv = cell.querySelector('.web_ui__Cell__body div span, .web_ui__Cell__body > div')
+					const timeDiv = cell.querySelector(
+						'.web_ui__Cell__body div span, .web_ui__Cell__body > div'
+					)
 					if (timeDiv?.textContent?.trim()) {
 						seller.lastSeen = timeDiv.textContent.trim()
 					}

@@ -18,7 +18,7 @@ export function sendMessage<T>(message: Record<string, unknown>): Promise<ApiRes
 /**
  * Create and trigger a file download
  */
-export function downloadFile(content: string, filename: string, mimeType: string = 'text/markdown'): void {
+export function downloadFile(content: string, filename: string, mimeType = 'text/markdown'): void {
 	const blob = new Blob([content], { type: mimeType })
 	const url = URL.createObjectURL(blob)
 	const link = document.createElement('a')

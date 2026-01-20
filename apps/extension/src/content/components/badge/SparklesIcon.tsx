@@ -11,6 +11,7 @@ interface SparklesIconProps {
 export function SparklesIcon({ style }: SparklesIconProps) {
 	return (
 		<svg
+			aria-hidden="true"
 			style={style}
 			viewBox="0 0 24 24"
 			fill="currentColor"

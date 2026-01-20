@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -7,41 +7,41 @@
 /* Custom styles for Vinted AI Assistant content UI */
 :host {
 	all: initial;
-	font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	font-family: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* CSS Variables for the light premium theme with orange accents */
 :root {
 	/* Surface colors */
-	--vai-surface: #FFFFFF;
-	--vai-surface-secondary: #FAFAFA;
-	--vai-surface-tertiary: #F5F5F5;
+	--vai-surface: #ffffff;
+	--vai-surface-secondary: #fafafa;
+	--vai-surface-tertiary: #f5f5f5;
 
 	/* Border colors */
-	--vai-border: #E5E7EB;
-	--vai-border-light: #F3F4F6;
-	--vai-border-dark: #D1D5DB;
-	--vai-border-hover: #D1D5DB;
+	--vai-border: #e5e7eb;
+	--vai-border-light: #f3f4f6;
+	--vai-border-dark: #d1d5db;
+	--vai-border-hover: #d1d5db;
 
 	/* Brand orange */
-	--vai-brand: #F97316;
-	--vai-brand-light: #FDBA74;
-	--vai-brand-dark: #EA580C;
-	--vai-brand-darker: #C2410C;
-	--vai-brand-gradient: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+	--vai-brand: #f97316;
+	--vai-brand-light: #fdba74;
+	--vai-brand-dark: #ea580c;
+	--vai-brand-darker: #c2410c;
+	--vai-brand-gradient: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
 
 	/* Semantic colors */
-	--vai-profit: #10B981;
-	--vai-caution: #F59E0B;
-	--vai-danger: #EF4444;
-	--vai-info: #3B82F6;
-	--vai-exceptional: #8B5CF6;
+	--vai-profit: #10b981;
+	--vai-caution: #f59e0b;
+	--vai-danger: #ef4444;
+	--vai-info: #3b82f6;
+	--vai-exceptional: #8b5cf6;
 
 	/* Text colors */
-	--vai-text-primary: #1F2937;
-	--vai-text-secondary: #6B7280;
-	--vai-text-muted: #9CA3AF;
-	--vai-text-on-brand: #FFFFFF;
+	--vai-text-primary: #1f2937;
+	--vai-text-secondary: #6b7280;
+	--vai-text-muted: #9ca3af;
+	--vai-text-on-brand: #ffffff;
 
 	/* Spacing */
 	--vai-sidebar-width: 480px;
@@ -95,7 +95,7 @@
 	}
 
 	.orange-accent-top::before {
-		content: '';
+		content: "";
 		position: absolute;
 		top: 0;
 		left: 0;
@@ -106,22 +106,25 @@
 	}
 
 	/* Score colors */
-	.score-danger { color: var(--vai-danger); }
-	.score-caution { color: var(--vai-caution); }
-	.score-info { color: var(--vai-info); }
-	.score-profit { color: var(--vai-profit); }
+	.score-danger {
+		color: var(--vai-danger);
+	}
+	.score-caution {
+		color: var(--vai-caution);
+	}
+	.score-info {
+		color: var(--vai-info);
+	}
+	.score-profit {
+		color: var(--vai-profit);
+	}
 	.score-exceptional {
 		color: var(--vai-exceptional);
 	}
 
 	/* Shimmer animation for skeleton - light theme */
 	.shimmer {
-		background: linear-gradient(
-			90deg,
-			#F3F4F6 0%,
-			#E5E7EB 50%,
-			#F3F4F6 100%
-		);
+		background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
 		background-size: 200% 100%;
 		animation: shimmer 1.5s infinite linear;
 	}
@@ -175,7 +178,7 @@
 	}
 
 	.btn-primary-orange:hover {
-		background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%);
+		background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
 		box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
 	}
 
@@ -253,7 +256,8 @@
 
 /* Keyframe animations */
 @keyframes pulseGlow {
-	0%, 100% {
+	0%,
+	100% {
 		box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
 	}
 	50% {

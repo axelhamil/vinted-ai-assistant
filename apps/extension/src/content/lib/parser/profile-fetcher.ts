@@ -35,7 +35,7 @@ export async function fetchSellerProfile(username: string): Promise<SellerProfil
 			credentials: 'include', // Include cookies for session context
 			signal: controller.signal,
 			headers: {
-				'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+				Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 				'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8',
 			},
 		})
@@ -170,12 +170,15 @@ export async function fetchSellerProfile(username: string): Promise<SellerProfil
 		}
 
 		// Check if profile has photo/bio (verified profile)
-		const hasPhoto = !!doc.querySelector('[data-testid="user-photo"] img, .user-photo img, .profile-image img')
-		const hasBio = !!(doc.querySelector('[data-testid="user-description"], .user-description')?.textContent?.trim())
+		const hasPhoto = !!doc.querySelector(
+			'[data-testid="user-photo"] img, .user-photo img, .profile-image img'
+		)
+		const hasBio = !!doc
+			.querySelector('[data-testid="user-description"], .user-description')
+			?.textContent?.trim()
 		profileData.verifiedProfile = hasPhoto && hasBio
 
 		return profileData
-
 	} catch (error) {
 		if (error instanceof Error && error.name === 'AbortError') {
 			// Timeout - not critical

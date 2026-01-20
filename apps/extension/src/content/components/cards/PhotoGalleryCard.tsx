@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Card } from '../primitives/Card'
 
 interface PhotoGalleryCardProps {
@@ -10,9 +10,25 @@ interface PhotoGalleryCardProps {
  */
 function CameraIcon({ className }: { className?: string }) {
 	return (
-		<svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+		<svg
+			aria-hidden="true"
+			className={className}
+			fill="none"
+			stroke="currentColor"
+			viewBox="0 0 24 24"
+		>
+			<path
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				strokeWidth={2}
+				d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+			/>
+			<path
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				strokeWidth={2}
+				d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+			/>
 		</svg>
 	)
 }
@@ -22,7 +38,13 @@ function CameraIcon({ className }: { className?: string }) {
  */
 function CloseIcon({ className }: { className?: string }) {
 	return (
-		<svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<svg
+			aria-hidden="true"
+			className={className}
+			fill="none"
+			stroke="currentColor"
+			viewBox="0 0 24 24"
+		>
 			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
 		</svg>
 	)
@@ -31,9 +53,18 @@ function CloseIcon({ className }: { className?: string }) {
 /**
  * Chevron icon component
  */
-function ChevronIcon({ direction, className }: { direction: 'left' | 'right'; className?: string }) {
+function ChevronIcon({
+	direction,
+	className,
+}: { direction: 'left' | 'right'; className?: string }) {
 	return (
-		<svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<svg
+			aria-hidden="true"
+			className={className}
+			fill="none"
+			stroke="currentColor"
+			viewBox="0 0 24 24"
+		>
 			{direction === 'left' ? (
 				<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
 			) : (
@@ -80,12 +111,15 @@ function Lightbox({
 	}, [])
 
 	return (
-		<div
-			className="fixed inset-0 z-[2147483647] bg-black/95 backdrop-blur-sm flex items-center justify-center"
+		<dialog
+			open
+			className="fixed inset-0 z-[2147483647] bg-black/95 backdrop-blur-sm flex items-center justify-center m-0 p-0 border-none max-w-none max-h-none w-screen h-screen"
 			onClick={onClose}
+			onKeyDown={(e) => e.key === 'Escape' && onClose()}
 		>
 			{/* Close button */}
 			<button
+				type="button"
 				onClick={onClose}
 				className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
 				aria-label="Fermer"
@@ -101,12 +135,13 @@ function Lightbox({
 			{/* Previous button */}
 			{photos.length > 1 && (
 				<button
+					type="button"
 					onClick={(e) => {
 						e.stopPropagation()
 						onPrev()
 					}}
 					className="absolute left-4 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-					aria-label="Photo précédente"
+					aria-label="Image précédente"
 				>
 					<ChevronIcon direction="left" className="w-6 h-6 text-white" />
 				</button>
@@ -116,10 +151,12 @@ function Lightbox({
 			<div
 				className="max-w-[90vw] max-h-[90vh] flex items-center justify-center"
 				onClick={(e) => e.stopPropagation()}
+				onKeyDown={(e) => e.stopPropagation()}
+				role="presentation"
 			>
 				<img
 					src={photos[currentIndex]}
-					alt={`Photo ${currentIndex + 1}`}
+					alt={`Article ${currentIndex + 1}`}
 					className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
 				/>
 			</div>
@@ -127,12 +164,13 @@ function Lightbox({
 			{/* Next button */}
 			{photos.length > 1 && (
 				<button
+					type="button"
 					onClick={(e) => {
 						e.stopPropagation()
 						onNext()
 					}}
 					className="absolute right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-					aria-label="Photo suivante"
+					aria-label="Image suivante"
 				>
 					<ChevronIcon direction="right" className="w-6 h-6 text-white" />
 				</button>
@@ -143,6 +181,7 @@ function Lightbox({
 				<div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 rounded-lg bg-white/10 backdrop-blur-sm">
 					{photos.map((photo, index) => (
 						<button
+							type="button"
 							key={photo}
 							onClick={(e) => {
 								e.stopPropagation()
@@ -169,7 +208,7 @@ function Lightbox({
 					))}
 				</div>
 			)}
-		</div>
+		</dialog>
 	)
 }
 
@@ -207,33 +246,37 @@ export function PhotoGalleryCard({ photos }: PhotoGalleryCardProps) {
 
 	return (
 		<>
-			<Card
-				title="Photos Article"
-				icon={<CameraIcon className="w-4 h-4" />}
-			>
+			<Card title="Photos Article" icon={<CameraIcon className="w-4 h-4" />}>
 				<div className="space-y-3">
 					{/* Photo grid */}
 					<div className="flex gap-2">
 						{visiblePhotos.map((photo, index) => (
 							<button
+								type="button"
 								key={photo}
 								onClick={() => openLightbox(index)}
 								className="relative flex-1 aspect-square rounded-lg overflow-hidden group cursor-pointer border border-white/10 hover:border-white/20 transition-all"
 							>
 								<img
 									src={photo}
-									alt={`Photo ${index + 1}`}
+									alt={`Article ${index + 1}`}
 									className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
 								/>
 								{/* Hover overlay */}
 								<div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
 									<svg
+										aria-hidden="true"
 										className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity"
 										fill="none"
 										stroke="currentColor"
 										viewBox="0 0 24 24"
 									>
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+										/>
 									</svg>
 								</div>
 							</button>
@@ -242,22 +285,34 @@ export function PhotoGalleryCard({ photos }: PhotoGalleryCardProps) {
 						{/* "+X" button for remaining photos */}
 						{remainingCount > 0 && (
 							<button
+								type="button"
 								onClick={() => openLightbox(maxThumbnails)}
 								className="flex-1 aspect-square rounded-lg bg-white/[0.05] border border-white/10 hover:border-white/20 hover:bg-white/[0.08] transition-all flex items-center justify-center cursor-pointer"
 							>
-								<span className="text-xl font-semibold text-white/70">
-									+{remainingCount}
-								</span>
+								<span className="text-xl font-semibold text-white/70">+{remainingCount}</span>
 							</button>
 						)}
 					</div>
 
 					{/* Helper text */}
 					<div className="flex items-center gap-2 text-sm text-white/40">
-						<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+						<svg
+							aria-hidden="true"
+							className="w-4 h-4"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
 						</svg>
-						<span>Cliquez pour agrandir • {photos.length} photo{photos.length > 1 ? 's' : ''}</span>
+						<span>
+							Cliquez pour agrandir • {photos.length} photo{photos.length > 1 ? 's' : ''}
+						</span>
 					</div>
 				</div>
 			</Card>

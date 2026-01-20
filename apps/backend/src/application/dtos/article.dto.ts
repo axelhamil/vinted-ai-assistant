@@ -19,6 +19,8 @@ export interface ArticleInputDTO {
 	title: string
 	description: string
 	price: number
+	/** Shipping cost in euros (null = free shipping or not available) */
+	shippingCost: number | null
 	brand: string | null
 	size: string | null
 	condition: string

@@ -5,21 +5,22 @@
 
 import type { VintedArticleData } from '@vinted-ai/shared/article'
 import {
-	extractVintedId,
-	extractTitle,
-	extractPrice,
-	extractDescription,
 	extractBrand,
-	extractSize,
 	extractCondition,
-	extractListedAt,
-	extractViews,
+	extractDescription,
 	extractFavorites,
+	extractListedAt,
+	extractPrice,
+	extractShippingCost,
+	extractSize,
+	extractTitle,
+	extractViews,
+	extractVintedId,
 } from './parser/article-parser'
-import { extractSeller, mergeSellerWithProfile } from './parser/seller-parser'
-import { extractPhotos } from './parser/photo-parser'
 import { detectLanguage } from './parser/language-detector'
+import { extractPhotos } from './parser/photo-parser'
 import { fetchSellerProfile } from './parser/profile-fetcher'
+import { extractSeller, mergeSellerWithProfile } from './parser/seller-parser'
 
 // Re-export utilities for external use
 export { detectLanguage, fetchSellerProfile, mergeSellerWithProfile }
@@ -40,6 +41,7 @@ export function parseVintedArticle(): VintedArticleData | null {
 		title: extractTitle(),
 		description: extractDescription(),
 		price: extractPrice(),
+		shippingCost: extractShippingCost(),
 		brand: extractBrand(),
 		size: extractSize(),
 		condition: extractCondition(),

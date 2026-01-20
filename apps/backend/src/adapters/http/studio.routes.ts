@@ -1,7 +1,12 @@
 import { Hono } from 'hono'
 import type { Container } from 'inversify'
 import { StudioController } from '../controllers/studio.controller'
-import { isValidationError, validateBody, validateParams, validateQuery } from './middleware/validation.middleware'
+import {
+	isValidationError,
+	validateBody,
+	validateParams,
+	validateQuery,
+} from './middleware/validation.middleware'
 import {
 	analyzeFormSchema,
 	createPresetSchema,

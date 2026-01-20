@@ -15,7 +15,7 @@ interface ApiResponse<T> {
  */
 export function useBackgroundMessaging() {
 	const sendMessage = useCallback(
-		<T,>(message: Record<string, unknown>): Promise<ApiResponse<T>> => {
+		<T>(message: Record<string, unknown>): Promise<ApiResponse<T>> => {
 			return new Promise((resolve) => {
 				chrome.runtime.sendMessage(message, (response: ApiResponse<T>) => {
 					resolve(response)

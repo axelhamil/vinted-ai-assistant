@@ -9,7 +9,6 @@ export const TYPES = {
 
 	// Providers
 	AIProvider: Symbol.for('AIProvider'),
-	ImageEditorProvider: Symbol.for('ImageEditorProvider'),
 
 	// Use Cases - Analysis
 	AnalyzeArticleUseCase: Symbol.for('AnalyzeArticleUseCase'),
@@ -19,9 +18,6 @@ export const TYPES = {
 	// Use Cases - Photo Studio
 	EditPhotoUseCase: Symbol.for('EditPhotoUseCase'),
 	FormFillingUseCase: Symbol.for('FormFillingUseCase'),
-
-	// Infrastructure
-	Database: Symbol.for('Database'),
 } as const
 
 export type Types = typeof TYPES

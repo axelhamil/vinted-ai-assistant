@@ -5,10 +5,14 @@
 
 import { StrictMode } from 'react'
 import { type Root, createRoot } from 'react-dom/client'
-import { FormFillingApp } from './FormFillingApp'
 import { createShadowContainer, injectStyles } from '../lib/shadow-dom'
-import { initializeDropHandler, cleanupDropHandler, injectDropZoneStyles } from './vinted-drop-handler'
 import contentStyles from '../styles.css?inline'
+import { FormFillingApp } from './FormFillingApp'
+import {
+	cleanupDropHandler,
+	initializeDropHandler,
+	injectDropZoneStyles,
+} from './vinted-drop-handler'
 
 // Store the React root for cleanup
 let reactRoot: Root | null = null
@@ -36,7 +40,11 @@ function initializeUI(): void {
 
 	try {
 		// Create Shadow DOM container
-		const { container, shadowRoot, reactRoot: rootElement } = createShadowContainer('vinted-ai-form-filling')
+		const {
+			container,
+			shadowRoot,
+			reactRoot: rootElement,
+		} = createShadowContainer('vinted-ai-form-filling')
 		containerElement = container
 
 		// Inject Tailwind and custom styles into shadow DOM

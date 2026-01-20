@@ -2,10 +2,10 @@
  * Individual article card in portfolio list
  */
 
-import type { PortfolioArticle } from '../../types'
 import { ExternalLinkIcon } from '../../icons/ExternalLinkIcon'
 import { StarIcon } from '../../icons/StarIcon'
 import { TrashIcon } from '../../icons/TrashIcon'
+import type { PortfolioArticle } from '../../types'
 
 interface ArticleCardProps {
 	article: PortfolioArticle
@@ -63,7 +63,13 @@ export function ArticleCard({ article, onDelete }: ArticleCardProps) {
 						/>
 					) : (
 						<div className="flex h-full w-full items-center justify-center text-gray-400">
-							<svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<svg
+								aria-hidden="true"
+								className="h-6 w-6"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
 								<path
 									strokeLinecap="round"
 									strokeLinejoin="round"

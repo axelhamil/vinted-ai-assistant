@@ -1,11 +1,11 @@
-import { useState, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type {
-	StudioPreset,
-	StudioEditedPhotoResponse,
 	StudioBatchEditResponse,
+	StudioEditedPhotoResponse,
+	StudioPreset,
 } from '../../../background/message-types'
-import { Card } from '../primitives/Card'
 import { Button } from '../primitives/Button'
+import { Card } from '../primitives/Card'
 
 interface StudioTabProps {
 	photos: string[]
@@ -56,9 +56,11 @@ export function StudioTab({ photos }: StudioTabProps) {
 	}, [presetsLoaded])
 
 	// Load presets when component is shown
-	if (!presetsLoaded) {
-		loadPresets()
-	}
+	useEffect(() => {
+		if (!presetsLoaded) {
+			loadPresets()
+		}
+	}, [presetsLoaded, loadPresets])
 
 	// Edit single photo with selected preset
 	const handleEditPhoto = useCallback(async () => {
@@ -130,17 +132,14 @@ export function StudioTab({ photos }: StudioTabProps) {
 	}, [photos, selectedPreset])
 
 	// Download edited photo
-	const handleDownload = useCallback(
-		(dataUrl: string, filename?: string) => {
-			const link = document.createElement('a')
-			link.href = dataUrl
-			link.download = filename || `studio-edited-${Date.now()}.png`
-			document.body.appendChild(link)
-			link.click()
-			document.body.removeChild(link)
-		},
-		[]
-	)
+	const handleDownload = useCallback((dataUrl: string, filename?: string) => {
+		const link = document.createElement('a')
+		link.href = dataUrl
+		link.download = filename || `studio-edited-${Date.now()}.png`
+		document.body.appendChild(link)
+		link.click()
+		document.body.removeChild(link)
+	}, [])
 
 	// Download all batch results as ZIP
 	const handleDownloadAll = useCallback(async () => {
@@ -149,7 +148,7 @@ export function StudioTab({ photos }: StudioTabProps) {
 		// For simplicity, download each individually (ZIP would require a library)
 		for (let i = 0; i < batchResults.results.length; i++) {
 			const result = batchResults.results[i]
-			if (result && result.success && result.dataUrl) {
+			if (result?.success && result.dataUrl) {
 				handleDownload(result.dataUrl, `studio-edited-${i + 1}.png`)
 				// Small delay between downloads
 				await new Promise((resolve) => setTimeout(resolve, 100))
@@ -161,7 +160,13 @@ export function StudioTab({ photos }: StudioTabProps) {
 		return (
 			<Card className="p-6">
 				<div className="text-center text-content-secondary">
-					<svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg
+						aria-hidden="true"
+						className="w-12 h-12 mx-auto mb-3 opacity-50"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
 						<path
 							strokeLinecap="round"
 							strokeLinejoin="round"
@@ -187,7 +192,7 @@ export function StudioTab({ photos }: StudioTabProps) {
 					<div className="grid grid-cols-4 gap-2">
 						{photos.map((photo, index) => (
 							<button
-								key={index}
+								key={photo}
 								type="button"
 								onClick={() => {
 									setSelectedPhoto(photo)
@@ -199,12 +204,27 @@ export function StudioTab({ photos }: StudioTabProps) {
 										: 'border-border hover:border-brand/50'
 								}`}
 							>
-								<img src={photo} alt={`Photo ${index + 1}`} className="w-full h-full object-cover" />
+								<img
+									src={photo}
+									alt={`Article ${index + 1}`}
+									className="w-full h-full object-cover"
+								/>
 								{selectedPhoto === photo && (
 									<div className="absolute inset-0 bg-brand/10 flex items-center justify-center">
 										<div className="w-6 h-6 rounded-full bg-brand text-white flex items-center justify-center">
-											<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+											<svg
+												aria-hidden="true"
+												className="w-4 h-4"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2}
+													d="M5 13l4 4L19 7"
+												/>
 											</svg>
 										</div>
 									</div>
@@ -280,7 +300,11 @@ export function StudioTab({ photos }: StudioTabProps) {
 								<div className="space-y-2">
 									<span className="text-xs font-medium text-content-secondary">Original</span>
 									<div className="aspect-square rounded-lg overflow-hidden border border-border">
-										<img src={selectedPhoto} alt="Original" className="w-full h-full object-cover" />
+										<img
+											src={selectedPhoto}
+											alt="Original"
+											className="w-full h-full object-cover"
+										/>
 									</div>
 								</div>
 							)}
@@ -298,7 +322,9 @@ export function StudioTab({ photos }: StudioTabProps) {
 										{processingState === 'loading' ? (
 											<div className="flex flex-col items-center">
 												<div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin" />
-												<span className="text-xs text-content-secondary mt-2">Retouche en cours...</span>
+												<span className="text-xs text-content-secondary mt-2">
+													Retouche en cours...
+												</span>
 											</div>
 										) : (
 											<span className="text-sm text-content-secondary">Cliquez sur Retoucher</span>
@@ -315,7 +341,13 @@ export function StudioTab({ photos }: StudioTabProps) {
 			{error && (
 				<Card className="p-4 bg-red-50 border-red-200">
 					<div className="flex items-start gap-3">
-						<svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg
+							aria-hidden="true"
+							className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
 							<path
 								strokeLinecap="round"
 								strokeLinejoin="round"
@@ -347,24 +379,55 @@ export function StudioTab({ photos }: StudioTabProps) {
 					<div className="p-4">
 						<div className="grid grid-cols-4 gap-2">
 							{batchResults.results.map((result, index) => (
-								<div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-border">
+								<div
+									key={result.dataUrl ?? `error-${index}`}
+									className="relative aspect-square rounded-lg overflow-hidden border border-border"
+								>
 									{result.success && result.dataUrl ? (
 										<>
-											<img src={result.dataUrl} alt={`Edited ${index + 1}`} className="w-full h-full object-cover" />
+											<img
+												src={result.dataUrl}
+												alt={`Retouché ${index + 1}`}
+												className="w-full h-full object-cover"
+											/>
 											<button
 												type="button"
-												onClick={() => handleDownload(result.dataUrl as string, `edited-${index + 1}.png`)}
+												onClick={() =>
+													handleDownload(result.dataUrl as string, `edited-${index + 1}.png`)
+												}
 												className="absolute bottom-1 right-1 p-1.5 bg-white/90 rounded-full shadow-sm hover:bg-white transition-colors"
 											>
-												<svg className="w-4 h-4 text-content-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+												<svg
+													aria-hidden="true"
+													className="w-4 h-4 text-content-primary"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														strokeWidth={2}
+														d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+													/>
 												</svg>
 											</button>
 										</>
 									) : (
 										<div className="w-full h-full bg-red-50 flex items-center justify-center">
-											<svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+											<svg
+												aria-hidden="true"
+												className="w-6 h-6 text-red-400"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2}
+													d="M6 18L18 6M6 6l12 12"
+												/>
 											</svg>
 										</div>
 									)}
@@ -395,8 +458,19 @@ export function StudioTab({ photos }: StudioTabProps) {
 
 				{editedPhoto && (
 					<Button variant="secondary" onClick={() => handleDownload(editedPhoto)}>
-						<svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+						<svg
+							aria-hidden="true"
+							className="w-4 h-4 mr-1"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+							/>
 						</svg>
 						Télécharger
 					</Button>

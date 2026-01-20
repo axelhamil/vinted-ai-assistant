@@ -1,11 +1,9 @@
 import { Container } from 'inversify'
 import { DrizzleAnalysisRepository } from '../adapters/persistence/drizzle-analysis.repository'
 import { DrizzleStudioPresetRepository } from '../adapters/persistence/drizzle-studio-preset.repository'
-import { GeminiImageEditorProvider } from '../adapters/providers/ai/gemini-image-editor.provider'
 import { GeminiProvider } from '../adapters/providers/ai/gemini.provider'
 import { TYPES } from './di-types'
 import type { IAIProvider } from './interfaces/providers/ai.provider.interface'
-import type { IImageEditorProvider } from './interfaces/providers/image-editor.provider.interface'
 import type { IAnalysisRepository } from './interfaces/repositories/analysis.repository.interface'
 import type { IStudioPresetRepository } from './interfaces/repositories/studio-preset.repository.interface'
 import { AnalyzeArticleUseCase } from './use-cases/analyze-article.use-case'
@@ -31,10 +29,8 @@ export function createContainer(): Container {
 		.to(DrizzleStudioPresetRepository)
 		.inSingletonScope()
 
-	// Bind AI providers
+	// Bind AI provider
 	container.bind<IAIProvider>(TYPES.AIProvider).to(GeminiProvider).inSingletonScope()
-
-	container.bind<IImageEditorProvider>(TYPES.ImageEditorProvider).to(GeminiImageEditorProvider).inSingletonScope()
 
 	// Bind use cases - Analysis
 	container
@@ -55,7 +51,10 @@ export function createContainer(): Container {
 	// Bind use cases - Studio
 	container.bind<EditPhotoUseCase>(TYPES.EditPhotoUseCase).to(EditPhotoUseCase).inSingletonScope()
 
-	container.bind<FormFillingUseCase>(TYPES.FormFillingUseCase).to(FormFillingUseCase).inSingletonScope()
+	container
+		.bind<FormFillingUseCase>(TYPES.FormFillingUseCase)
+		.to(FormFillingUseCase)
+		.inSingletonScope()
 
 	return container
 }

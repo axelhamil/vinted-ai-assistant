@@ -11,7 +11,13 @@ export function EmptyState({ title, description }: EmptyStateProps) {
 	return (
 		<div className="flex flex-col items-center justify-center p-8 text-center">
 			<div className="mb-3 text-gray-300">
-				<svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<svg
+					aria-hidden="true"
+					className="h-12 w-12"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+				>
 					<path
 						strokeLinecap="round"
 						strokeLinejoin="round"
@@ -20,7 +26,7 @@ export function EmptyState({ title, description }: EmptyStateProps) {
 					/>
 				</svg>
 			</div>
-				<p className="text-base font-medium text-gray-600">{title}</p>
+			<p className="text-base font-medium text-gray-600">{title}</p>
 			<p className="mt-1 text-base text-gray-400">{description}</p>
 		</div>
 	)

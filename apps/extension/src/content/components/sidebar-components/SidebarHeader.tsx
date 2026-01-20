@@ -16,8 +16,19 @@ export function SidebarHeader({ onClose, onCollapse }: SidebarHeaderProps) {
 				{onCollapse && (
 					<IconButton
 						icon={
-							<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+							<svg
+								aria-hidden="true"
+								className="w-5 h-5"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M15 19l-7-7 7-7"
+								/>
 							</svg>
 						}
 						variant="ghost"
@@ -30,11 +41,22 @@ export function SidebarHeader({ onClose, onCollapse }: SidebarHeaderProps) {
 				{/* Logo */}
 				<div className="flex items-center gap-3">
 					<div className="w-10 h-10 rounded-lg bg-gradient-to-br from-brand to-brand-dark flex items-center justify-center shadow-soft">
-						<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+						<svg
+							aria-hidden="true"
+							className="w-5 h-5 text-white"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M13 10V3L4 14h7v7l9-11h-7z"
+							/>
 						</svg>
 					</div>
-						<div>
+					<div>
 						<span className="text-lg font-semibold text-content-primary">Vinted</span>
 						<span className="text-lg font-semibold text-brand">AI</span>
 					</div>
@@ -44,8 +66,19 @@ export function SidebarHeader({ onClose, onCollapse }: SidebarHeaderProps) {
 			{/* Right side: close button */}
 			<IconButton
 				icon={
-					<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+					<svg
+						aria-hidden="true"
+						className="w-5 h-5"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M6 18L18 6M6 6l12 12"
+						/>
 					</svg>
 				}
 				variant="ghost"

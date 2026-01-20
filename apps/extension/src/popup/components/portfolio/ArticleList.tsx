@@ -50,9 +50,9 @@ export function ArticleList({
 	if (isLoading) {
 		return (
 			<div className="flex flex-col gap-2 p-3">
-				{[...Array(3)].map((_, i) => (
+				{['skeleton-1', 'skeleton-2', 'skeleton-3'].map((id) => (
 					<div
-						key={`skeleton-${i}`}
+						key={id}
 						className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-2"
 					>
 						<div className="h-12 w-12 animate-pulse rounded-md bg-gray-200" />
@@ -71,7 +71,13 @@ export function ArticleList({
 		return (
 			<div className="flex flex-col items-center justify-center p-6 text-center">
 				<div className="mb-2 text-red-500">
-					<svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<svg
+						aria-hidden="true"
+						className="h-8 w-8"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+					>
 						<path
 							strokeLinecap="round"
 							strokeLinejoin="round"
@@ -80,7 +86,7 @@ export function ArticleList({
 						/>
 					</svg>
 				</div>
-					<p className="text-base font-medium text-gray-900">Erreur de chargement</p>
+				<p className="text-base font-medium text-gray-900">Erreur de chargement</p>
 				<p className="mt-1 text-base text-gray-500">{error}</p>
 			</div>
 		)

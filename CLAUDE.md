@@ -123,3 +123,25 @@ PORT=3000
 ```
 
 Extension settings are stored in Chrome storage and configured via popup UI.
+
+## Code Quality Rules
+
+### NO Useless Abstractions
+- **NEVER** create a service/interface that only wraps a function
+- If a class only delegates → use the function directly
+- DI only for: repositories, providers, services with real business logic
+
+### NO Dead Code
+- Delete commented code immediately
+- Delete unused imports
+- Delete identical conditional branches (e.g., `x ? 'A' : 'A'`)
+
+### Type Safety
+- `any` forbidden except for documented exceptions (poorly-typed external SDKs)
+- Prefer `unknown` + type guards over `any`
+- Type assertions (`as`) must be justified
+
+### Clean Architecture
+- Adapters don't import other adapters
+- Use cases orchestrate, they don't do low-level logic
+- Controllers return DTOs, not HTTP Response objects

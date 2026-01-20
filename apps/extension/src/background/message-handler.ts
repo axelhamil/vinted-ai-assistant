@@ -2,7 +2,6 @@
  * Message handler for routing extension messages
  */
 
-import type { ApiResponse, ExtensionMessage } from './message-types'
 import {
 	analyzeArticle,
 	checkBackendStatus,
@@ -22,6 +21,7 @@ import {
 	studioGetPresets,
 	updateAnalysisStatus,
 } from './api-client'
+import type { ApiResponse, ExtensionMessage } from './message-types'
 import { getSettings, getState, saveSettings, toggleExtension } from './state-manager'
 
 // Messages that don't require extension to be enabled

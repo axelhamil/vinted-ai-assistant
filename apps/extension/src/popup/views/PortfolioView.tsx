@@ -3,10 +3,14 @@
  */
 
 import { useEffect, useState } from 'react'
-import { BackIcon } from '../icons/BackIcon'
-import { usePortfolio } from '../hooks/usePortfolio'
-import { PortfolioTabs, getStatusFromTab, type PortfolioTab } from '../components/portfolio/PortfolioTabs'
 import { ArticleList } from '../components/portfolio/ArticleList'
+import {
+	type PortfolioTab,
+	PortfolioTabs,
+	getStatusFromTab,
+} from '../components/portfolio/PortfolioTabs'
+import { usePortfolio } from '../hooks/usePortfolio'
+import { BackIcon } from '../icons/BackIcon'
 
 interface PortfolioViewProps {
 	onBack: () => void
@@ -67,7 +71,7 @@ export function PortfolioView({ onBack, scoreThreshold = 7 }: PortfolioViewProps
 			</div>
 
 			{/* Footer */}
-				<div className="border-t border-gray-100 px-4 py-2">
+			<div className="border-t border-gray-100 px-4 py-2">
 				<p className="text-center text-base text-gray-400">
 					{articles.length} article{articles.length !== 1 ? 's' : ''}
 				</p>

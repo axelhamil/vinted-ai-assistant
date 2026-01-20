@@ -2,16 +2,16 @@
  * Main dashboard view
  */
 
-import { StatCard } from '../components/StatCard'
 import { BackendStatus } from '../components/BackendStatus'
 import { ExtensionToggle } from '../components/ExtensionToggle'
-import { SettingsIcon } from '../icons/SettingsIcon'
-import { PortfolioIcon } from '../icons/PortfolioIcon'
+import { StatCard } from '../components/StatCard'
 import { AnalysisIcon } from '../icons/AnalysisIcon'
-import { OpportunityIcon } from '../icons/OpportunityIcon'
 import { BoughtIcon } from '../icons/BoughtIcon'
+import { OpportunityIcon } from '../icons/OpportunityIcon'
+import { PortfolioIcon } from '../icons/PortfolioIcon'
+import { SettingsIcon } from '../icons/SettingsIcon'
 import { SoldIcon } from '../icons/SoldIcon'
-import type { ExtensionSettings, ExtensionState, StatsResponse, PopupView } from '../types'
+import type { ExtensionSettings, ExtensionState, PopupView, StatsResponse } from '../types'
 
 interface MainViewProps {
 	backendStatus: 'connected' | 'disconnected' | 'checking'

@@ -13,9 +13,6 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
 	scoreThreshold: 7,
 	autoOpenSidebar: true,
 	enabled: true,
-	aiProvider: 'openai',
-	openaiApiKey: '',
-	geminiApiKey: '',
 }
 
 export const STORAGE_KEYS = {
@@ -32,7 +29,9 @@ export async function getSettings(): Promise<ExtensionSettings> {
 	return { ...DEFAULT_SETTINGS, ...result[STORAGE_KEYS.SETTINGS] }
 }
 
-export async function saveSettings(settings: Partial<ExtensionSettings>): Promise<ExtensionSettings> {
+export async function saveSettings(
+	settings: Partial<ExtensionSettings>
+): Promise<ExtensionSettings> {
 	const current = await getSettings()
 	const updated = { ...current, ...settings }
 	await chrome.storage.local.set({ [STORAGE_KEYS.SETTINGS]: updated })

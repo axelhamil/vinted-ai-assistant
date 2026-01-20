@@ -42,7 +42,12 @@ function formatMargin(margin: number): string {
  * Floating action button for quick access to sidebar
  * Shows essential info in compact mode when sidebar is closed
  */
-export function FloatingButton({ analysis, isOpen, onToggle, isLoading = false }: FloatingButtonProps) {
+export function FloatingButton({
+	analysis,
+	isOpen,
+	onToggle,
+	isLoading = false,
+}: FloatingButtonProps) {
 	const [isHovered, setIsHovered] = useState(false)
 	const [isExpanded, setIsExpanded] = useState(true) // Start expanded
 
@@ -82,9 +87,7 @@ export function FloatingButton({ analysis, isOpen, onToggle, isLoading = false }
 					className="relative w-14 h-14 rounded-full shadow-xl border-2 border-white transition-all duration-300 hover:scale-110"
 					style={{
 						background: scoreGradient,
-						boxShadow: isHovered
-							? `0 8px 30px ${scoreColor}66`
-							: `0 4px 20px ${scoreColor}44`,
+						boxShadow: isHovered ? `0 8px 30px ${scoreColor}66` : `0 4px 20px ${scoreColor}44`,
 					}}
 				>
 					<span className="text-2xl font-bold text-white">{score}</span>
@@ -96,8 +99,19 @@ export function FloatingButton({ analysis, isOpen, onToggle, isLoading = false }
 					onClick={() => setIsExpanded(true)}
 					className="w-14 h-8 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
 				>
-					<svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+					<svg
+						aria-hidden="true"
+						className="w-4 h-4 text-gray-500"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M15 19l-7-7 7-7"
+						/>
 					</svg>
 				</button>
 			</div>
@@ -140,7 +154,13 @@ export function FloatingButton({ analysis, isOpen, onToggle, isLoading = false }
 					</div>
 
 					{/* Arrow */}
-					<svg className="w-5 h-5 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg
+						aria-hidden="true"
+						className="w-5 h-5 text-gray-400 ml-2"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
 						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
 					</svg>
 				</button>
@@ -184,7 +204,13 @@ export function FloatingButton({ analysis, isOpen, onToggle, isLoading = false }
 						className="w-full py-3 px-4 rounded-xl bg-brand text-white font-semibold text-base hover:bg-brand-dark transition-colors flex items-center justify-center gap-2"
 					>
 						Voir l'analyse complète
-						<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg
+							aria-hidden="true"
+							className="w-4 h-4"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
 						</svg>
 					</button>
@@ -196,7 +222,13 @@ export function FloatingButton({ analysis, isOpen, onToggle, isLoading = false }
 					onClick={() => setIsExpanded(false)}
 					className="w-full py-2 border-t border-gray-100 text-sm text-gray-500 hover:bg-gray-50 transition-colors flex items-center justify-center gap-1"
 				>
-					<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg
+						aria-hidden="true"
+						className="w-4 h-4"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
 						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
 					</svg>
 					Réduire

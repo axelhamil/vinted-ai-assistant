@@ -2,16 +2,11 @@
  * Popup shared types
  */
 
-export type AIProvider = 'openai' | 'gemini'
-
 export interface ExtensionSettings {
 	backendUrl: string
 	scoreThreshold: number
 	autoOpenSidebar: boolean
 	enabled: boolean
-	aiProvider: AIProvider
-	openaiApiKey: string
-	geminiApiKey: string
 }
 
 export interface ExtensionState {

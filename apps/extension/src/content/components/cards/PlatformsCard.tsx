@@ -1,4 +1,4 @@
-import type { ResalePlatform, PlatformRelevance } from '@vinted-ai/shared/analysis'
+import type { PlatformRelevance, ResalePlatform } from '@vinted-ai/shared/analysis'
 import { Card } from '../primitives/Card'
 import { Pill } from '../primitives/Pill'
 
@@ -52,14 +52,30 @@ function formatEstimatedDays(days: number): string {
 /**
  * Card displaying resale platforms and recommendations
  */
-export function PlatformsCard({ recommendedPrice, estimatedDays, platforms, tips }: PlatformsCardProps) {
+export function PlatformsCard({
+	recommendedPrice,
+	estimatedDays,
+	platforms,
+	tips,
+}: PlatformsCardProps) {
 	return (
 		<Card
 			title="Revente"
 			iconColor="green"
 			icon={
-				<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+				<svg
+					aria-hidden="true"
+					className="w-4 h-4"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						strokeWidth={2}
+						d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+					/>
 				</svg>
 			}
 		>
@@ -72,7 +88,9 @@ export function PlatformsCard({ recommendedPrice, estimatedDays, platforms, tips
 					</div>
 					<div className="text-right">
 						<div className="text-xl text-content-muted mb-1">Délai estimé</div>
-						<div className="text-2xl font-semibold text-content-primary">{formatEstimatedDays(estimatedDays)}</div>
+						<div className="text-2xl font-semibold text-content-primary">
+							{formatEstimatedDays(estimatedDays)}
+						</div>
 					</div>
 				</div>
 
@@ -100,8 +118,17 @@ export function PlatformsCard({ recommendedPrice, estimatedDays, platforms, tips
 				{tips.length > 0 && (
 					<div className="pt-3 border-t border-border">
 						<h5 className="text-xl text-content-muted mb-2 flex items-center gap-1">
-							<svg className="w-5 h-5 text-caution" fill="currentColor" viewBox="0 0 20 20">
-								<path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+							<svg
+								aria-hidden="true"
+								className="w-5 h-5 text-caution"
+								fill="currentColor"
+								viewBox="0 0 20 20"
+							>
+								<path
+									fillRule="evenodd"
+									d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+									clipRule="evenodd"
+								/>
 							</svg>
 							Conseils
 						</h5>

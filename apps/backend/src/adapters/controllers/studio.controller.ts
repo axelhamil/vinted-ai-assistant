@@ -1,5 +1,5 @@
+import { randomUUID } from 'node:crypto'
 import type { Container } from 'inversify'
-import { randomUUID } from 'crypto'
 import { TYPES } from '../../application/di-types'
 import type {
 	BatchEditedPhotosDTO,
@@ -20,6 +20,7 @@ import type {
 	FormFillingInput,
 	FormFillingUseCase,
 } from '../../application/use-cases/form-filling.use-case'
+import type { StudioPreset } from '../persistence/database/schema'
 
 /**
  * Controller for studio-related endpoints
@@ -73,7 +74,7 @@ export class StudioController {
 	 * List all presets (optionally filtered by type)
 	 */
 	async listPresets(type?: 'system' | 'custom' | 'all'): Promise<StudioPresetListDTO> {
-		let presets
+		let presets: StudioPreset[]
 		if (type === 'system') {
 			presets = await this.presetRepository.findAll('system')
 		} else if (type === 'custom') {

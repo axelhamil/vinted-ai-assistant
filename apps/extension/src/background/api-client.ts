@@ -25,7 +25,10 @@ import { getSettings, incrementAnalyzedCount } from './state-manager'
 // Generic API Request
 // ============================================================================
 
-export async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+export async function apiRequest<T>(
+	endpoint: string,
+	options: RequestInit = {}
+): Promise<ApiResponse<T>> {
 	const settings = await getSettings()
 	const url = `${settings.backendUrl}${endpoint}`
 
@@ -114,7 +117,9 @@ export async function updateAnalysisStatus(
 // Export API
 // ============================================================================
 
-export async function exportMarkdown(vintedId: string): Promise<ApiResponse<ExportMarkdownResponse>> {
+export async function exportMarkdown(
+	vintedId: string
+): Promise<ApiResponse<ExportMarkdownResponse>> {
 	const settings = await getSettings()
 	const url = `${settings.backendUrl}/api/analyses/${vintedId}/export`
 

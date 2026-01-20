@@ -1,16 +1,23 @@
 import { createId } from '@paralleldrive/cuid2'
 import type { MarketPrice, Resale } from '@vinted-ai/shared/analysis'
 import { inject, injectable } from 'inversify'
-import { TYPES } from '../di-types'
+import { downloadImageAsBase64 } from '../../adapters/providers/ai/ai.helpers'
 import { AnalysisEntity, type AnalysisProps } from '../../domain/entities/analysis.entity'
+import { MAX_AI_STEPS } from '../constants'
+import { TYPES } from '../di-types'
 import { type AnalysisResponseDTO, toAnalysisResponseDTO } from '../dtos/analysis.dto'
 import { type ArticleInputDTO, calculateDaysListed, toVintedArticleData } from '../dtos/article.dto'
 import type { IAIProvider } from '../interfaces/providers/ai.provider.interface'
 import type { IAnalysisRepository } from '../interfaces/repositories/analysis.repository.interface'
+import { buildArticleAnalysisMessage } from './prompts/article-analysis.prompt'
+import {
+	type CompleteAnalysis,
+	completeAnalysisSchema,
+} from './prompts/schemas/article-analysis.schema'
 
 /**
  * Use case for analyzing a Vinted article
- * Orchestrates: photo analysis → opportunity scoring → negotiation generation → save
+ * Orchestrates: prompt building → AI generation → result mapping → save
  */
 @injectable()
 export class AnalyzeArticleUseCase {
@@ -21,9 +28,6 @@ export class AnalyzeArticleUseCase {
 
 	/**
 	 * Execute the analysis pipeline for an article
-	 * Uses a single AI call for maximum performance
-	 * @param input - Article data from the extension
-	 * @returns Complete analysis result
 	 */
 	async execute(input: ArticleInputDTO): Promise<AnalysisResponseDTO> {
 		// Check if we already have a cached analysis (skip if forceRefresh)
@@ -36,35 +40,69 @@ export class AnalyzeArticleUseCase {
 		const articleData = toVintedArticleData(input)
 		const daysListed = calculateDaysListed(articleData.listedAt)
 
-		// Single AI call for complete analysis (photos + opportunity + negotiation)
-		const analysisResult = await this.aiProvider.analyzeComplete({
-			photoUrls: articleData.photos,
+		// Download images in parallel
+		const downloadedImages = await Promise.all(articleData.photos.map(downloadImageAsBase64))
+		const validImages = downloadedImages.filter((img): img is string => img !== null)
+
+		if (validImages.length === 0) {
+			throw new Error('Failed to download any images for analysis')
+		}
+
+		// Build the AI message with prompt
+		const message = buildArticleAnalysisMessage({
+			images: validImages,
 			title: articleData.title,
 			brand: articleData.brand,
 			condition: articleData.condition,
 			price: articleData.price,
+			shippingCost: articleData.shippingCost,
 			daysListed,
-			language: input.language,
 			size: articleData.size ?? undefined,
+			language: input.language ?? 'fr',
 		})
 
-		// Extract results from unified analysis
-		const aiEstimation = analysisResult.marketPriceEstimation
+		// Single AI call for complete analysis
+		const result = await this.aiProvider.generateText({
+			messages: [message],
+			schema: completeAnalysisSchema,
+			tools: ['google_search'],
+			maxSteps: MAX_AI_STEPS.articleAnalysis,
+		})
+
+		if (!result.output) {
+			throw new Error('Failed to generate analysis output')
+		}
+
+		// Map AI result to domain and save
+		return this.saveAnalysis(input, articleData, existingAnalysis?.id, result.output)
+	}
+
+	/**
+	 * Map AI result and save analysis entity
+	 */
+	private async saveAnalysis(
+		_input: ArticleInputDTO,
+		articleData: ReturnType<typeof toVintedArticleData>,
+		existingId: string | undefined,
+		aiResult: CompleteAnalysis
+	): Promise<AnalysisResponseDTO> {
+		const aiEstimation = aiResult.marketPriceEstimation
 
 		// Build sources from AI estimation or fallback to default
-		const sources = aiEstimation.sources && aiEstimation.sources.length > 0
-			? aiEstimation.sources.map((s) => ({
-					name: s.name,
-					price: s.price,
-					searchQuery: s.searchQuery,
-					count: s.count,
-				}))
-			: [
-					{
-						name: 'Estimation IA',
-						price: aiEstimation.average,
-					},
-				]
+		const sources =
+			aiEstimation.sources && aiEstimation.sources.length > 0
+				? aiEstimation.sources.map((s) => ({
+						name: s.name,
+						price: s.price,
+						searchQuery: s.searchQuery,
+						count: s.count,
+					}))
+				: [
+						{
+							name: 'Estimation IA',
+							price: aiEstimation.average,
+						},
+					]
 
 		const marketPrice: MarketPrice = {
 			low: aiEstimation.low,
@@ -77,7 +115,7 @@ export class AnalyzeArticleUseCase {
 				retailPrice: {
 					price: aiEstimation.retailPrice,
 					url: '',
-					brand: analysisResult.detectedBrand ?? articleData.brand ?? 'Marque',
+					brand: aiResult.detectedBrand ?? articleData.brand ?? 'Marque',
 				},
 			}),
 		}
@@ -85,23 +123,23 @@ export class AnalyzeArticleUseCase {
 		// Generate resale recommendation (no AI needed)
 		const resale = this.generateResaleRecommendation(
 			marketPrice.average,
-			analysisResult.opportunity.margin,
+			aiResult.opportunity.margin,
 			articleData.brand
 		)
 
 		// Create and save the analysis entity
 		const now = new Date()
 		const analysisProps: AnalysisProps = {
-			id: existingAnalysis?.id ?? createId(),
+			id: existingId ?? createId(),
 			vintedId: articleData.vintedId,
 			url: articleData.url,
 			title: articleData.title,
 			description: articleData.description,
 			price: articleData.price,
-			brand: analysisResult.detectedBrand ?? articleData.brand,
+			brand: aiResult.detectedBrand ?? articleData.brand,
 			size: articleData.size,
-			condition: analysisResult.estimatedCondition ?? articleData.condition,
-			detectedModel: analysisResult.detectedModel,
+			condition: aiResult.estimatedCondition ?? articleData.condition,
+			detectedModel: aiResult.detectedModel,
 
 			sellerUsername: articleData.seller.username,
 			sellerRating: articleData.seller.rating,
@@ -109,14 +147,14 @@ export class AnalyzeArticleUseCase {
 
 			photos: articleData.photos,
 
-			photoQuality: analysisResult.photoQuality,
-			authenticityCheck: analysisResult.authenticityCheck,
+			photoQuality: aiResult.photoQuality,
+			authenticityCheck: aiResult.authenticityCheck,
 			marketPrice,
-			opportunity: analysisResult.opportunity,
-			negotiation: analysisResult.negotiation,
+			opportunity: aiResult.opportunity,
+			negotiation: aiResult.negotiation,
 			resale,
 
-			status: existingAnalysis?.status ?? 'ANALYZED',
+			status: 'ANALYZED',
 			analyzedAt: now,
 			updatedAt: now,
 		}

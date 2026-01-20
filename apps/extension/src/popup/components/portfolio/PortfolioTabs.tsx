@@ -43,9 +43,7 @@ export function PortfolioTabs({ activeTab, onTabChange, stats }: PortfolioTabsPr
 					{tab.count > 0 && (
 						<span
 							className={`ml-1 rounded-full px-1.5 py-0.5 text-sm ${
-								activeTab === tab.id
-									? 'bg-indigo-100 text-indigo-700'
-									: 'bg-gray-100 text-gray-600'
+								activeTab === tab.id ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'
 							}`}
 						>
 							{tab.count}

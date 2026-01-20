@@ -1,6 +1,6 @@
 import type { ConfidenceLevel } from '@vinted-ai/shared/analysis'
-import { ScoreRing } from '../primitives/ScoreRing'
 import { Pill } from '../primitives/Pill'
+import { ScoreRing } from '../primitives/ScoreRing'
 
 interface HeroScoreProps {
 	score: number
@@ -11,7 +11,10 @@ interface HeroScoreProps {
 /**
  * Get confidence badge info
  */
-function getConfidenceInfo(confidence: ConfidenceLevel): { label: string; variant: 'success' | 'warning' | 'negative' } {
+function getConfidenceInfo(confidence: ConfidenceLevel): {
+	label: string
+	variant: 'success' | 'warning' | 'negative'
+} {
 	switch (confidence) {
 		case 'high':
 			return { label: 'Confiance Haute', variant: 'success' }
@@ -46,10 +49,8 @@ export function HeroScore({ score, confidence, marginPercent }: HeroScoreProps) 
 			{/* Score Ring */}
 			<ScoreRing score={score} size="lg" animated showLabel={false} />
 
-				{/* Score label */}
-			<h2 className="text-5xl font-semibold text-content-primary text-center">
-				{scoreLabel}
-			</h2>
+			{/* Score label */}
+			<h2 className="text-5xl font-semibold text-content-primary text-center">{scoreLabel}</h2>
 
 			{/* Badges row */}
 			<div className="flex items-center gap-4">
@@ -58,8 +59,12 @@ export function HeroScore({ score, confidence, marginPercent }: HeroScoreProps) 
 					variant={confidenceInfo.variant}
 					icon={
 						confidence === 'high' ? (
-							<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-								<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+							<svg aria-hidden="true" className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+								<path
+									fillRule="evenodd"
+									d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+									clipRule="evenodd"
+								/>
 							</svg>
 						) : undefined
 					}
@@ -69,7 +74,8 @@ export function HeroScore({ score, confidence, marginPercent }: HeroScoreProps) 
 
 				{/* Margin badge */}
 				<Pill variant={isPositiveMargin ? 'success' : 'negative'}>
-					{isPositiveMargin ? '+' : ''}{marginPercent.toFixed(0)}%
+					{isPositiveMargin ? '+' : ''}
+					{marginPercent.toFixed(0)}%
 				</Pill>
 			</div>
 		</section>

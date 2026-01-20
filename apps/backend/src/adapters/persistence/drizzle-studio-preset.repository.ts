@@ -231,7 +231,11 @@ export class DrizzleStudioPresetRepository implements IStudioPresetRepository {
 	 * Check if a preset exists
 	 */
 	async exists(id: string): Promise<boolean> {
-		const result = await db.select({ id: studioPresets.id }).from(studioPresets).where(eq(studioPresets.id, id)).get()
+		const result = await db
+			.select({ id: studioPresets.id })
+			.from(studioPresets)
+			.where(eq(studioPresets.id, id))
+			.get()
 		return result !== undefined
 	}
 
@@ -240,7 +244,7 @@ export class DrizzleStudioPresetRepository implements IStudioPresetRepository {
 	 */
 	async seedSystemPresets(): Promise<void> {
 		for (const preset of SYSTEM_PRESETS) {
-			const exists = await this.exists(preset.id as string)
+			const exists = await this.exists(preset.id)
 			if (!exists) {
 				await this.create(preset)
 				console.log(`Seeded system preset: ${preset.name}`)

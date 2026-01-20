@@ -1,157 +1,90 @@
-import type {
-	AuthenticityCheck,
-	Negotiation,
-	NegotiationTone,
-	Opportunity,
-	PhotoQuality,
-} from '@vinted-ai/shared/analysis'
+import type { ZodSchema, z } from 'zod'
 
 /**
- * Input for complete analysis (single AI call)
+ * Multimodal content part for AI messages
  */
-export interface CompleteAnalysisInput {
-	photoUrls: string[]
-	title: string
-	brand: string | null
-	condition: string
-	price: number
-	daysListed: number
-	/** ISO language code for response localization (e.g., 'fr', 'en', 'de') */
-	language?: string
-	/** Size of the article (S, M, L, XL, etc.) */
-	size?: string
+export type ContentPart = { type: 'text'; text: string } | { type: 'image'; image: string }
+
+/**
+ * Message for AI conversation
+ */
+export interface AIMessage {
+	role: 'user' | 'assistant' | 'system'
+	content: string | ContentPart[]
 }
 
 /**
- * Complete analysis result (from single AI call)
+ * Available AI tools
  */
-export interface CompleteAnalysisResult {
-	photoQuality: PhotoQuality
-	authenticityCheck: AuthenticityCheck
-	detectedBrand: string | null
-	detectedModel: string | null
-	estimatedCondition: string
-	marketPriceEstimation: MarketPriceEstimation
-	opportunity: Opportunity
-	negotiation: Negotiation
+export type AITool = 'google_search'
+
+/**
+ * Options for text generation
+ */
+export interface GenerateTextOptions<TSchema extends ZodSchema = ZodSchema> {
+	/** Messages for the AI conversation */
+	messages: AIMessage[]
+	/** Optional Zod schema for structured output */
+	schema?: TSchema
+	/** Optional tools to enable */
+	tools?: AITool[]
+	/** Maximum number of AI steps (for multi-step tool use) */
+	maxSteps?: number
 }
 
 /**
- * Input for photo analysis
+ * Result of text generation
  */
-export interface PhotoAnalysisInput {
-	photoUrls: string[]
-	title: string
-	brand: string | null
-	condition: string
-	price: number
+export interface GenerateTextResult<T = unknown> {
+	/** Structured output if schema was provided */
+	output: T | null
+	/** Raw text response */
+	text: string | null
 }
 
 /**
- * Input for opportunity scoring
+ * Options for image generation/editing
  */
-export interface OpportunityScoringInput {
-	price: number
-	marketPriceLow: number
-	marketPriceHigh: number
-	marketPriceAvg: number
-	photoQualityScore: number
-	daysListed: number
-	sellerSalesCount: number
-	sellerRating: number | null
-	authenticityScore: number
+export interface GenerateImageOptions {
+	/** The prompt describing what to generate/edit */
+	prompt: string
+	/** Optional source image for editing (base64 data URL or URL) */
+	sourceImage?: string
+	/** Output image size */
+	size?: 'small' | 'medium' | 'large'
 }
 
 /**
- * Input for negotiation generation
+ * Result of image generation
  */
-export interface NegotiationInput {
-	price: number
-	marketPriceAvg: number
-	daysListed: number
-	sellerSalesCount: number
-	condition: string
-	preferredTone?: NegotiationTone
+export interface GenerateImageResult {
+	/** Generated image as base64 */
+	imageBase64: string
+	/** MIME type of the image */
+	mimeType: string
 }
 
 /**
- * Market price estimation from AI
- */
-/**
- * Source used for market price estimation
- */
-export interface MarketPriceSourceEstimation {
-	/** Name of the source (e.g., "Vinted FR", "Google Search") */
-	name: string
-	/** Average price found on this source */
-	price: number
-	/** Search query used */
-	searchQuery?: string
-	/** Number of articles found */
-	count?: number
-}
-
-export interface MarketPriceEstimation {
-	/** Estimated minimum market price */
-	low: number
-	/** Estimated maximum market price */
-	high: number
-	/** Estimated average market price */
-	average: number
-	/** Confidence level */
-	confidence: 'low' | 'medium' | 'high'
-	/** Explanation of the estimation */
-	reasoning: string
-	/** Estimated retail/new price if applicable */
-	retailPrice?: number
-	/** Sources used for the estimation */
-	sources?: MarketPriceSourceEstimation[]
-}
-
-/**
- * Combined photo analysis result
- */
-export interface PhotoAnalysisResult {
-	photoQuality: PhotoQuality
-	authenticityCheck: AuthenticityCheck
-	detectedBrand: string | null
-	detectedModel: string | null
-	estimatedCondition: string
-	/** Market price estimation based on visual analysis */
-	marketPriceEstimation: MarketPriceEstimation
-}
-
-/**
- * AI Provider interface (port)
- * Defines the contract for AI-powered analysis operations
+ * Generic AI Provider interface
+ *
+ * This interface provides generic text and image generation capabilities.
+ * Business logic and prompt construction belong in use cases, not in the provider.
  */
 export interface IAIProvider {
 	/**
-	 * Complete analysis in a single AI call (optimized)
-	 * Combines: photo analysis + opportunity scoring + negotiation generation
+	 * Generate text (optionally structured) from messages
 	 */
-	analyzeComplete(input: CompleteAnalysisInput): Promise<CompleteAnalysisResult>
+	generateText<TSchema extends ZodSchema>(
+		options: GenerateTextOptions<TSchema>
+	): Promise<GenerateTextResult<z.infer<TSchema>>>
 
 	/**
-	 * Analyze photos for quality and authenticity
-	 * @deprecated Use analyzeComplete() for better performance
+	 * Generate or edit an image
 	 */
-	analyzePhotos(input: PhotoAnalysisInput): Promise<PhotoAnalysisResult>
+	generateImage(options: GenerateImageOptions): Promise<GenerateImageResult>
 
 	/**
-	 * Calculate opportunity score based on multiple factors
-	 * @deprecated Use analyzeComplete() for better performance
-	 */
-	scoreOpportunity(input: OpportunityScoringInput): Promise<Opportunity>
-
-	/**
-	 * Generate a negotiation script and suggested offer
-	 * @deprecated Use analyzeComplete() for better performance
-	 */
-	generateNegotiation(input: NegotiationInput): Promise<Negotiation>
-
-	/**
-	 * Get the provider name (e.g., "openai", "ollama")
+	 * Get the provider name (e.g., "gemini", "openai")
 	 */
 	getProviderName(): string
 
