@@ -4,7 +4,12 @@ import type { AnalysisDto, ProtocolMap } from "@/lib/messaging/protocol";
 import type { DailyCounter } from "@/lib/storage/daily-count";
 import type { Settings } from "@/lib/storage/settings";
 import type { ApiClient } from "./client";
-import { type Reply, toFailure } from "./failure";
+import {
+  LOCAL_FAILURE_MESSAGE,
+  type Reply,
+  toFailure,
+  unreadableFailure,
+} from "./failure";
 
 export interface HandlerDeps {
   client: (baseUrl: string) => ApiClient;
@@ -21,22 +26,49 @@ export type Handlers = {
 
 const DISABLED: Reply<never> = { ok: false, failure: { kind: "disabled" } };
 
+const UNREADABLE_SETTINGS: Reply<never> = {
+  ok: false,
+  failure: { kind: "local", message: LOCAL_FAILURE_MESSAGE },
+};
+
 const FILENAME = /filename="([^"]+)"/;
 
 async function call<R extends Response, T>(
   request: () => Promise<R>,
   read: (response: R) => Promise<T>,
 ): Promise<Reply<T>> {
+  const sent = await request().catch((error: unknown) =>
+    error instanceof Error ? error : new Error(String(error)),
+  );
+  if (sent instanceof Error)
+    return { ok: false, failure: await toFailure(sent) };
+
+  if (!sent.ok) return { ok: false, failure: await toFailure(sent) };
+
   try {
-    const response = await request();
-    if (!response.ok) return { ok: false, failure: await toFailure(response) };
-
-    return { ok: true, data: await read(response) };
-  } catch (error) {
-    const thrown = error instanceof Error ? error : new Error(String(error));
-
-    return { ok: false, failure: await toFailure(thrown) };
+    return { ok: true, data: await read(sent) };
+  } catch {
+    return { ok: false, failure: unreadableFailure(sent.status) };
   }
+}
+
+async function bestEffort<T>(
+  effect: () => Promise<T>,
+  fallback: T,
+): Promise<T> {
+  try {
+    return await effect();
+  } catch {
+    return fallback;
+  }
+}
+
+function isMissingAnalysis<T>(reply: Reply<T>): boolean {
+  return (
+    !reply.ok &&
+    reply.failure.kind === "api" &&
+    reply.failure.code === "ANALYSIS_NOT_FOUND"
+  );
 }
 
 function filenameOf(response: Response, vintedId: string): string {
@@ -46,35 +78,42 @@ function filenameOf(response: Response, vintedId: string): string {
 }
 
 export function createHandlers(deps: HandlerDeps): Handlers {
-  async function open<T>(
+  async function withSettings<T>(
+    gate: "enabled-only" | "always",
     run: (client: ApiClient) => Promise<Reply<T>>,
   ): Promise<Reply<T>> {
-    const { backendUrl } = await deps.settings.getValue();
+    const current = await deps.settings.getValue().catch(() => null);
+    if (!current) return UNREADABLE_SETTINGS;
 
-    return run(deps.client(backendUrl));
+    if (gate === "enabled-only" && !current.enabled) return DISABLED;
+
+    return run(deps.client(current.backendUrl));
   }
 
-  async function guarded<T>(
-    run: (client: ApiClient) => Promise<Reply<T>>,
-  ): Promise<Reply<T>> {
-    const { backendUrl, enabled } = await deps.settings.getValue();
-    if (!enabled) return DISABLED;
+  function open<T>(run: (client: ApiClient) => Promise<Reply<T>>) {
+    return withSettings("always", run);
+  }
 
-    return run(deps.client(backendUrl));
+  function guarded<T>(run: (client: ApiClient) => Promise<Reply<T>>) {
+    return withSettings("enabled-only", run);
   }
 
   async function writtenThrough(
     reply: Reply<AnalysisDto>,
   ): Promise<Reply<AnalysisDto>> {
-    if (reply.ok) await deps.cache.put(reply.data);
+    if (reply.ok) await bestEffort(() => deps.cache.put(reply.data), undefined);
 
     return reply;
+  }
+
+  async function forget(vintedId: string): Promise<void> {
+    await bestEffort(() => deps.cache.remove(vintedId), undefined);
   }
 
   async function fromCache(
     vintedId: string,
   ): Promise<Reply<AnalysisDto> | null> {
-    const cached = await deps.cache.get(vintedId);
+    const cached = await bestEffort(() => deps.cache.get(vintedId), null);
 
     return cached ? { ok: true, data: cached } : null;
   }
@@ -82,7 +121,7 @@ export function createHandlers(deps: HandlerDeps): Handlers {
   return {
     analyze: (input) =>
       guarded(async (client) => {
-        if (input.forceRefresh) await deps.cache.remove(input.vintedId);
+        if (input.forceRefresh) await forget(input.vintedId);
 
         const cached = input.forceRefresh
           ? null
@@ -95,7 +134,7 @@ export function createHandlers(deps: HandlerDeps): Handlers {
             (response) => response.json(),
           ),
         );
-        if (reply.ok) await deps.counter.increment();
+        if (reply.ok) await bestEffort(() => deps.counter.increment(), 0);
 
         return reply;
       }),
@@ -148,7 +187,7 @@ export function createHandlers(deps: HandlerDeps): Handlers {
             client.api.portfolio[":vintedId"].$delete({ param: { vintedId } }),
           async () => null,
         );
-        if (reply.ok) await deps.cache.remove(vintedId);
+        if (reply.ok || isMissingAnalysis(reply)) await forget(vintedId);
 
         return reply;
       }),

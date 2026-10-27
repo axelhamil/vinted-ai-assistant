@@ -6,7 +6,8 @@ import type { AnalysisDto, AnalyzeInput } from "@/lib/messaging/protocol";
 import { dailyCount } from "@/lib/storage/daily-count";
 import { DEFAULT_SETTINGS, settings } from "@/lib/storage/settings";
 import { createApiClient } from "./client";
-import { createHandlers } from "./handlers";
+import { LOCAL_FAILURE_MESSAGE } from "./failure";
+import { createHandlers, type HandlerDeps } from "./handlers";
 
 const VINTED_ID = "123";
 
@@ -95,14 +96,14 @@ function fakeApi(routes: Record<string, Route>) {
     );
   };
 
-  const handlers = createHandlers({
+  const deps: HandlerDeps = {
     client: (baseUrl) => createApiClient(baseUrl, fetchImpl),
     cache: analysisCache,
     settings,
     counter: dailyCount,
-  });
+  };
 
-  return { calls, handlers };
+  return { calls, deps, handlers: createHandlers(deps) };
 }
 
 const ANALYZE = "POST /api/analyses";
@@ -237,6 +238,82 @@ describe("background handlers", () => {
     expect(await analysisCache.get(VINTED_ID)).toBeNull();
   });
 
+  it("forgets the cached analysis the api no longer knows", async () => {
+    await analysisCache.put(analysisDto());
+    const api = fakeApi({
+      [`DELETE /api/portfolio/${VINTED_ID}`]: () =>
+        Response.json(
+          {
+            error: {
+              code: "ANALYSIS_NOT_FOUND",
+              message: "No analysis for this listing.",
+              requestId: "req-2",
+            },
+          },
+          { status: 404 },
+        ),
+    });
+
+    await api.handlers.deleteAnalysis(VINTED_ID);
+
+    expect(await analysisCache.get(VINTED_ID)).toBeNull();
+  });
+
+  it("keeps the fetched analysis when the cache cannot store it", async () => {
+    const handlers = createHandlers({
+      ...fakeApi({}).deps,
+      client: (baseUrl) =>
+        createApiClient(baseUrl, async () =>
+          Response.json(analysisDto(), { status: 201 }),
+        ),
+      cache: {
+        ...analysisCache,
+        put: async () => {
+          throw new Error("QuotaExceededError");
+        },
+      },
+    });
+
+    const reply = await handlers.analyze(analyzeInput);
+
+    expect(reply).toEqual({ ok: true, data: analysisDto() });
+    expect(await dailyCount.current()).toBe(1);
+  });
+
+  it("answers a failure when the settings cannot be read", async () => {
+    const handlers = createHandlers({
+      ...fakeApi({}).deps,
+      settings: {
+        getValue: async () => {
+          throw new Error("storage unavailable");
+        },
+      },
+    });
+
+    const replies = [
+      await handlers.analyze(analyzeInput),
+      await handlers.checkBackend(undefined),
+    ];
+
+    expect(replies).toEqual([
+      { ok: false, failure: { kind: "local", message: LOCAL_FAILURE_MESSAGE } },
+      { ok: false, failure: { kind: "local", message: LOCAL_FAILURE_MESSAGE } },
+    ]);
+  });
+
+  it("reports a success with an unreadable body as an api failure", async () => {
+    const api = fakeApi({
+      "GET /api/studio/presets": () => new Response("<html>proxy</html>"),
+    });
+
+    const reply = await api.handlers.listPresets(undefined);
+
+    expect(reply).toMatchObject({
+      ok: false,
+      failure: { kind: "api", code: "HTTP_200" },
+    });
+  });
+
   it("reads the export filename from the response", async () => {
     const api = fakeApi({
       [`GET /api/analyses/${VINTED_ID}/export`]: () =>
@@ -295,13 +372,11 @@ describe("background handlers", () => {
 
   it("reports an unreachable server", async () => {
     const handlers = createHandlers({
+      ...fakeApi({}).deps,
       client: (baseUrl) =>
         createApiClient(baseUrl, async () => {
           throw new TypeError("Failed to fetch");
         }),
-      cache: analysisCache,
-      settings,
-      counter: dailyCount,
     });
 
     const reply = await handlers.checkBackend(undefined);

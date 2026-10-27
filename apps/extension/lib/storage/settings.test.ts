@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { fakeBrowser } from "wxt/testing/fake-browser";
-import { normalizeBackendUrl, settings } from "./settings";
+import { DEFAULT_SETTINGS, normalizeBackendUrl, settings } from "./settings";
 
 describe("settings", () => {
   beforeEach(() => {
@@ -25,6 +25,17 @@ describe("settings", () => {
       enabled: true,
     });
   });
+
+  it.each([{}, { backendUrl: 42, enabled: "yes" }])(
+    "falls back to the defaults for missing or invalid legacy fields in %o",
+    async (legacy) => {
+      await fakeBrowser.storage.local.set({ vinted_ai_settings: legacy });
+
+      await settings.migrate();
+
+      expect(await settings.getValue()).toEqual(DEFAULT_SETTINGS);
+    },
+  );
 
   it.each([
     ["localhost:3000/", null],

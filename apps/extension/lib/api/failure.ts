@@ -1,6 +1,7 @@
 export type ApiFailure =
   | { kind: "api"; code: string; message: string; requestId: string }
   | { kind: "network"; message: string }
+  | { kind: "local"; message: string }
   | { kind: "disabled" };
 
 export type Reply<T> =
@@ -9,6 +10,9 @@ export type Reply<T> =
 
 export const NETWORK_FAILURE_MESSAGE =
   "Le serveur est injoignable. Vérifiez l'adresse du serveur dans les réglages.";
+
+export const LOCAL_FAILURE_MESSAGE =
+  "L'extension n'a pas pu lire ses données locales. Rechargez l'extension puis réessayez.";
 
 interface ErrorBody {
   error: { code: string; message: string; requestId: string };
@@ -47,10 +51,14 @@ export async function toFailure(
   const body = parsedJson(await response.text().catch(() => ""));
   if (isErrorBody(body)) return { kind: "api", ...body.error };
 
+  return unreadableFailure(response.status);
+}
+
+export function unreadableFailure(status: number): ApiFailure {
   return {
     kind: "api",
-    code: `HTTP_${response.status}`,
-    message: `Le serveur a répondu par une erreur ${response.status}. Réessayez dans un instant.`,
+    code: `HTTP_${status}`,
+    message: `Le serveur a répondu par une réponse illisible (${status}). Réessayez dans un instant.`,
     requestId: "",
   };
 }
