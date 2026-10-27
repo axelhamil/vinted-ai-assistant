@@ -20,7 +20,7 @@
     "ci:check": "biome ci .",
     "type-check": "turbo type-check",
     "test": "turbo test",
-    "test:db": "turbo test:db",
+    "test:db": "turbo test:db --concurrency=1",
     "check:duplication": "jscpd ./packages ./apps",
     "check:unused": "knip",
     "check:boundaries": "depcruise packages apps --config .dependency-cruiser.cjs",

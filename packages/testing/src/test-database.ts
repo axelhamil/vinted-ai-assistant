@@ -17,6 +17,7 @@ const OBJECT_IN_USE = "55006";
 const UNDEFINED_DATABASE = "3D000";
 const CLONE_ATTEMPTS = 20;
 const CLONE_RETRY_DELAY_MS = 250;
+const TEMPLATE_LOCK = 20261005;
 
 const REMOTE_REFUSAL =
   "TEST_DATABASE_URL must point to a local Postgres (localhost, 127.0.0.1 or [::1]) and carry no query string. Refusing to run the database tests.";
@@ -230,6 +231,19 @@ export async function dropStaleDatabases(admin: Client): Promise<void> {
   for (const { datname } of rows) await dropDatabase(admin, datname);
 }
 
+export async function withTemplateLock<T>(
+  admin: Client,
+  work: () => Promise<T>,
+): Promise<T> {
+  await admin.query("SELECT pg_advisory_lock($1)", [TEMPLATE_LOCK]);
+
+  try {
+    return await work();
+  } finally {
+    await admin.query("SELECT pg_advisory_unlock($1)", [TEMPLATE_LOCK]);
+  }
+}
+
 export interface TestDatabase {
   db: Db;
   url: string;
@@ -241,7 +255,9 @@ export async function createTestDatabase(): Promise<TestDatabase> {
   const admin = await connectAdmin();
 
   try {
-    await createDatabase(admin, name, TEMPLATE_DATABASE);
+    await withTemplateLock(admin, () =>
+      createDatabase(admin, name, TEMPLATE_DATABASE),
+    );
   } finally {
     await admin.end();
   }

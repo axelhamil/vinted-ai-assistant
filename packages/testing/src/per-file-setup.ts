@@ -1,10 +1,11 @@
 import { afterAll } from "bun:test";
-import { ensureTemplate, withTemplateLock } from "./template";
+import { ensureTemplate } from "./template";
 import {
   connectAdmin,
   createTestDatabase,
   refuseConnectionsOutside,
   resolveAdminUrl,
+  withTemplateLock,
 } from "./test-database";
 
 const HOOK_TIMEOUT_MS = 30_000;

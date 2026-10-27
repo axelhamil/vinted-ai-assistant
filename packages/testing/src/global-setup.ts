@@ -1,5 +1,9 @@
-import { ensureTemplate, withTemplateLock } from "./template";
-import { connectAdmin, dropStaleDatabases } from "./test-database";
+import { ensureTemplate } from "./template";
+import {
+  connectAdmin,
+  dropStaleDatabases,
+  withTemplateLock,
+} from "./test-database";
 
 const admin = await connectAdmin();
 

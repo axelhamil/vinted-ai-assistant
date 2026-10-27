@@ -15,7 +15,6 @@ import {
 const MIGRATIONS_FOLDER = fileURLToPath(
   new URL("../../drizzle/migrations", import.meta.url),
 );
-const TEMPLATE_LOCK = 20261005;
 
 async function migrationsFingerprint(): Promise<string> {
   const entries = await readdir(MIGRATIONS_FOLDER, { recursive: true });
@@ -68,17 +67,4 @@ export async function ensureTemplate(admin: Client): Promise<void> {
   if ((await storedFingerprint(admin)) === fingerprint) return;
 
   await buildTemplate(admin, fingerprint);
-}
-
-export async function withTemplateLock<T>(
-  admin: Client,
-  work: () => Promise<T>,
-): Promise<T> {
-  await admin.query("SELECT pg_advisory_lock($1)", [TEMPLATE_LOCK]);
-
-  try {
-    return await work();
-  } finally {
-    await admin.query("SELECT pg_advisory_unlock($1)", [TEMPLATE_LOCK]);
-  }
 }
