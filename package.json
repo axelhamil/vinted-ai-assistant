@@ -8,6 +8,7 @@
     "dev:up": "docker compose --profile dev up -d --build --wait api",
     "dev:down": "docker compose --profile dev --profile prod-smoke down",
     "dev:smoke": "docker compose --profile prod-smoke up -d --build --wait api-prod migrate-prod && curl -fsS http://127.0.0.1:3001/health/ready",
+    "dev:legacy": "turbo dev --filter=@vinted-ai/backend --filter=@vinted-ai/extension --filter=@vinted-ai/shared",
     "dev:psql": "docker compose exec db psql -U postgres -d vinted",
     "build": "turbo build",
     "lint": "turbo lint",

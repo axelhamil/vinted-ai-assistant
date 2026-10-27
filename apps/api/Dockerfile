@@ -33,11 +33,13 @@ RUN mkdir /app && chown node:node /app
 WORKDIR /app
 
 COPY package.json ./
-RUN npm install --global "pnpm@$(node -p 'require("./package.json").packageManager.split("@")[1]')"
+RUN --mount=type=cache,id=vinted-dev-npm,target=/root/.npm npm install --global "pnpm@$(node -p 'require("./package.json").packageManager.split("@")[1]')"
 
 USER node
+COPY --chown=node:node --parents package.json pnpm-lock.yaml pnpm-workspace.yaml apps/*/package.json packages/*/package.json ./
+RUN --mount=type=cache,id=vinted-prod-pnpm-store,target=/home/node/.pnpm-store,uid=1000,gid=1000 \
+    pnpm install --frozen-lockfile --prod --filter "api..." --store-dir=/home/node/.pnpm-store
 COPY --chown=node:node . .
-RUN pnpm install --frozen-lockfile --prod --filter "api..."
 RUN rm -r packages/testing
 RUN find node_modules -type f \( -name '*.d.ts' -o -name '*.d.mts' -o -name '*.d.cts' -o -name '*.map' \) -delete
 
@@ -51,10 +53,10 @@ RUN useradd --uid 1000 --create-home --shell /bin/sh bun
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 
 WORKDIR /app
-COPY --from=prod-deps --chown=bun:bun /app/package.json ./
-COPY --from=prod-deps --chown=bun:bun /app/node_modules ./node_modules
-COPY --from=prod-deps --chown=bun:bun /app/packages ./packages
-COPY --from=prod-deps --chown=bun:bun /app/apps/api ./apps/api
+COPY --from=prod-deps --chown=root:root /app/package.json ./
+COPY --from=prod-deps --chown=root:root /app/node_modules ./node_modules
+COPY --from=prod-deps --chown=root:root /app/packages ./packages
+COPY --from=prod-deps --chown=root:root /app/apps/api ./apps/api
 
 USER bun
 ENV NODE_ENV=production

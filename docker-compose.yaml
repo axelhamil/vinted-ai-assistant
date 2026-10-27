@@ -12,7 +12,7 @@ x-api-healthcheck: &api-healthcheck
     - CMD
     - bun
     - -e
-    - fetch('http://127.0.0.1:3000/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
+    - fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
   interval: 5s
   timeout: 5s
   retries: 20
@@ -110,6 +110,14 @@ services:
         - action: rebuild
           path: ./apps/api/package.json
         - action: rebuild
+          path: ./packages/ddd-kit/package.json
+        - action: rebuild
+          path: ./packages/drizzle/package.json
+        - action: rebuild
+          path: ./packages/testing/package.json
+        - action: rebuild
+          path: ./packages/typescript-config/package.json
+        - action: rebuild
           path: ./.bun-version
         - action: rebuild
           path: ./apps/api/Dockerfile
@@ -130,7 +138,6 @@ services:
     environment:
       <<: *api-environment
       NODE_ENV: production
-    healthcheck: *api-healthcheck
     depends_on:
       migrate-prod:
         condition: service_completed_successfully
