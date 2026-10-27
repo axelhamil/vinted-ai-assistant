@@ -29,13 +29,10 @@ const server = serve({
 
 logger.info({ port: server.port, env: env.NODE_ENV }, "[Api] listening");
 
-const relay = container.OutboxRelayRunner;
-relay.start();
-
 const stop = createShutdown(
   apiShutdownSteps({
     http: () => server.stop(),
-    outbox: () => relay.stop(),
+    outbox: () => container.OutboxRelayRunner.stop(),
     database: () => container.dispose(),
     sentry: () => flushSentry(SENTRY_FLUSH_TIMEOUT_MS),
     logger: () => flushLogger(logger),
@@ -51,3 +48,5 @@ installProcessHandlers({
   exit: (code) => process.exit(code),
   events: process,
 });
+
+container.OutboxRelayRunner.start();

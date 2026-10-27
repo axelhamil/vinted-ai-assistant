@@ -10,6 +10,9 @@ import {
   InMemoryEventDispatcher,
 } from "@packages/ddd-kit";
 import { createDb } from "@packages/drizzle/config";
+import { DrizzleOutboxRepository } from "@packages/outbox/drizzle-outbox.repository";
+import { OutboxListener } from "@packages/outbox/outbox-listener";
+import { OutboxRelay } from "@packages/outbox/outbox-relay";
 import { studioAiModule, studioModule } from "@packages/studio/studio.module";
 import { container } from "inwire";
 import type { Env } from "../../common/env";
@@ -22,6 +25,7 @@ import { PostgresDatabaseProbe } from "../adapters/persistence/postgres-database
 import { eventRoutes } from "./event-routes";
 
 const DISPOSE_TIMEOUT_MS = 5_000;
+const OUTBOX_LANES = { concurrency: 4, handlerBudgetSeconds: 25 };
 
 export function createContainer(env: Env) {
   return container({ disposeTimeout: DISPOSE_TIMEOUT_MS })
@@ -61,11 +65,16 @@ export function createContainer(env: Env) {
       "OutboxRelayRunner",
       (c) =>
         new OutboxRelayRunner({
-          db: c.db,
-          table: analysisOutbox,
-          dispatcher: c.IEventDispatcher,
-          routes: eventRoutes,
-          listenUrl: c.env.DATABASE_URL,
+          relay: new OutboxRelay(
+            new DrizzleOutboxRepository(c.db, analysisOutbox),
+            c.IEventDispatcher,
+            eventRoutes,
+            { lanes: OUTBOX_LANES },
+          ),
+          listener: new OutboxListener({
+            connectionString: c.env.DATABASE_URL,
+            logger: c.logger,
+          }),
           pollIntervalMs: c.env.OUTBOX_POLL_INTERVAL_MS,
           logger: c.logger,
           instrumentation: c.IInstrumentation,

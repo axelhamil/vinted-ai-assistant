@@ -66,6 +66,9 @@ const envSchema = z.object({
       .number({ error: "must be a number of milliseconds" })
       .int({ error: "must be a whole number of milliseconds" })
       .min(1000, { error: "must be at least 1000 milliseconds" })
+      .max(2_147_483_647, {
+        error: "must be at most 2147483647 milliseconds, the timer limit",
+      })
       .default(30_000),
   ),
   SENTRY_DSN: blankAsUnset(

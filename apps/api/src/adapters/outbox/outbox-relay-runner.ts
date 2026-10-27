@@ -1,68 +1,55 @@
-import type {
-  IEventDispatcher,
-  IInstrumentation,
-  ILogger,
-} from "@packages/ddd-kit";
-import type { Db } from "@packages/drizzle/config";
-import { DrizzleOutboxRepository } from "@packages/outbox/drizzle-outbox.repository";
-import { OutboxListener } from "@packages/outbox/outbox-listener";
+import type { IInstrumentation, ILogger } from "@packages/ddd-kit";
+import type { DeadEvent } from "@packages/outbox/outbox-relay";
 import {
-  type DeadEvent,
-  type EventRoutes,
-  OutboxRelay,
-} from "@packages/outbox/outbox-relay";
-import type { OutboxTable } from "@packages/outbox/outbox-table";
-import { startRelayLoop } from "@packages/outbox/relay-loop";
+  type DrainingRelay,
+  type RelayWakeSource,
+  startRelayLoop,
+} from "@packages/outbox/relay-loop";
 
-const LANES = { concurrency: 4, handlerBudgetSeconds: 25 };
+export interface RelayListener extends RelayWakeSource {
+  start(): void;
+  close(): Promise<void>;
+}
 
 export interface OutboxRelayRunnerDeps {
-  db: Db;
-  table: OutboxTable;
-  dispatcher: IEventDispatcher;
-  routes: EventRoutes;
-  listenUrl: string;
+  relay: DrainingRelay;
+  listener: RelayListener;
   pollIntervalMs: number;
   logger: ILogger;
   instrumentation: IInstrumentation;
-}
-
-interface Running {
-  listener: OutboxListener;
-  stopLoop: () => Promise<void>;
+  startLoop?: typeof startRelayLoop;
 }
 
 export class OutboxRelayRunner {
-  private running: Running | undefined;
+  private stopLoop: (() => Promise<void>) | undefined;
+  private failing = false;
 
   constructor(private readonly deps: OutboxRelayRunnerDeps) {}
 
   start(): void {
-    if (this.running) return;
+    if (this.stopLoop) return;
 
-    const { db, table, dispatcher, routes, listenUrl, pollIntervalMs, logger } =
-      this.deps;
-    const listener = new OutboxListener({
-      connectionString: listenUrl,
+    const {
+      relay,
+      listener,
+      pollIntervalMs,
       logger,
-    });
-    const repository = new DrizzleOutboxRepository(db, table);
-    const relay = new OutboxRelay(repository, dispatcher, routes, {
-      lanes: LANES,
-    });
+      startLoop = startRelayLoop,
+    } = this.deps;
 
     listener.start();
-    const stopLoop = startRelayLoop(relay, {
+    this.stopLoop = startLoop(relay, {
       fallbackIntervalMs: pollIntervalMs,
       wakeSource: listener,
-      onError: (error) => this.relayFailed(error),
+      onError: (error) => this.drainFailed(error),
       observer: {
         delivered: () => {},
         died: (outbox, event) => this.eventDied(outbox, event),
-        pendingAged: () => {},
+        pendingAged: () => {
+          this.failing = false;
+        },
       },
     });
-    this.running = { listener, stopLoop };
 
     logger.info(
       { outbox: relay.outbox, pollIntervalMs },
@@ -71,15 +58,23 @@ export class OutboxRelayRunner {
   }
 
   async stop(): Promise<void> {
-    const running = this.running;
-    this.running = undefined;
-    if (!running) return;
+    const stopLoop = this.stopLoop;
+    if (!stopLoop) return;
 
-    await running.stopLoop();
-    await running.listener.close();
+    this.stopLoop = undefined;
+
+    try {
+      await stopLoop();
+    } finally {
+      await this.deps.listener.close();
+    }
   }
 
-  private relayFailed(error: unknown): void {
+  private drainFailed(error: unknown): void {
+    this.deps.logger.error({ err: error }, "[Outbox] relay drain failed");
+    if (this.failing) return;
+
+    this.failing = true;
     this.deps.instrumentation.capture(error, {
       tags: { component: "outbox" },
     });

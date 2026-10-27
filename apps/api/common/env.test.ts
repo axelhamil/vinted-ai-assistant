@@ -49,7 +49,7 @@ describe("the api environment", () => {
     expect(env.OUTBOX_POLL_INTERVAL_MS).toBe(30_000);
   });
 
-  it.each(["999", "1500.5", "soon"])(
+  it.each(["999", "1500.5", "soon", "2147483648"])(
     "refuses an outbox poll interval of %p and names it",
     (interval) => {
       const result = parseEnv({
