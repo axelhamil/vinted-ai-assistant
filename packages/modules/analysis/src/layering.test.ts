@@ -1,5 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import { dirname, join, relative } from "node:path";
+import {
+  expectDomainImportsOnly,
+  expectNoEnvironmentRead,
+  expectProviderReachedOnlyFrom,
+} from "@packages/testing/layering";
 import { createSourceScan } from "@packages/testing/source-scan";
 
 const scan = createSourceScan(__dirname);
@@ -13,19 +17,10 @@ const MODULE_WIRING = "analysis.module.ts";
 
 describe("layering rules of the analysis module", () => {
   it("keeps the domain on ddd-kit, zod, the shared language list, the module contract and itself", () => {
-    const imports = scan.importsOf("domain");
-
-    const foreign = imports
-      .filter(({ file, specifier }) => {
-        if (!specifier.startsWith(".")) return true;
-        const target = relative("domain", join(dirname(file), specifier));
-        return target.startsWith("..") && target !== MODULE_CONTRACT;
-      })
-      .filter(({ specifier }) => !ALLOWED_IN_DOMAIN.includes(specifier))
-      .map(({ file, specifier }) => `${file} imports ${specifier}`);
-
-    expect(imports.length).toBeGreaterThan(0);
-    expect(foreign).toEqual([]);
+    expectDomainImportsOnly(scan, {
+      packages: ALLOWED_IN_DOMAIN,
+      moduleFiles: [MODULE_CONTRACT],
+    });
   });
 
   it("keeps the contract free of imports, so a client can load it alone", () => {
@@ -62,34 +57,14 @@ describe("layering rules of the analysis module", () => {
   );
 
   it("reaches the AI provider from infrastructure and the module wiring only", () => {
-    const providerImports = scan
-      .importsOf(".")
-      .filter(
-        ({ specifier }) =>
-          specifier.startsWith("@packages/ai/") &&
-          specifier !== SHARED_LANGUAGES,
-      );
-
-    const outside = providerImports
-      .filter(
-        ({ file }) =>
-          !file.startsWith("infrastructure/") && file !== MODULE_WIRING,
-      )
-      .map(({ file, specifier }) => `${file} imports ${specifier}`);
-
-    expect(providerImports.length).toBeGreaterThan(0);
-    expect(outside).toEqual([]);
+    expectProviderReachedOnlyFrom(scan, {
+      prefix: "@packages/ai/",
+      except: [SHARED_LANGUAGES],
+      allowedIn: ["infrastructure/", MODULE_WIRING],
+    });
   });
 
   it("never reads the environment", () => {
-    const reading = scan
-      .sourceFiles(".")
-      .filter((file) =>
-        /process\.env|Bun\.env|import\.meta\.env|common\/env/.test(
-          scan.codeOf(file),
-        ),
-      );
-
-    expect(reading).toEqual([]);
+    expectNoEnvironmentRead(scan);
   });
 });

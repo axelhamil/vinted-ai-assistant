@@ -25,11 +25,12 @@ const INPUT_INVALID: StudioInputInvalid = "STUDIO_INPUT_INVALID";
 const PRESET_NOT_FOUND: StudioPresetNotFound = "STUDIO_PRESET_NOT_FOUND";
 const SUGGESTION_REFUSED: StudioAiCode = "STUDIO_AI_PROVIDER_FAILURE";
 const MAX_PHOTOS = 10;
+const MAX_EXISTING_TITLE_LENGTH = 200;
 
 const suggestionInputSchema = z.object({
   photos: z.array(z.string().min(1)).min(1).max(MAX_PHOTOS),
   language: z.enum(LANGUAGES),
-  existingTitle: z.string().trim().optional(),
+  existingTitle: z.string().trim().max(MAX_EXISTING_TITLE_LENGTH).optional(),
 });
 
 export interface PresetEditInput {

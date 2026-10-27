@@ -3,17 +3,24 @@ import { z } from "zod";
 
 export const MAX_TITLE_LENGTH = 50;
 
-const listingTitleSchema = z.string().trim().min(1).max(MAX_TITLE_LENGTH);
+const characterCount = (text: string): number => Array.from(text).length;
+
+const listingTitleSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .refine((title) => characterCount(title) <= MAX_TITLE_LENGTH);
 
 function cutAtWordBoundary(text: string): string {
   const compact = text.trim().replace(/\s+/g, " ");
-  if (compact.length <= MAX_TITLE_LENGTH) return compact;
+  const characters = Array.from(compact);
+  if (characters.length <= MAX_TITLE_LENGTH) return compact;
 
-  const head = compact.slice(0, MAX_TITLE_LENGTH + 1);
+  const head = characters.slice(0, MAX_TITLE_LENGTH + 1).join("");
   const lastSpace = head.lastIndexOf(" ");
-  const cut = lastSpace > 0 ? head.slice(0, lastSpace) : head.slice(0, -1);
+  if (lastSpace > 0) return head.slice(0, lastSpace).trimEnd();
 
-  return cut.trimEnd();
+  return characters.slice(0, MAX_TITLE_LENGTH).join("");
 }
 
 export class ListingTitle extends ValueObject<string> {

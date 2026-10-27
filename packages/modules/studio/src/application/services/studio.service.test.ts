@@ -66,16 +66,42 @@ describe("editing a photo", () => {
     expect(photoEditor.edit).not.toHaveBeenCalled();
   });
 
-  it("refuses an instruction of 9 characters", async () => {
+  it("counts the instruction length after trimming it", async () => {
     const { studio, photoEditor } = given();
 
+    const tooShort = await studio.editWithInstruction({
+      image: PHOTO,
+      instruction: "   Blue sky.   ",
+    });
     const result = await studio.editWithInstruction({
       image: PHOTO,
-      instruction: "Blue sky.",
+      instruction: "  Blue skies  ",
     });
 
-    expect(result.getError()).toBe("STUDIO_INPUT_INVALID");
-    expect(photoEditor.edit).not.toHaveBeenCalled();
+    expect(tooShort.getError()).toBe("STUDIO_INPUT_INVALID");
+    expect(result.isSuccess).toBe(true);
+    expect(photoEditor.edit).toHaveBeenCalledTimes(1);
+    const request = photoEditor.edit.mock.calls[0]?.[0];
+    expect(
+      request && "instruction" in request && request.instruction.value,
+    ).toBe("Blue skies");
+  });
+
+  it("sends the background of the chosen preset to the editor", async () => {
+    const { studio, photoEditor } = given();
+    const minimalist = studio
+      .listPresets()
+      .find(({ id }) => id === "preset-minimalist");
+
+    await studio.editWithPreset({
+      image: PHOTO,
+      presetId: "preset-minimalist",
+    });
+
+    expect(photoEditor.edit).toHaveBeenCalledWith({
+      image: PHOTO,
+      background: minimalist?.background,
+    });
   });
 
   it("passes the editor failure code through", async () => {
@@ -108,6 +134,26 @@ describe("suggesting a listing", () => {
     expect(longTitle.startsWith(`${title} `)).toBe(true);
   });
 
+  it("cuts a single 60 character word to 50 characters", async () => {
+    const { studio } = given(buildFacts({ title: "a".repeat(60) }));
+
+    const result = await suggest(studio);
+
+    expect(result.getValue().suggestion.get("title").value).toBe(
+      "a".repeat(50),
+    );
+  });
+
+  it("cuts a title by characters, never inside an emoji", async () => {
+    const { studio } = given(buildFacts({ title: `${"a".repeat(49)}😀bbbbb` }));
+
+    const result = await suggest(studio);
+
+    expect(result.getValue().suggestion.get("title").value).toBe(
+      `${"a".repeat(49)}😀`,
+    );
+  });
+
   it("frames a 40 € price between 32 € and 48 €", async () => {
     const { studio } = given(buildFacts({ priceCents: 4000 }));
 
@@ -117,6 +163,49 @@ describe("suggesting a listing", () => {
       lowCents: 3200,
       highCents: 4800,
     });
+  });
+
+  it("frames a price below 10 € to the 10 cents, between 0.80 € and 1.20 € for 0.99 €", async () => {
+    const { studio } = given(buildFacts({ priceCents: 99 }));
+
+    const result = await suggest(studio);
+
+    expect(result.getValue().suggestion.get("price").range()).toEqual({
+      lowCents: 80,
+      highCents: 120,
+    });
+  });
+
+  it("answers a provider failure when the model suggests a price above 10 000 000 €", async () => {
+    const { studio } = given(buildFacts({ priceCents: 1_000_000_001 }));
+
+    const result = await suggest(studio);
+
+    expect(result.getError()).toBe("STUDIO_AI_PROVIDER_FAILURE");
+  });
+
+  it("passes the suggester failure code through", async () => {
+    const { studio, listingSuggester } = given();
+    listingSuggester.suggest.mockResolvedValue(
+      Result.fail("STUDIO_AI_RATE_LIMITED"),
+    );
+
+    const result = await suggest(studio);
+
+    expect(result.getError()).toBe("STUDIO_AI_RATE_LIMITED");
+  });
+
+  it("refuses an existing title above 200 characters before calling the model", async () => {
+    const { studio, listingSuggester } = given();
+
+    const result = await studio.suggestListing({
+      photos: [PHOTO],
+      language: "fr",
+      existingTitle: "a".repeat(201),
+    });
+
+    expect(result.getError()).toBe("STUDIO_INPUT_INVALID");
+    expect(listingSuggester.suggest).not.toHaveBeenCalled();
   });
 
   it("answers a provider failure when the model suggests a price of 0", async () => {
