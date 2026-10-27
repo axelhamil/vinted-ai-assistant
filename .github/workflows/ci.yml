@@ -103,6 +103,9 @@ jobs:
       - name: Build the production image
         run: docker build --file apps/api/Dockerfile --target production --tag vinted/api:ci .
 
+      - name: Image size budget
+        run: bash scripts/check-image-size.sh vinted/api:ci 510
+
   commits:
     name: Commit messages
     runs-on: ubuntu-latest

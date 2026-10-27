@@ -34,6 +34,16 @@ x-prod-smoke-service: &prod-smoke-service
     target: production
   profiles: [prod-smoke]
 
+x-live-database-url: &live-database-url postgres://postgres:${POSTGRES_PASSWORD:-}@db-prod:5432/vinted
+
+x-live-service: &live-service
+  image: vinted/api:live
+  build:
+    context: .
+    dockerfile: apps/api/Dockerfile
+    target: production
+  profiles: [prod]
+
 services:
   db:
     image: postgres:18.6-alpine
@@ -151,5 +161,59 @@ services:
       migrate-prod:
         condition: service_completed_successfully
 
+  db-prod:
+    image: postgres:18.6-alpine
+    profiles: [prod]
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_DB: vinted
+    volumes:
+      - vinted_prod_pg:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vinted"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrate-live:
+    <<: *live-service
+    command: ["bun", "/app/packages/drizzle/src/migrate.ts"]
+    environment:
+      DATABASE_URL: *live-database-url
+    depends_on:
+      db-prod:
+        condition: service_healthy
+
+  api-live:
+    <<: *live-service
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${API_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: *live-database-url
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    healthcheck:
+      test:
+        - CMD
+        - bun
+        - -e
+        - fetch('http://127.0.0.1:3000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    depends_on:
+      migrate-live:
+        condition: service_completed_successfully
+      db-prod:
+        condition: service_healthy
+
 volumes:
   vinted_dev_pg:
+  vinted_prod_pg:

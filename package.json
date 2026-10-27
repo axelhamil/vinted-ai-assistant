@@ -27,6 +27,7 @@
     "check:duplication": "jscpd ./packages ./apps",
     "check:unused": "knip",
     "check:boundaries": "depcruise packages apps --config .dependency-cruiser.cjs",
+    "check:image": "docker build --file apps/api/Dockerfile --target production --tag vinted/api:budget . && bash scripts/check-image-size.sh vinted/api:budget 510",
     "check:all": "pnpm type-check && pnpm db:drift && pnpm check && pnpm check:duplication && pnpm check:unused && pnpm check:boundaries && pnpm test && pnpm test:db",
     "prepare": "husky"
   },
