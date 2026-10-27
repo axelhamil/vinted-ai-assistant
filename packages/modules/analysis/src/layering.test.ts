@@ -59,6 +59,19 @@ describe("layering rules of the analysis module", () => {
     },
   );
 
+  it("reaches the AI provider from infrastructure only", () => {
+    const providerImports = scan
+      .importsOf(".")
+      .filter(({ specifier }) => specifier.startsWith("@packages/ai/"));
+
+    const outside = providerImports
+      .filter(({ file }) => !file.startsWith("infrastructure/"))
+      .map(({ file, specifier }) => `${file} imports ${specifier}`);
+
+    expect(providerImports.length).toBeGreaterThan(0);
+    expect(outside).toEqual([]);
+  });
+
   it("never reads the environment", () => {
     const reading = scan
       .sourceFiles(".")

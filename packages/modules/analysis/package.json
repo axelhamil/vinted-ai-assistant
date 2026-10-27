@@ -17,6 +17,7 @@
     "test:db": "bun ../../testing/src/global-setup.ts && bun --config=../../../bunfig.db.toml test --isolate --timeout=15000 .db.test.ts"
   },
   "dependencies": {
+    "@packages/ai": "workspace:*",
     "@packages/ddd-kit": "workspace:*",
     "@packages/drizzle": "workspace:*",
     "drizzle-orm": "^0.45.4",

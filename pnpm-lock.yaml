@@ -447,6 +447,9 @@ importers:
 
   packages/modules/analysis:
     dependencies:
+      '@packages/ai':
+        specifier: workspace:*
+        version: link:../../ai
       '@packages/ddd-kit':
         specifier: workspace:*
         version: link:../../ddd-kit
