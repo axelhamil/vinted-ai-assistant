@@ -38,8 +38,7 @@
     "knip": "^6.43.0",
     "lint-staged": "^17.6.0",
     "turbo": "^2.11.9",
-    "typescript": "~6.0.3",
-    "typescript-7": "npm:typescript@7.0.2"
+    "typescript": "~6.0.3"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,cjs,mjs}": [

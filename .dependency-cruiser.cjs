@@ -18,6 +18,14 @@ module.exports = {
       to: { path: `${MODULES}/([^/]+)/`, pathNot: `${MODULES}/$1/` },
     },
     {
+      name: "packages-never-import-apps",
+      comment:
+        "A module never imports an app: the app composes it, never the other way.",
+      severity: "error",
+      from: { path: `${MODULES}/` },
+      to: { path: "^apps/" },
+    },
+    {
       name: "pure-domain-and-application",
       comment:
         "Domain and application import no framework, no database and no infrastructure.",
@@ -36,7 +44,7 @@ module.exports = {
       },
     },
     {
-      name: "domain-does-not-import-application",
+      name: "domain-does-not-depend-on-application",
       severity: "error",
       from: { path: `${MODULES}/[^/]+/src/domain/` },
       to: { path: `${MODULES}/[^/]+/src/application/` },
@@ -50,14 +58,15 @@ module.exports = {
       to: { path: "\\.module\\.ts$" },
     },
     {
-      name: "libs-do-not-import-modules-or-apps",
-      comment: "A lib never imports a module or an app.",
+      name: "packages-stay-business-free",
+      comment:
+        "A lib never imports a module or an app (modules may import libs).",
       severity: "error",
       from: { path: LIBS },
       to: { path: [`${MODULES}/`, "^apps/"] },
     },
     {
-      name: "schemas-import-only-schemas",
+      name: "schemas-reach-only-other-schemas",
       comment:
         "A module's schemas/ may import another module's schemas/ for a foreign key, nothing else.",
       severity: "error",

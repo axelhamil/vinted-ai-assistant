@@ -112,7 +112,7 @@ apps/extension/src/
 - **Biome 2** for linting and formatting (not ESLint/Prettier), config in `biome.json`
 - 2-space indentation, double quotes, semicolons, line width 80, LF line endings
 - `noUnusedImports`, `noUnusedVariables`, `noUndeclaredVariables` and `noImportCycles` are errors
-- `noExplicitAny` and `noNonNullAssertion` warn
+- `noExplicitAny` and `noNonNullAssertion` are errors
 - Legacy `apps/backend`, `apps/extension`, `packages/shared` and `installer` are excluded from Biome until the v1 rewrite
 - Target architecture and migration steps: `docs/superpowers/specs/2026-10-27-v1-refactor-roadmap.md`
 
