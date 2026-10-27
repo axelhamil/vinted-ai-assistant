@@ -8,24 +8,31 @@ export interface IDatabaseProbe {
   check(): Promise<Result<void, DatabaseProbeError>>;
 }
 
-const PROBE_TIMEOUT_MS = 2_000;
+interface ProbeOptions {
+  timeoutMs: number;
+  statement: string;
+}
+
+const DEFAULT_PROBE: ProbeOptions = { timeoutMs: 2_000, statement: "select 1" };
 
 export class PostgresDatabaseProbe implements IDatabaseProbe {
   constructor(
     private readonly database: Db,
     private readonly logger: Logger,
-    private readonly timeoutMs = PROBE_TIMEOUT_MS,
+    private readonly options: ProbeOptions = DEFAULT_PROBE,
   ) {}
 
   async check(): Promise<Result<void, DatabaseProbeError>> {
+    const { timeoutMs, statement } = this.options;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const timedOut = new Promise<string>((resolve) => {
       timer = setTimeout(
-        () => resolve(`no answer within ${this.timeoutMs} ms`),
-        this.timeoutMs,
+        () => resolve(`no answer within ${timeoutMs} ms`),
+        timeoutMs,
       );
     });
-    const answered = this.database.$client.query("select 1").then(
+    const boundedQuery = { text: statement, query_timeout: timeoutMs };
+    const answered = this.database.$client.query(boundedQuery).then(
       () => undefined,
       (error: unknown) => (error instanceof Error ? error.message : "failed"),
     );

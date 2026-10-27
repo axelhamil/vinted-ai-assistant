@@ -4,9 +4,14 @@ import pino from "pino";
 import { createApp } from "../../composition/app";
 import { PostgresDatabaseProbe } from "./database-probe";
 
+const logger = pino({ level: "silent" });
+
+function checkedOutClients(): number {
+  return db.$client.totalCount - db.$client.idleCount;
+}
+
 describe("the readiness probe on the real database", () => {
   it("answers ready 200 against the test database", async () => {
-    const logger = pino({ level: "silent" });
     const app = createApp({
       env: { NODE_ENV: "test" },
       logger,
@@ -17,5 +22,21 @@ describe("the readiness probe on the real database", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ status: "ok" });
+  });
+
+  it("gives up on a stalled database and hands its connection back to the pool", async () => {
+    const probe = new PostgresDatabaseProbe(db, logger, {
+      timeoutMs: 2_000,
+      statement: "select pg_sleep(5)",
+    });
+    const startedAt = performance.now();
+
+    const result = await probe.check();
+    const elapsedMs = performance.now() - startedAt;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(result.getError()).toBe("DATABASE_UNAVAILABLE");
+    expect(elapsedMs).toBeLessThanOrEqual(2_500);
+    expect(checkedOutClients()).toBe(0);
   });
 });
