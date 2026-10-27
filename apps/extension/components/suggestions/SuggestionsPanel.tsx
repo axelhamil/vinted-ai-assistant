@@ -11,11 +11,12 @@ import {
   unreadablePhotosNotice,
 } from "@/lib/photos/suggestion-input";
 import { useBackgroundMutation } from "@/lib/ui/query";
-import { fillField, type ListingField } from "@/lib/vinted/listing-form";
+import type { ListingField } from "@/lib/vinted/listing-form";
 
 export interface SuggestionsPanelProps {
   sources: File[];
   onSuggest: (sources: File[]) => Promise<Reply<SuggestedListing>>;
+  onFill: (field: ListingField, value: string | number) => boolean;
 }
 
 const APPLIED: Record<ListingField, string> = {
@@ -24,22 +25,22 @@ const APPLIED: Record<ListingField, string> = {
   price: "Prix appliqué",
 };
 
-function use(field: ListingField, value: string | number): void {
-  if (fillField(document, field, value)) {
-    toast.success(APPLIED[field]);
-    return;
-  }
-
-  toast.error(
-    "Champ introuvable dans le formulaire Vinted. Copiez la suggestion à la main.",
-  );
-}
-
 export function SuggestionsPanel({
   sources,
   onSuggest,
+  onFill,
 }: SuggestionsPanelProps) {
   const request = useBackgroundMutation(onSuggest);
+  const use = (field: ListingField, value: string | number) => {
+    if (onFill(field, value)) {
+      toast.success(APPLIED[field]);
+      return;
+    }
+
+    toast.error(
+      "Champ introuvable dans le formulaire Vinted. Copiez la suggestion à la main.",
+    );
+  };
   const result = request.data;
 
   if (request.error)

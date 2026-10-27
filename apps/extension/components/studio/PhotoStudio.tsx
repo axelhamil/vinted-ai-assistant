@@ -12,12 +12,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { sendMessage } from "@/lib/messaging/protocol";
 import type { EditMode, PhotoJob } from "@/lib/photos/edit-queue";
 import { useBackground } from "@/lib/ui/query";
-import { injectPhotos } from "@/lib/vinted/listing-form";
 
 export interface PhotoStudioProps {
   jobs: PhotoJob[];
   editing: boolean;
   onEdit: (mode: EditMode) => void;
+  onAddToListing: (files: File[]) => boolean;
 }
 
 const INSTRUCTION_MIN = 10;
@@ -34,18 +34,12 @@ function editMode(choice: string, instruction: string): EditMode | null {
   return { instruction: instruction.trim() };
 }
 
-function addToListing(files: File[]): void {
-  if (injectPhotos(document, files)) {
-    toast.success("Photos ajoutées à l'annonce");
-    return;
-  }
-
-  toast.error(
-    "Zone de photos introuvable. Ouvrez le formulaire de vente Vinted puis réessayez.",
-  );
-}
-
-export function PhotoStudio({ jobs, editing, onEdit }: PhotoStudioProps) {
+export function PhotoStudio({
+  jobs,
+  editing,
+  onEdit,
+  onAddToListing,
+}: PhotoStudioProps) {
   const presets = useBackground({
     key: ["studio", "presets"],
     request: () => sendMessage("listPresets", undefined),
@@ -71,6 +65,16 @@ export function PhotoStudio({ jobs, editing, onEdit }: PhotoStudioProps) {
       />
     );
 
+  const addToListing = (files: File[]) => {
+    if (onAddToListing(files)) {
+      toast.success("Photos ajoutées à l'annonce");
+      return;
+    }
+
+    toast.error(
+      "Zone de photos introuvable. Ouvrez le formulaire de vente Vinted puis réessayez.",
+    );
+  };
   const mode = editMode(choice, instruction);
   const edited = jobs.flatMap((job) => (job.edited ? [job.edited] : []));
   const instructionLength = instruction.trim().length;

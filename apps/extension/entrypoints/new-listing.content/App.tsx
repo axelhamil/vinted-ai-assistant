@@ -14,6 +14,11 @@ import { downscale } from "@/lib/photos/downscale";
 import { type SuggestDeps, suggestListing } from "@/lib/photos/suggest-listing";
 import { usePhotoEdits } from "@/lib/photos/use-photo-edits";
 import { detectLanguage } from "@/lib/vinted/language";
+import {
+  fillField,
+  injectPhotos,
+  type ListingField,
+} from "@/lib/vinted/listing-form";
 
 export interface ListingFormProps {
   autoOpen: boolean;
@@ -36,6 +41,11 @@ const SUGGEST_DEPS: SuggestDeps = {
 };
 
 const suggest = (sources: File[]) => suggestListing(sources, SUGGEST_DEPS);
+
+const fill = (field: ListingField, value: string | number) =>
+  fillField(document, field, value);
+
+const addPhotos = (files: File[]) => injectPhotos(document, files);
 
 export function App({ autoOpen }: ListingFormProps) {
   const [open, setOpen] = useState(autoOpen);
@@ -76,6 +86,7 @@ export function App({ autoOpen }: ListingFormProps) {
             jobs={photos.jobs}
             editing={photos.editing}
             onEdit={photos.edit}
+            onAddToListing={addPhotos}
           />
         </TabsContent>
         <TabsContent
@@ -86,6 +97,7 @@ export function App({ autoOpen }: ListingFormProps) {
           <SuggestionsPanel
             sources={photos.jobs.map((job) => job.source)}
             onSuggest={suggest}
+            onFill={fill}
           />
         </TabsContent>
       </Tabs>
