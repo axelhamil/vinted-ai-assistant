@@ -1,4 +1,4 @@
-import type { Option } from "@packages/ddd-kit";
+import type { Option, Result } from "@packages/ddd-kit";
 import { Score } from "../value-objects/score.vo";
 
 export interface OpportunityInput {
@@ -12,6 +12,7 @@ export interface OpportunityInput {
 const BEST_SIZES = ["M", "L"];
 const COMMON_SIZES = ["S", "XL"];
 const EDGE_SIZE = /^(XS|X{2,}L|[2-9]XL)$/;
+const SIZE_SEPARATOR = /[\s/]+/;
 
 function marginPoints(percent: number): number {
   if (percent > 40) return 10;
@@ -37,7 +38,10 @@ function agePoints(days: Option<number>): number {
 }
 
 function sizePoints(size: Option<string>): number {
-  const normalized = size.map((raw) => raw.trim().toUpperCase()).unwrapOr("");
+  const normalized = size
+    .map((raw) => raw.trim().split(SIZE_SEPARATOR)[0] ?? "")
+    .unwrapOr("")
+    .toUpperCase();
 
   if (BEST_SIZES.includes(normalized)) return 10;
   if (COMMON_SIZES.includes(normalized)) return 6;
@@ -45,7 +49,9 @@ function sizePoints(size: Option<string>): number {
   return 6;
 }
 
-export function computeOpportunityScore(input: OpportunityInput): Score {
+export function computeOpportunityScore(
+  input: OpportunityInput,
+): Result<Score> {
   const weightedHundredths =
     35 * marginPoints(input.marginPercent) +
     20 * photoPoints(input.photoQualityScore) +

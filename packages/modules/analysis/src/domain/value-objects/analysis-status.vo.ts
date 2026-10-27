@@ -29,11 +29,7 @@ export class AnalysisStatus extends ValueObject<AnalysisStatusValue> {
     const result = analysisStatusSchema.safeParse(raw);
     if (!result.success) return Result.fail("Unknown analysis status");
 
-    return Result.ok(new AnalysisStatus(result.data));
-  }
-
-  static of(value: AnalysisStatusValue): AnalysisStatus {
-    return new AnalysisStatus(value);
+    return AnalysisStatus.create(result.data);
   }
 
   canMoveTo(next: AnalysisStatus): boolean {

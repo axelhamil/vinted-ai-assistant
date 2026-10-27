@@ -17,7 +17,8 @@ describe("computeResale", () => {
     "recommends 5 % above the $averageCents average, rounded to the euro",
     ({ averageCents, recommended }) => {
       expect(
-        computeResale({ ...BASE, averageCents }).value.recommendedPriceCents,
+        computeResale({ ...BASE, averageCents }).getValue().value
+          .recommendedPriceCents,
       ).toBe(recommended);
     },
   );
@@ -36,7 +37,7 @@ describe("computeResale", () => {
         brand: Option.fromNullable(brand),
       });
 
-      expect(resale.value.estimatedDays).toBe(days);
+      expect(resale.getValue().value.estimatedDays).toBe(days);
     },
   );
 
@@ -62,7 +63,7 @@ describe("computeResale", () => {
       brand: Option.fromNullable(brand),
     });
 
-    expect(resale.value.platforms).toEqual([...platforms]);
+    expect(resale.getValue().value.platforms).toEqual([...platforms]);
   });
 
   it.each([
@@ -90,7 +91,7 @@ describe("computeResale", () => {
         brand: Option.fromNullable(brand),
       });
 
-      expect(resale.value.tips).toEqual([...tips]);
+      expect(resale.getValue().value.tips).toEqual([...tips]);
     },
   );
 });

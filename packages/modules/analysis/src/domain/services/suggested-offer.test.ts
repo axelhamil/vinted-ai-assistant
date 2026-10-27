@@ -100,6 +100,6 @@ describe("computeSuggestedOffer", () => {
       daysListed: Option.fromNullable(days),
     });
 
-    expect(suggested.value).toBe(offer);
+    expect(suggested.getValue().value).toBe(offer);
   });
 });

@@ -7,10 +7,10 @@ const MAX_SCORE = 10;
 const scoreSchema = z.number().min(MIN_SCORE).max(MAX_SCORE);
 
 export class Score extends ValueObject<number> {
-  static clamped(raw: number): Score {
+  static clamped(raw: number): Result<Score> {
     const rounded = Math.round(raw * 10) / 10;
 
-    return new Score(Math.min(MAX_SCORE, Math.max(MIN_SCORE, rounded)));
+    return Score.create(Math.min(MAX_SCORE, Math.max(MIN_SCORE, rounded)));
   }
 
   protected validate(value: number): Result<number> {

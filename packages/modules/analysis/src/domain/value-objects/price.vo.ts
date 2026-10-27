@@ -4,8 +4,8 @@ import { z } from "zod";
 export const centsSchema = z.number().int().nonnegative();
 
 export class Price extends ValueObject<number> {
-  static ofCents(cents: number): Price {
-    return new Price(Math.max(0, Math.round(cents)));
+  static fromEuros(euros: number): Result<Price> {
+    return Price.create(Math.round(euros * 100));
   }
 
   protected validate(value: number): Result<number> {

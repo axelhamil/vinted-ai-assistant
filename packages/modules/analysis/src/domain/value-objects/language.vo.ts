@@ -28,7 +28,7 @@ export class Language extends ValueObject<LanguageValue> {
     if (!result.success)
       return Result.fail(`Supported languages are ${LANGUAGES.join(", ")}`);
 
-    return Result.ok(new Language(result.data));
+    return Language.create(result.data);
   }
 
   protected validate(value: LanguageValue): Result<LanguageValue> {

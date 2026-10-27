@@ -25,9 +25,9 @@ describe("computeOpportunityScore", () => {
   ])(
     "weighs a $marginPercent % margin into $score",
     ({ marginPercent, score }) => {
-      expect(computeOpportunityScore({ ...WEAKEST, marginPercent }).value).toBe(
-        score,
-      );
+      expect(
+        computeOpportunityScore({ ...WEAKEST, marginPercent }).getValue().value,
+      ).toBe(score);
     },
   );
 
@@ -42,9 +42,9 @@ describe("computeOpportunityScore", () => {
   ])("weighs $days days listed into $score", ({ days, score }) => {
     const daysListed = Option.fromNullable(days);
 
-    expect(computeOpportunityScore({ ...WEAKEST, daysListed }).value).toBe(
-      score,
-    );
+    expect(
+      computeOpportunityScore({ ...WEAKEST, daysListed }).getValue().value,
+    ).toBe(score);
   });
 
   it.each([
@@ -57,6 +57,10 @@ describe("computeOpportunityScore", () => {
     { size: "XXXL", score: 1.9 },
     { size: "4XL", score: 1.9 },
     { size: "XXS", score: 2.4 },
+    { size: "M / 38 / 10", score: 3 },
+    { size: "xl/42", score: 2.4 },
+    { size: " xs 34", score: 1.9 },
+    { size: "38 / M", score: 2.4 },
     { size: "38", score: 2.4 },
     { size: null, score: 2.4 },
   ])("weighs size $size into $score", ({ size, score }) => {
@@ -66,25 +70,29 @@ describe("computeOpportunityScore", () => {
       size: Option.fromNullable(size),
     };
 
-    expect(computeOpportunityScore(input).value).toBe(score);
+    expect(computeOpportunityScore(input).getValue().value).toBe(score);
   });
 
   it.each([
     { photoQualityScore: 1, score: 4.2 },
     { photoQualityScore: 6, score: 3.2 },
     { photoQualityScore: 10, score: 2.4 },
+    { photoQualityScore: 0.5, score: 4.2 },
+    { photoQualityScore: 11, score: 2.4 },
   ])(
     "rewards amateur photos: quality $photoQualityScore gives $score",
     ({ photoQualityScore, score }) => {
       expect(
-        computeOpportunityScore({ ...WEAKEST, photoQualityScore }).value,
+        computeOpportunityScore({ ...WEAKEST, photoQualityScore }).getValue()
+          .value,
       ).toBe(score);
     },
   );
 
   it("weighs authenticity by its own score", () => {
     expect(
-      computeOpportunityScore({ ...WEAKEST, authenticityScore: 10 }).value,
+      computeOpportunityScore({ ...WEAKEST, authenticityScore: 10 }).getValue()
+        .value,
     ).toBe(3.7);
   });
 
@@ -97,6 +105,6 @@ describe("computeOpportunityScore", () => {
       size: Option.some("L"),
     });
 
-    expect(score.value).toBe(10);
+    expect(score.getValue().value).toBe(10);
   });
 });

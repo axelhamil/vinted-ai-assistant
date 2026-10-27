@@ -1,4 +1,4 @@
-import type { Option } from "@packages/ddd-kit";
+import type { Option, Result } from "@packages/ddd-kit";
 import {
   Resale,
   type ResaleTip,
@@ -16,7 +16,7 @@ function estimatedDays(marginPercent: number, hasBrand: boolean): number {
   return hasBrand ? 14 : 30;
 }
 
-export function computeResale(input: ResaleInput): Resale {
+export function computeResale(input: ResaleInput): Result<Resale> {
   const hasBrand = input.brand.isSome();
 
   const platforms: ResaleValue["platforms"] = [
@@ -31,7 +31,7 @@ export function computeResale(input: ResaleInput): Resale {
   if (hasBrand) tips.push("HIGHLIGHT_BRAND");
   tips.push("RETAKE_PHOTOS", "DETAILED_DESCRIPTION");
 
-  return Resale.of({
+  return Resale.create({
     recommendedPriceCents:
       Math.round((input.averageCents * 105) / 10_000) * 100,
     estimatedDays: estimatedDays(input.marginPercent, hasBrand),

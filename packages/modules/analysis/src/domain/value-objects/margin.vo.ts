@@ -9,10 +9,6 @@ const marginSchema = z.object({
 export type MarginValue = z.infer<typeof marginSchema>;
 
 export class Margin extends ValueObject<MarginValue> {
-  static of(value: MarginValue): Margin {
-    return new Margin(value);
-  }
-
   protected validate(value: MarginValue): Result<MarginValue> {
     const result = marginSchema.safeParse(value);
     if (!result.success)

@@ -50,7 +50,7 @@ describe("Analysis", () => {
           averageCents: 3000,
         }),
       }),
-    );
+    ).getValue();
 
     expect(analysis.get("status").value).toBe("ANALYZED");
     expect(analysis.margin().value).toEqual({
@@ -60,6 +60,39 @@ describe("Analysis", () => {
     expect(analysis.opportunityScore().value).toBe(7.3);
     expect(analysis.suggestedOfferCents().value).toBe(1800);
     expect(analysis.resale().value.recommendedPriceCents).toBe(3200);
+    expect(analysis.get("analyzedAt")).toEqual(ANALYZED_AT);
+  });
+
+  it.each([
+    {
+      case: "an average that is not whole cents",
+      facts: { averageCents: 2999.5 },
+    },
+    { case: "a low above the average", facts: { lowCents: 3500 } },
+    { case: "a photo score of 0", facts: { photoScore: 0 } },
+    { case: "an authenticity score of 11", facts: { authenticityScore: 11 } },
+  ])("refuses to create an analysis from $case", ({ facts }) => {
+    const created = Analysis.create(
+      analysisInput({ facts: buildFacts(facts) }),
+    );
+
+    expect(created.isFailure).toBe(true);
+    expect(created.getError()).toBe("ANALYSIS_INPUT_INVALID");
+  });
+
+  it("keeps its stored assessment when a refresh is refused", () => {
+    const analysis = buildAnalysis();
+    const before = analysis.margin().value;
+
+    const refreshed = analysis.refresh(
+      analysisInput({
+        facts: buildFacts({ averageCents: 2999.5 }),
+        now: new Date(ANALYZED_AT.getTime() + 90 * MINUTE_MS),
+      }),
+    );
+
+    expect(refreshed.isFailure).toBe(true);
+    expect(analysis.margin().value).toEqual(before);
     expect(analysis.get("analyzedAt")).toEqual(ANALYZED_AT);
   });
 
@@ -81,13 +114,14 @@ describe("Analysis", () => {
     const id = analysis.id.value;
     const later = new Date(ANALYZED_AT.getTime() + 90 * MINUTE_MS);
 
-    analysis.refresh(
+    const refreshed = analysis.refresh(
       analysisInput({
         facts: buildFacts({ averageCents: 4000, highCents: 5000 }),
         now: later,
       }),
     );
 
+    expect(refreshed.isSuccess).toBe(true);
     expect(analysis.id.value).toBe(id);
     expect(analysis.get("status").value).toBe("BOUGHT");
     expect(analysis.get("analyzedAt")).toEqual(later);

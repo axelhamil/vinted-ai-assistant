@@ -11,8 +11,9 @@ import { AnalysisStatus } from "./value-objects/analysis-status.vo";
 import type { Margin } from "./value-objects/margin.vo";
 import type { NegotiationTone } from "./value-objects/negotiation-tone.vo";
 import type { Price } from "./value-objects/price.vo";
+import { PriceRange } from "./value-objects/price-range.vo";
 import type { Resale } from "./value-objects/resale.vo";
-import type { Score } from "./value-objects/score.vo";
+import { Score } from "./value-objects/score.vo";
 
 export interface GroundingSource {
   title: string;
@@ -50,31 +51,63 @@ export interface AnalysisProps extends Assessment {
   createdAt: Date;
 }
 
-function assess(listing: Listing, facts: ListingFacts, now: Date): Assessment {
-  const margin = computeMargin(listing, facts.market);
+const INPUT_INVALID = "ANALYSIS_INPUT_INVALID";
+
+type InputInvalid = typeof INPUT_INVALID;
+
+function checkFacts(facts: ListingFacts): Result<void> {
+  const { lowCents, averageCents, highCents } = facts.market;
+
+  return Result.combine([
+    PriceRange.create({ lowCents, averageCents, highCents }),
+    Score.create(facts.photoQuality.score),
+    Score.create(facts.authenticity.score),
+  ]);
+}
+
+function assess(
+  listing: Listing,
+  facts: ListingFacts,
+  now: Date,
+): Result<Assessment, InputInvalid> {
+  const margin = checkFacts(facts).flatMap(() =>
+    computeMargin(listing, facts.market),
+  );
+  if (margin.isFailure) return Result.fail(INPUT_INVALID);
+
+  const { percent } = margin.getValue().value;
   const listedFor = daysListed(listing.listedAt, now);
 
-  return {
-    margin,
-    opportunityScore: computeOpportunityScore({
-      marginPercent: margin.value.percent,
+  const computed = Result.all([
+    computeOpportunityScore({
+      marginPercent: percent,
       photoQualityScore: facts.photoQuality.score,
       authenticityScore: facts.authenticity.score,
       daysListed: listedFor,
       size: listing.size,
     }),
-    suggestedOffer: computeSuggestedOffer({
+    computeSuggestedOffer({
       priceCents: listing.priceCents.value,
       lowCents: facts.market.lowCents,
       averageCents: facts.market.averageCents,
       daysListed: listedFor,
     }),
-    resale: computeResale({
+    computeResale({
       averageCents: facts.market.averageCents,
-      marginPercent: margin.value.percent,
+      marginPercent: percent,
       brand: listing.brand.or(facts.detected.brand),
     }),
-  };
+  ]);
+  if (computed.isFailure) return Result.fail(INPUT_INVALID);
+
+  const [opportunityScore, suggestedOffer, resale] = computed.getValue();
+
+  return Result.ok({
+    margin: margin.getValue(),
+    opportunityScore,
+    suggestedOffer,
+    resale,
+  });
 }
 
 export class Analysis extends Aggregate<AnalysisProps> {
@@ -86,21 +119,30 @@ export class Analysis extends Aggregate<AnalysisProps> {
     return AnalysisId.create(this._id);
   }
 
-  static create(input: AnalysisInput): Analysis {
+  static create(input: AnalysisInput): Result<Analysis, InputInvalid> {
     const { listing, facts, groundingSources, negotiation, now } = input;
+    const assessed = Result.all([
+      assess(listing, facts, now),
+      AnalysisStatus.create("ANALYZED"),
+    ]);
+    if (assessed.isFailure) return Result.fail(INPUT_INVALID);
 
-    return new Analysis(
-      {
-        listing,
-        facts,
-        groundingSources,
-        negotiation,
-        ...assess(listing, facts, now),
-        status: AnalysisStatus.of("ANALYZED"),
-        analyzedAt: now,
-        createdAt: now,
-      },
-      new UUID<string>(),
+    const [assessment, status] = assessed.getValue();
+
+    return Result.ok(
+      new Analysis(
+        {
+          listing,
+          facts,
+          groundingSources,
+          negotiation,
+          ...assessment,
+          status,
+          analyzedAt: now,
+          createdAt: now,
+        },
+        new UUID<string>(),
+      ),
     );
   }
 
@@ -108,9 +150,12 @@ export class Analysis extends Aggregate<AnalysisProps> {
     return new Analysis(props, new UUID(id.value));
   }
 
-  refresh(input: AnalysisInput): void {
+  refresh(input: AnalysisInput): Result<void, InputInvalid> {
     const { listing, facts, groundingSources, negotiation, now } = input;
-    const assessment = assess(listing, facts, now);
+    const assessed = assess(listing, facts, now);
+    if (assessed.isFailure) return Result.fail(INPUT_INVALID);
+
+    const assessment = assessed.getValue();
 
     this._props.listing = listing;
     this._props.facts = facts;
@@ -121,6 +166,7 @@ export class Analysis extends Aggregate<AnalysisProps> {
     this._props.suggestedOffer = assessment.suggestedOffer;
     this._props.resale = assessment.resale;
     this._props.analyzedAt = now;
+    return Result.ok();
   }
 
   changeStatus(next: AnalysisStatus): Result<void, "ANALYSIS_STATUS_CONFLICT"> {

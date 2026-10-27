@@ -25,10 +25,6 @@ export type ResaleValue = z.infer<typeof resaleSchema>;
 export type ResaleTip = (typeof RESALE_TIPS)[number];
 
 export class Resale extends ValueObject<ResaleValue> {
-  static of(value: ResaleValue): Resale {
-    return new Resale(value);
-  }
-
   protected validate(value: ResaleValue): Result<ResaleValue> {
     const result = resaleSchema.safeParse(value);
     if (!result.success) return Result.fail("Invalid resale recommendation");

@@ -8,9 +8,14 @@ export interface ImportLine {
 }
 
 export function createSourceScan(root: string) {
+  function exists(layer: string): boolean {
+    return existsSync(join(root, layer));
+  }
+
   function sourceFiles(layer: string): string[] {
     const directory = join(root, layer);
-    if (!existsSync(directory)) return [];
+    if (!existsSync(directory))
+      throw new Error(`No "${layer}" folder under ${root}`);
 
     return readdirSync(directory, { withFileTypes: true, recursive: true })
       .filter(
@@ -70,5 +75,12 @@ export function createSourceScan(root: string) {
       );
   }
 
-  return { sourceFiles, codeOf, importsOf, throwsPerFile, importedNames };
+  return {
+    exists,
+    sourceFiles,
+    codeOf,
+    importsOf,
+    throwsPerFile,
+    importedNames,
+  };
 }

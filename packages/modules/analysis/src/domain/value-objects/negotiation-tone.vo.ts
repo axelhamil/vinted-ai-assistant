@@ -13,7 +13,7 @@ export class NegotiationTone extends ValueObject<NegotiationToneValue> {
     if (!result.success)
       return Result.fail(`A tone is one of ${NEGOTIATION_TONES.join(", ")}`);
 
-    return Result.ok(new NegotiationTone(result.data));
+    return NegotiationTone.create(result.data);
   }
 
   protected validate(

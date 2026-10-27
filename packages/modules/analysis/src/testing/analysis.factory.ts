@@ -155,10 +155,10 @@ export function propsOf(analysis: Analysis): AnalysisProps {
 }
 
 export function buildAnalysis(options: BuildAnalysisOptions = {}): Analysis {
-  const created = Analysis.create(analysisInput(options));
+  const created = Analysis.create(analysisInput(options)).getValue();
   if (options.status === undefined) return created;
 
-  const status = AnalysisStatus.of(options.status);
+  const status = AnalysisStatus.create(options.status).getValue();
 
   return Analysis.reconstitute({ ...propsOf(created), status }, created.id);
 }

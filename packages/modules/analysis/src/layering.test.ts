@@ -6,6 +6,8 @@ const scan = createSourceScan(__dirname);
 
 const ALLOWED_IN_DOMAIN = ["@packages/ddd-kit", "zod"];
 const MODULE_CONTRACT = "../contract";
+const REPOSITORIES = "infrastructure/repositories";
+const APPLICATION = "application";
 
 describe("layering rules of the analysis module", () => {
   it("keeps the domain on ddd-kit, zod, the module contract and itself", () => {
@@ -28,20 +30,34 @@ describe("layering rules of the analysis module", () => {
     expect(scan.codeOf("contract.ts")).not.toMatch(/\bimport\b/);
   });
 
-  it("throws nowhere in the domain or in the application", () => {
+  it("throws nowhere in the domain", () => {
     expect(scan.throwsPerFile("domain")).toEqual({});
-    expect(scan.throwsPerFile("application")).toEqual({});
   });
 
-  it("reaches the database from a repository only through the ambient executor", () => {
-    const direct = scan
-      .sourceFiles("infrastructure/repositories")
-      .filter((file) =>
-        scan.importedNames(file, "@packages/drizzle").includes("db"),
-      );
+  it.skipIf(!scan.exists(APPLICATION))(
+    "throws nowhere in the application (skipped until application/ exists)",
+    () => {
+      expect(scan.throwsPerFile(APPLICATION)).toEqual({});
+    },
+  );
 
-    expect(direct).toEqual([]);
-  });
+  it.skipIf(!scan.exists(REPOSITORIES))(
+    "reaches the database from a repository only through the ambient executor (skipped until infrastructure/repositories/ exists)",
+    () => {
+      const files = scan.sourceFiles(REPOSITORIES);
+
+      const offending = files.filter((file) => {
+        const code = scan.codeOf(file);
+        return (
+          !code.includes("resolveExecutor(") ||
+          /\bthis\.db\.|\bdatabase\./.test(code)
+        );
+      });
+
+      expect(files.length).toBeGreaterThan(0);
+      expect(offending).toEqual([]);
+    },
+  );
 
   it("never reads the environment", () => {
     const reading = scan

@@ -27,6 +27,33 @@ describe("value objects", () => {
   });
 
   it.each([
+    { euros: 19.99, cents: 1999 },
+    { euros: 0.1 + 0.2, cents: 30 },
+    { euros: 1234.5, cents: 123450 },
+  ])("Price converts $euros € into $cents whole cents", ({ euros, cents }) => {
+    expect(Price.fromEuros(euros).getValue().value).toBe(cents);
+  });
+
+  it.each([-0.01, Number.NaN, Number.POSITIVE_INFINITY])(
+    "Price refuses %p euros",
+    (euros) => {
+      expect(Price.fromEuros(euros).isFailure).toBe(true);
+    },
+  );
+
+  it.each([
+    { raw: 0.2, score: 1 },
+    { raw: 7.46, score: 7.5 },
+    { raw: 12, score: 10 },
+  ])("Score clamps $raw to $score", ({ raw, score }) => {
+    expect(Score.clamped(raw).getValue().value).toBe(score);
+  });
+
+  it("refuses to clamp a score that is not a number", () => {
+    expect(Score.clamped(Number.NaN).isFailure).toBe(true);
+  });
+
+  it.each([
     { low: 1000, average: 2000, high: 3000, valid: true },
     { low: 2000, average: 2000, high: 2000, valid: true },
     { low: 2500, average: 2000, high: 3000, valid: false },

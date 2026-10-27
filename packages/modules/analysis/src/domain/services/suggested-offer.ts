@@ -1,4 +1,4 @@
-import type { Option } from "@packages/ddd-kit";
+import type { Option, Result } from "@packages/ddd-kit";
 import { Price } from "../value-objects/price.vo";
 
 export interface OfferInput {
@@ -28,9 +28,9 @@ function roundToEuro(cents: number): number {
   return Math.round(cents / 100) * 100;
 }
 
-export function computeSuggestedOffer(input: OfferInput): Price {
+export function computeSuggestedOffer(input: OfferInput): Result<Price> {
   const discounted = (input.priceCents * (100 - discountPercent(input))) / 100;
   const floored = Math.max(discounted, input.lowCents * FLOOR_SHARE_OF_LOW);
 
-  return Price.ofCents(Math.min(roundToEuro(floored), input.priceCents));
+  return Price.create(Math.min(roundToEuro(floored), input.priceCents));
 }

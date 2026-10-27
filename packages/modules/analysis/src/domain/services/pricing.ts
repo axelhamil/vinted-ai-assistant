@@ -1,4 +1,4 @@
-import type { Option } from "@packages/ddd-kit";
+import type { Option, Result } from "@packages/ddd-kit";
 import type { Listing } from "../listing";
 import { Margin } from "../value-objects/margin.vo";
 
@@ -12,7 +12,7 @@ type CostedListing = Pick<
 export function computeMargin(
   listing: CostedListing,
   market: { averageCents: number },
-): Margin {
+): Result<Margin> {
   const itemCents = listing.totalPriceCents.unwrapOr(listing.priceCents).value;
   const shippingCents = listing.shippingCostCents
     .map((cost) => cost.value)
@@ -20,9 +20,9 @@ export function computeMargin(
   const totalCostCents = itemCents + shippingCents;
   const amountCents = market.averageCents - totalCostCents;
 
-  if (totalCostCents === 0) return Margin.of({ amountCents, percent: 0 });
+  if (totalCostCents === 0) return Margin.create({ amountCents, percent: 0 });
 
-  return Margin.of({
+  return Margin.create({
     amountCents,
     percent: Math.round((amountCents * 1000) / totalCostCents) / 10,
   });

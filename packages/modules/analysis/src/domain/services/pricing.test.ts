@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { Option } from "@packages/ddd-kit";
 import { buildListing } from "../../testing/analysis.factory";
+import { Price } from "../value-objects/price.vo";
 import { computeMargin, daysListed } from "./pricing";
 
 const DAY_MS = 86_400_000;
@@ -59,9 +60,28 @@ describe("computeMargin", () => {
 
       const margin = computeMargin(listing, { averageCents: average });
 
-      expect(margin.value).toEqual({ amountCents: amount, percent });
+      expect(margin.getValue().value).toEqual({ amountCents: amount, percent });
     },
   );
+});
+
+describe("computeMargin on euro inputs", () => {
+  it("keeps 19.99 € in whole cents through the margin", () => {
+    const priceCents = Price.fromEuros(19.99).getValue();
+    const averageCents = Price.fromEuros(29.99).getValue().value;
+    const listing = { ...buildListing(), priceCents };
+
+    const margin = computeMargin(listing, { averageCents }).getValue().value;
+
+    expect(priceCents.value).toBe(1999);
+    expect(margin).toEqual({ amountCents: 1000, percent: 50 });
+  });
+
+  it("refuses a market average that is not whole cents", () => {
+    const margin = computeMargin(buildListing(), { averageCents: 2999.5 });
+
+    expect(margin.isFailure).toBe(true);
+  });
 });
 
 describe("daysListed", () => {
