@@ -17,6 +17,7 @@
     "db:push": "pnpm --filter backend db:push",
     "db:generate": "turbo db:generate",
     "db:migrate": "turbo db:migrate",
+    "db:drift": "pnpm --filter @packages/drizzle db:drift",
     "db:studio": "pnpm --filter backend db:studio",
     "db": "docker compose up -d --wait db postgres-test",
     "db:down": "docker compose down",
@@ -29,7 +30,7 @@
     "check:duplication": "jscpd ./packages ./apps",
     "check:unused": "knip",
     "check:boundaries": "depcruise packages apps --config .dependency-cruiser.cjs",
-    "check:all": "pnpm type-check && pnpm check && pnpm check:duplication && pnpm check:unused && pnpm check:boundaries && pnpm test && pnpm test:db",
+    "check:all": "pnpm type-check && pnpm db:drift && pnpm check && pnpm check:duplication && pnpm check:unused && pnpm check:boundaries && pnpm test && pnpm test:db",
     "prepare": "husky"
   },
   "devDependencies": {

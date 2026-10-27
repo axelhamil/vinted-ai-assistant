@@ -8,7 +8,7 @@ const databaseUrl = process.env.DATABASE_URL ?? "postgresql://placeholder";
 
 export default defineConfig({
   schema: ["../modules/*/schemas/*.ts"],
-  schemaFilter: [],
+  schemaFilter: ["analysis"],
   out: "./migrations",
   dbCredentials: {
     url: databaseUrl,

@@ -38,6 +38,9 @@ jobs:
       - name: Type Check
         run: pnpm type-check
 
+      - name: Schema drift
+        run: pnpm db:drift
+
       - name: Code Duplication
         run: pnpm check:duplication
 

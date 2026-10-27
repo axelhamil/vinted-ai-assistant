@@ -2,6 +2,7 @@ export * from "./application/database-operation-error";
 export * from "./application/error-code";
 export * from "./application/input-parse-error";
 export * from "./application/instrumentation";
+export * from "./application/logger";
 export * from "./application/pagination";
 export * from "./application/repository";
 export * from "./application/scope";

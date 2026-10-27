@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./port-mock": "./src/port-mock.ts",
+    "./instrumentation-mock": "./src/instrumentation-mock.ts",
     "./install-fetch-guard": "./src/install-fetch-guard.ts",
     "./isolation-guard": "./src/isolation-guard.ts",
     "./test-database": "./src/test-database.ts",

@@ -1,0 +1,230 @@
+import { beforeEach, describe, expect, it } from "bun:test";
+import { type ILogger, Option } from "@packages/ddd-kit";
+import { db } from "@packages/testing/clone-database";
+import { mockInstrumentation } from "@packages/testing/instrumentation-mock";
+import { mockPort } from "@packages/testing/port-mock";
+import { Analysis } from "../../domain/analysis.aggregate";
+import {
+  AnalysisStatus,
+  type AnalysisStatusValue,
+} from "../../domain/value-objects/analysis-status.vo";
+import { Score } from "../../domain/value-objects/score.vo";
+import { VintedId } from "../../domain/value-objects/vinted-id.vo";
+import {
+  ANALYZED_AT,
+  analysisInput,
+  buildAnalysis,
+  buildListing,
+  propsOf,
+} from "../../testing/analysis.factory";
+import { clearAnalyses, overwriteFacts, rowsFor } from "../../testing/database";
+import { DrizzleAnalysisRepository } from "./drizzle-analysis.repository";
+
+const logger = mockPort<ILogger>();
+const repository = new DrizzleAnalysisRepository(
+  db,
+  logger,
+  mockInstrumentation(),
+);
+const HOUR_MS = 3_600_000;
+
+interface StoredOptions {
+  vintedId: string;
+  score?: number;
+  status?: AnalysisStatusValue;
+  hoursAgo?: number;
+}
+
+function analysisOf(options: StoredOptions): Analysis {
+  const built = buildAnalysis({
+    listing: buildListing({ vintedId: options.vintedId }),
+    status: options.status,
+  });
+  const props = propsOf(built);
+
+  return Analysis.reconstitute(
+    {
+      ...props,
+      opportunityScore:
+        options.score === undefined
+          ? props.opportunityScore
+          : Score.create(options.score).getValue(),
+      analyzedAt: new Date(
+        ANALYZED_AT.getTime() - (options.hoursAgo ?? 0) * HOUR_MS,
+      ),
+    },
+    built.id,
+  );
+}
+
+async function store(options: StoredOptions): Promise<Analysis> {
+  const analysis = analysisOf(options);
+  expect((await repository.save(analysis)).isSuccess).toBe(true);
+
+  return analysis;
+}
+
+function vintedId(raw: string): VintedId {
+  return VintedId.create(raw).getValue();
+}
+
+async function find(raw: string): Promise<Analysis> {
+  const found = await repository.findByVintedId(vintedId(raw));
+
+  return found.getValue().unwrap();
+}
+
+function vintedIdsOf(items: Analysis[]): string[] {
+  return items.map((item) => item.get("listing").vintedId.value);
+}
+
+describe("DrizzleAnalysisRepository", () => {
+  beforeEach(async () => {
+    await clearAnalyses();
+    logger.error.mockClear();
+  });
+
+  it("gives back the analysis it saved", async () => {
+    const analysis = await store({ vintedId: "1001", status: "WATCHING" });
+
+    const found = await find("1001");
+
+    expect(String(found.id.value)).toBe(String(analysis.id.value));
+    expect(propsOf(found)).toEqual(propsOf(analysis));
+  });
+
+  it("finds nothing for an unknown listing", async () => {
+    const found = await repository.findByVintedId(vintedId("404"));
+
+    expect(found.getValue().isNone()).toBe(true);
+  });
+
+  it("keeps the id, the status and the creation date when a re-analysis of the listing is saved", async () => {
+    const first = await store({ vintedId: "1002" });
+    first.changeStatus(AnalysisStatus.create("BOUGHT").getValue());
+    expect((await repository.updateStatus(first)).isSuccess).toBe(true);
+    const later = new Date(ANALYZED_AT.getTime() + 2 * HOUR_MS);
+    const reanalysis = Analysis.create(
+      analysisInput({
+        listing: buildListing({ vintedId: "1002", priceCents: 2500 }),
+        now: later,
+      }),
+    ).getValue();
+
+    expect((await repository.save(reanalysis)).isSuccess).toBe(true);
+    const found = await find("1002");
+
+    expect(String(found.id.value)).toBe(String(first.id.value));
+    expect(found.get("status").value).toBe("BOUGHT");
+    expect(found.get("createdAt")).toEqual(first.get("createdAt"));
+    expect(found.get("listing").priceCents.value).toBe(2500);
+    expect(found.get("analyzedAt")).toEqual(later);
+  });
+
+  it("ends with one row when two analyses of the same listing are saved at once", async () => {
+    const [left, right] = await Promise.all([
+      repository.save(analysisOf({ vintedId: "1003" })),
+      repository.save(analysisOf({ vintedId: "1003" })),
+    ]);
+
+    expect(left?.isSuccess).toBe(true);
+    expect(right?.isSuccess).toBe(true);
+    expect(await rowsFor("1003")).toBe(1);
+  });
+
+  it("lists the newest analyses first, filtered by minimum score and status, with the total", async () => {
+    await store({ vintedId: "2001", score: 8, hoursAgo: 3 });
+    await store({ vintedId: "2002", score: 9, hoursAgo: 1 });
+    await store({ vintedId: "2003", score: 7, hoursAgo: 2 });
+    await store({ vintedId: "2004", score: 5, hoursAgo: 0 });
+    await store({ vintedId: "2005", score: 9, status: "SOLD", hoursAgo: 4 });
+
+    const firstPage = await repository.list({
+      limit: 2,
+      offset: 0,
+      minScore: Option.some(7),
+      status: Option.some(AnalysisStatus.create("ANALYZED").getValue()),
+    });
+    const secondPage = await repository.list({
+      limit: 2,
+      offset: 2,
+      minScore: Option.some(7),
+      status: Option.some(AnalysisStatus.create("ANALYZED").getValue()),
+    });
+    const everything = await repository.list({
+      limit: 10,
+      offset: 0,
+      minScore: Option.none(),
+      status: Option.none(),
+    });
+
+    expect(vintedIdsOf(firstPage.getValue().items)).toEqual(["2002", "2003"]);
+    expect(firstPage.getValue().total).toBe(3);
+    expect(vintedIdsOf(secondPage.getValue().items)).toEqual(["2001"]);
+    expect(vintedIdsOf(everything.getValue().items)).toEqual([
+      "2004",
+      "2002",
+      "2003",
+      "2001",
+      "2005",
+    ]);
+    expect(everything.getValue().total).toBe(5);
+  });
+
+  it("skips a row whose facts no longer read in the list, and reports it as an integrity failure on find", async () => {
+    await store({ vintedId: "3001", hoursAgo: 1 });
+    await store({ vintedId: "3002", hoursAgo: 0 });
+    await overwriteFacts("3002", { photoQuality: "unreadable" });
+
+    const listed = await repository.list({
+      limit: 10,
+      offset: 0,
+      minScore: Option.none(),
+      status: Option.none(),
+    });
+    const found = await repository.findByVintedId(vintedId("3002"));
+
+    expect(vintedIdsOf(listed.getValue().items)).toEqual(["3001"]);
+    expect(logger.error).toHaveBeenCalled();
+    expect(found.isFailure).toBe(true);
+    expect(found.getError()).toBe("ANALYSIS_RECORD_INTEGRITY_FAILED");
+  });
+
+  it("counts the portfolio per status and the opportunities that are not archived", async () => {
+    await store({ vintedId: "4001", score: 8, status: "WATCHING" });
+    await store({ vintedId: "4002", score: 5, status: "BOUGHT" });
+    await store({ vintedId: "4003", score: 9, status: "SOLD" });
+    await store({ vintedId: "4004", score: 9.5, status: "ARCHIVED" });
+    await store({ vintedId: "4005", score: 7 });
+    await store({ vintedId: "4006", score: 6.9 });
+
+    const stats = await repository.stats(7);
+
+    expect(stats.getValue()).toEqual({
+      watching: 1,
+      bought: 1,
+      sold: 1,
+      opportunities: 3,
+    });
+  });
+
+  it("changes nothing and answers not found when the status of an unknown listing is updated", async () => {
+    const updated = await repository.updateStatus(
+      analysisOf({ vintedId: "5001", status: "WATCHING" }),
+    );
+
+    expect(updated.getError()).toBe("ANALYSIS_NOT_FOUND");
+    expect(await rowsFor("5001")).toBe(0);
+  });
+
+  it("deletes a stored analysis, and answers not found for a missing one", async () => {
+    await store({ vintedId: "6001" });
+
+    const deleted = await repository.delete(vintedId("6001"));
+    const missing = await repository.delete(vintedId("6001"));
+
+    expect(deleted.isSuccess).toBe(true);
+    expect(await rowsFor("6001")).toBe(0);
+    expect(missing.getError()).toBe("ANALYSIS_NOT_FOUND");
+  });
+});

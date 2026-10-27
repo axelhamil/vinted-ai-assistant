@@ -9,7 +9,7 @@ export const RESALE_TIPS = [
   "DETAILED_DESCRIPTION",
 ] as const;
 
-const resaleSchema = z.object({
+export const resaleSchema = z.object({
   recommendedPriceCents: centsSchema,
   estimatedDays: z.number().int().positive(),
   platforms: z.array(
