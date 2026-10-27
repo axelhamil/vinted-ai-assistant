@@ -1,4 +1,4 @@
-import { Database } from "bun:sqlite";
+import type { Database } from "bun:sqlite";
 import type { IAnalysisRepository } from "@packages/analysis/application/ports/analysis.repository.port";
 import type { Analysis } from "@packages/analysis/domain/analysis.aggregate";
 import { DrizzleAnalysisRepository } from "@packages/analysis/infrastructure/repositories/drizzle-analysis.repository";
@@ -7,6 +7,7 @@ import { parseDatabaseEnv } from "../common/env";
 import { createJsonLogger } from "../common/logger";
 import { createSentryInstrumentation } from "../src/adapters/instrumentation/sentry-instrumentation";
 import { analysisFromLegacyRow, legacyVintedIdOf } from "./legacy-row";
+import { readLegacyCopy } from "./legacy-source";
 
 export interface ImportFailure {
   vintedId: string;
@@ -92,24 +93,19 @@ async function main(args: string[]): Promise<number> {
     createSentryInstrumentation(logger),
   );
 
-  try {
-    const source = new Database(path, { readonly: true });
-    const report = await importLegacy({
-      source,
-      repository,
-      dryRun: args.includes("--dry-run"),
-    });
-    source.close();
-    process.stdout.write(`${JSON.stringify(report)}\n`);
-
-    return report.failed.length === 0 ? 0 : 1;
-  } catch (error) {
-    process.stderr.write(`import-sqlite: cannot read ${path}: ${error}\n`);
+  const imported = await readLegacyCopy(path, (source) =>
+    importLegacy({ source, repository, dryRun: args.includes("--dry-run") }),
+  ).finally(() => db.$client.end());
+  if (imported.isFailure) {
+    process.stderr.write(`import-sqlite: ${imported.getError()}\n`);
 
     return 1;
-  } finally {
-    await db.$client.end();
   }
+
+  const report = imported.getValue();
+  process.stdout.write(`${JSON.stringify(report)}\n`);
+
+  return report.failed.length === 0 ? 0 : 1;
 }
 
 if (import.meta.main) process.exit(await main(process.argv.slice(2)));

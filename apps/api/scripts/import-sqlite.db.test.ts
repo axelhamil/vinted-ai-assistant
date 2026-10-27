@@ -1,4 +1,13 @@
 import { beforeEach, describe, expect, it } from "bun:test";
+import {
+  chmodSync,
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import { DrizzleAnalysisRepository } from "@packages/analysis/infrastructure/repositories/drizzle-analysis.repository";
 import { analyses, analysisOutbox } from "@packages/analysis/schemas/analysis";
 import { clearAnalyses } from "@packages/analysis/testing/database";
@@ -11,8 +20,10 @@ import {
   createLegacyDatabase,
   LEGACY_ANALYZED_AT_SECONDS,
   legacyRow,
+  writeLegacyWalFile,
 } from "./fixtures/legacy-schema";
 import { importLegacy } from "./import-sqlite";
+import { readLegacyCopy } from "./legacy-source";
 
 const repository = new DrizzleAnalysisRepository(
   db,
@@ -125,5 +136,24 @@ describe("the one-shot sqlite portfolio import", () => {
     expect(report.imported).toBe(3);
     expect(report.failed).toHaveLength(1);
     expect(await storedRows()).toEqual([]);
+  });
+
+  it("imports a legacy file left in wal mode from a read only folder", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "legacy-wal-"));
+    const path = join(folder, "legacy.db");
+    writeLegacyWalFile(path, [legacyRow({ vinted_id: "1000000001" })]);
+    chmodSync(folder, 0o555);
+
+    let copyFolder = "";
+    const report = await readLegacyCopy(path, (source) => {
+      copyFolder = dirname(source.filename);
+      return importLegacy({ source, repository, dryRun: false });
+    }).finally(() => chmodSync(folder, 0o755));
+    const folderContent = readdirSync(folder);
+    rmSync(folder, { recursive: true });
+
+    expect(report.getValue().imported).toBe(1);
+    expect(folderContent).toEqual(["legacy.db"]);
+    expect(existsSync(copyFolder)).toBe(false);
   });
 });

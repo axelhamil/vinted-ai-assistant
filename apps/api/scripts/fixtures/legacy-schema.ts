@@ -118,8 +118,11 @@ export function legacyRow(overrides: LegacyRow = {}): LegacyRow {
   };
 }
 
-export function createLegacyDatabase(rows: LegacyRow[]): Database {
-  const database = new Database(":memory:");
+export function createLegacyDatabase(
+  rows: LegacyRow[],
+  path = ":memory:",
+): Database {
+  const database = new Database(path, { create: true });
   database.run(LEGACY_ANALYSES_DDL);
 
   for (const row of rows) {
@@ -132,4 +135,10 @@ export function createLegacyDatabase(rows: LegacyRow[]): Database {
   }
 
   return database;
+}
+
+export function writeLegacyWalFile(path: string, rows: LegacyRow[]): void {
+  const database = createLegacyDatabase(rows, path);
+  database.run("PRAGMA journal_mode = WAL");
+  database.close();
 }
