@@ -1,7 +1,7 @@
 import { languageName } from "@packages/ai/languages";
 import { untrustedBlock, untrustedNotice } from "@packages/ai/untrusted-data";
 import type { NegotiationRequest } from "../../../application/ports/negotiation-writer.port";
-import type { NegotiationToneValue } from "../../../domain/value-objects/negotiation-tone.vo";
+import type { NegotiationToneValue } from "../../../contract";
 import { euros, type Prompt } from "./prompt-format";
 
 const TONE_INSTRUCTIONS: Record<NegotiationToneValue, string> = {

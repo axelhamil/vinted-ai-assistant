@@ -40,12 +40,6 @@ export const TONE_LABELS: Record<NegotiationTone, string> = {
   urgent: "Pressé",
 };
 
-export const TONES: readonly NegotiationTone[] = [
-  "friendly",
-  "direct",
-  "urgent",
-];
-
 export const STATUS_LABELS: Record<AnalysisStatus, string> = {
   ANALYZED: "Analysé",
   WATCHING: "Surveillé",

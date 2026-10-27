@@ -1,4 +1,4 @@
-import type { AnalysisStatusValue } from "../../contract";
+import type { AnalysisStatusValue, NegotiationToneValue } from "../../contract";
 import type {
   Analysis,
   GroundingSource,
@@ -10,7 +10,6 @@ import type {
   PhotoLighting,
   SignalType,
 } from "../../domain/listing-facts";
-import type { NegotiationToneValue } from "../../domain/value-objects/negotiation-tone.vo";
 import type { ResaleValue } from "../../domain/value-objects/resale.vo";
 import type { PortfolioListing } from "./analysis.dto";
 

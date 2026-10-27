@@ -1,6 +1,7 @@
+import { NEGOTIATION_TONES } from "@packages/analysis/contract";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { TONE_LABELS, TONES } from "@/lib/analysis-copy";
+import { TONE_LABELS } from "@/lib/analysis-copy";
 import { euros } from "@/lib/format";
 import {
   type AnalysisDto,
@@ -30,7 +31,7 @@ export function NegotiateTab({ analysis, onChange }: NegotiateTabProps) {
       </dl>
       <fieldset className="flex gap-row">
         <legend className="sr-only">Ton du message</legend>
-        {TONES.map((tone) => (
+        {NEGOTIATION_TONES.map((tone) => (
           <Button
             key={tone}
             size="sm"

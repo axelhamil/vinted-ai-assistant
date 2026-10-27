@@ -1,9 +1,6 @@
 import { Result, ValueObject } from "@packages/ddd-kit";
 import { z } from "zod";
-
-export const NEGOTIATION_TONES = ["friendly", "direct", "urgent"] as const;
-
-export type NegotiationToneValue = (typeof NEGOTIATION_TONES)[number];
+import { NEGOTIATION_TONES, type NegotiationToneValue } from "../../contract";
 
 const negotiationToneSchema = z.enum(NEGOTIATION_TONES);
 

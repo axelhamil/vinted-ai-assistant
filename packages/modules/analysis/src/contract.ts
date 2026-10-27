@@ -22,6 +22,10 @@ export const NEXT_STATUSES: Record<
   ARCHIVED: [],
 };
 
+export const NEGOTIATION_TONES = ["friendly", "direct", "urgent"] as const;
+
+export type NegotiationToneValue = (typeof NEGOTIATION_TONES)[number];
+
 export type Level = "high" | "medium" | "low";
 
 export function scoreLevel(score: number): Level {
