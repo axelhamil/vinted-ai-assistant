@@ -23,14 +23,17 @@
       "entry": ["src/index.ts", "common/**/*.test.ts", "src/**/*.test.ts"],
       "project": ["common/**/*.ts", "src/**/*.ts"],
       "ignoreDependencies": ["pino-pretty"]
+    },
+    "apps/extension": {
+      "entry": [
+        "entrypoints/**",
+        "**/*.test.ts",
+        "components/ui/*.tsx",
+        "assets/styles.css"
+      ]
     }
   },
-  "ignoreWorkspaces": [
-    "apps/backend",
-    "apps/extension",
-    "packages/shared",
-    "installer"
-  ],
+  "ignoreWorkspaces": ["apps/backend", "packages/shared", "installer"],
   "ignoreExportsUsedInFile": true,
   "rules": {
     "unlisted": "off",

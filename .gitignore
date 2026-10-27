@@ -47,7 +47,8 @@ pnpm-debug.log*
 apps/backend/drizzle/
 
 # Extension build
-apps/extension/dist/
+.output/
+.wxt/
 
 # pnpm store
 .pnpm-store/

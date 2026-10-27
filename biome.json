@@ -5,10 +5,11 @@
     "includes": [
       "**",
       "!apps/backend",
-      "!apps/extension",
       "!packages/shared",
       "!installer",
       "!**/migrations",
+      "!**/.output",
+      "!**/.wxt",
       "!pnpm-lock.yaml"
     ]
   },

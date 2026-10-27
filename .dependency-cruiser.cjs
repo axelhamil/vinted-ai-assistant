@@ -1,6 +1,6 @@
 const MODULES = "^packages/modules";
 const LIBS = "^packages/(?!modules/)[^/]+/";
-const LEGACY = "^(apps/backend|apps/extension|packages/shared|installer)/";
+const LEGACY = "^(apps/backend|packages/shared|installer)/";
 const FRAMEWORKS =
   "node_modules/(hono|drizzle-orm|pg|postgres|pino|inwire|@google/genai)(/|$)";
 
@@ -85,6 +85,21 @@ module.exports = {
       to: { path: "node_modules/(@google/genai|sharp)(/|$)" },
     },
     {
+      name: "extension-boundary",
+      comment:
+        "The extension reads only the analysis contract and the api's AppType type.",
+      severity: "error",
+      from: { path: "^apps/extension/" },
+      to: {
+        path: "^(packages|apps)/",
+        pathNot: [
+          "^apps/extension/",
+          "^packages/modules/analysis/src/contract\\.ts$",
+          "^apps/api/src/composition/app\\.ts$",
+        ],
+      },
+    },
+    {
       name: "no-circular",
       severity: "error",
       from: { path: [`${MODULES}/`, LIBS] },
@@ -93,7 +108,7 @@ module.exports = {
   ],
   options: {
     doNotFollow: { path: "node_modules" },
-    exclude: { path: `^(packages|apps)/.*/dist/|${LEGACY}` },
+    exclude: { path: `^(packages|apps)/.*/(dist|\\.output|\\.wxt)/|${LEGACY}` },
     tsPreCompilationDeps: true,
     combinedDependencies: true,
     enhancedResolveOptions: {
