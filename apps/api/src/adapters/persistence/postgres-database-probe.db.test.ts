@@ -1,10 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { db } from "@packages/testing/clone-database";
-import pino from "pino";
+import { silentLogger } from "../../../common/logger";
 import { createApp } from "../../composition/app";
-import { PostgresDatabaseProbe } from "./database-probe";
-
-const logger = pino({ level: "silent" });
+import { PostgresDatabaseProbe } from "./postgres-database-probe";
 
 function checkedOutClients(): number {
   return db.$client.totalCount - db.$client.idleCount;
@@ -14,8 +12,9 @@ describe("the readiness probe on the real database", () => {
   it("answers ready 200 against the test database", async () => {
     const app = createApp({
       env: { NODE_ENV: "test" },
-      logger,
-      databaseProbe: new PostgresDatabaseProbe(db, logger),
+      logger: silentLogger,
+      report: () => {},
+      databaseProbe: new PostgresDatabaseProbe(db.$client, silentLogger),
     });
 
     const response = await app.request("/health/ready");
@@ -25,7 +24,7 @@ describe("the readiness probe on the real database", () => {
   });
 
   it("gives up on a stalled database and hands its connection back to the pool", async () => {
-    const probe = new PostgresDatabaseProbe(db, logger, {
+    const probe = new PostgresDatabaseProbe(db.$client, silentLogger, {
       timeoutMs: 2_000,
       statement: "select pg_sleep(5)",
     });

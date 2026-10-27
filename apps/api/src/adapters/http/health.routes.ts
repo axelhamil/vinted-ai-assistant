@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import type { IDatabaseProbe } from "./database-probe";
+import type { IDatabaseProbe } from "../../ports/database-probe.port";
 import { errorBody } from "./error-handler";
 
 export interface HealthRoutesDeps {

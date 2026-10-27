@@ -1,14 +1,15 @@
 import { describe, expect, it } from "bun:test";
 import { Result } from "@packages/ddd-kit";
 import { mockPort } from "@packages/testing/port-mock";
-import pino from "pino";
+import { silentLogger } from "../../../common/logger";
 import { createApp } from "../../composition/app";
-import type { IDatabaseProbe } from "./database-probe";
+import type { IDatabaseProbe } from "../../ports/database-probe.port";
 
 function appWith(probe: IDatabaseProbe) {
   return createApp({
     env: { NODE_ENV: "test" },
-    logger: pino({ level: "silent" }),
+    logger: silentLogger,
+    report: () => {},
     databaseProbe: probe,
   });
 }

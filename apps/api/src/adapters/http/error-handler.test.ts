@@ -1,17 +1,21 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, mock } from "bun:test";
 import { AppErrorException } from "@packages/ddd-kit";
 import { mockPort } from "@packages/testing/port-mock";
 import { HTTPException } from "hono/http-exception";
-import pino from "pino";
+import { silentLogger } from "../../../common/logger";
 import { createApp } from "../../composition/app";
-import type { IDatabaseProbe } from "./database-probe";
+import type { IDatabaseProbe } from "../../ports/database-probe.port";
 
 const EXTENSION_ORIGIN = "chrome-extension://abcdefghijklmnopabcdefghijklmnop";
 
-function appIn(NODE_ENV: "development" | "test" | "production" = "test") {
+function appIn(
+  NODE_ENV: "development" | "test" | "production" = "test",
+  report = mock(),
+) {
   const app = createApp({
     env: { NODE_ENV },
-    logger: pino({ level: "silent" }),
+    logger: silentLogger,
+    report,
     databaseProbe: mockPort<IDatabaseProbe>(),
   });
 
@@ -26,6 +30,15 @@ function appIn(NODE_ENV: "development" | "test" | "production" = "test") {
   });
   app.get("/rejected", () => {
     throw new HTTPException(400, { message: "Malformed JSON in request body" });
+  });
+  app.get("/throttled", () => {
+    throw new HTTPException(429, {
+      message: "Too many analyses",
+      res: new Response(null, { headers: { "Retry-After": "30" } }),
+    });
+  });
+  app.get("/thrown-string", () => {
+    throw "boom";
   });
 
   return app;
@@ -45,13 +58,41 @@ describe("the http error mapping", () => {
     });
   });
 
-  it("hides an unexpected error behind SERVER_UNAVAILABLE", async () => {
-    const response = await appIn().request("/unexpected");
+  it("hides an unexpected error behind SERVER_UNAVAILABLE and reports it", async () => {
+    const report = mock();
+
+    const response = await appIn("test", report).request("/unexpected");
     const body = await response.text();
 
     expect(response.status).toBe(500);
     expect(JSON.parse(body).error.code).toBe("SERVER_UNAVAILABLE");
     expect(body).not.toContain("relation");
+    expect(report).toHaveBeenCalledWith(
+      expect.any(Error),
+      JSON.parse(body).error.requestId,
+    );
+  });
+
+  it("answers a thrown non error value like an unexpected error", async () => {
+    const response = await appIn().request("/thrown-string");
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+      error: {
+        code: "SERVER_UNAVAILABLE",
+        message: expect.any(String),
+        requestId: expect.any(String),
+      },
+    });
+  });
+
+  it("keeps the status and headers of a rejected request", async () => {
+    const response = await appIn().request("/throttled");
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBe("30");
+    expect(response.headers.get("content-type")).toContain("application/json");
+    expect((await response.json()).error.code).toBe("REQUEST_RATE_LIMITED");
   });
 
   it("answers a rejected request with REQUEST_INVALID and keeps its status", async () => {

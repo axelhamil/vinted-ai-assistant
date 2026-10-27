@@ -1,4 +1,6 @@
 import type { Logger } from "pino";
+import { flushLogger } from "../../../common/logger";
+import { withTimeout } from "../../../common/with-timeout";
 
 export interface ShutdownStep {
   name: string;
@@ -13,19 +15,6 @@ type StepOutcome =
   | { kind: "failed"; error: unknown }
   | { kind: "timeout" };
 
-function withTimeout<T>(
-  work: Promise<T>,
-  timeoutMs: number,
-  onTimeout: T,
-): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<T>((resolve) => {
-    timer = setTimeout(() => resolve(onTimeout), timeoutMs);
-  });
-
-  return Promise.race([work, timeout]).finally(() => clearTimeout(timer));
-}
-
 function runStep(step: ShutdownStep): Promise<StepOutcome> {
   const settled = Promise.resolve()
     .then(() => step.run())
@@ -35,12 +24,6 @@ function runStep(step: ShutdownStep): Promise<StepOutcome> {
     );
 
   return withTimeout<StepOutcome>(settled, step.timeoutMs, { kind: "timeout" });
-}
-
-export function flushLogger(logger: Logger): Promise<void> {
-  return new Promise<void>((resolve, reject) =>
-    logger.flush((error) => (error ? reject(error) : resolve())),
-  );
 }
 
 async function runAll(steps: ShutdownStep[], logger: Logger): Promise<boolean> {

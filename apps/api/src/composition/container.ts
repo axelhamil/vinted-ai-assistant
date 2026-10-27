@@ -3,8 +3,9 @@ import { DrizzleUnitOfWork } from "@packages/drizzle/unit-of-work";
 import { container } from "inwire";
 import type { Env } from "../../common/env";
 import { createLogger } from "../../common/logger";
-import { PostgresDatabaseProbe } from "../adapters/http/database-probe";
+import { captureError } from "../../common/sentry";
 import { watchPoolErrors } from "../adapters/lifecycle/pool";
+import { PostgresDatabaseProbe } from "../adapters/persistence/postgres-database-probe";
 
 const DISPOSE_TIMEOUT_MS = 5_000;
 
@@ -12,11 +13,12 @@ export function buildContainer(env: Env) {
   return container({ disposeTimeout: DISPOSE_TIMEOUT_MS })
     .add("env", () => env)
     .add("logger", (c) => createLogger(c.env))
+    .add("report", () => captureError)
     .add(
       "db",
       (c) => {
         const db = createDb(c.env.DATABASE_URL);
-        watchPoolErrors(db.$client, c.logger);
+        watchPoolErrors(db.$client, c.logger, c.report);
 
         return db;
       },
@@ -26,7 +28,7 @@ export function buildContainer(env: Env) {
     )
     .add("pool", (c) => c.db.$client)
     .add("unitOfWork", (c) => new DrizzleUnitOfWork(c.db))
-    .add("databaseProbe", (c) => new PostgresDatabaseProbe(c.db, c.logger))
+    .add("databaseProbe", (c) => new PostgresDatabaseProbe(c.pool, c.logger))
     .build();
 }
 

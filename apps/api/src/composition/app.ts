@@ -4,16 +4,19 @@ import { requestId } from "hono/request-id";
 import { pinoLogger } from "hono-pino";
 import type { Logger } from "pino";
 import type { Env } from "../../common/env";
-import type { IDatabaseProbe } from "../adapters/http/database-probe";
 import {
   createErrorHandler,
   notFoundHandler,
+  rethrowNonErrors,
 } from "../adapters/http/error-handler";
 import { createHealthRoutes } from "../adapters/http/health.routes";
+import type { IDatabaseProbe } from "../ports/database-probe.port";
+import type { ErrorReporter } from "../ports/error-reporter.port";
 
 export interface AppDeps {
   env: Pick<Env, "NODE_ENV">;
   logger: Logger;
+  report: ErrorReporter;
   databaseProbe: IDatabaseProbe;
 }
 
@@ -34,6 +37,7 @@ function allowedOrigin(env: AppDeps["env"]) {
 export function createApp(deps: AppDeps) {
   const app = new Hono();
 
+  app.use(rethrowNonErrors);
   app.use(requestId());
   app.use(
     pinoLogger({
@@ -49,7 +53,7 @@ export function createApp(deps: AppDeps) {
     }),
   );
   app.use(cors({ origin: allowedOrigin(deps.env) }));
-  app.onError(createErrorHandler(deps.logger));
+  app.onError(createErrorHandler(deps.logger, deps.report));
   app.notFound(notFoundHandler);
 
   return app.route("/health", createHealthRoutes(deps));

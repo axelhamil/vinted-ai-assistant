@@ -3,14 +3,47 @@ import {
   type ErrorCode,
   httpStatusFromCode,
 } from "@packages/ddd-kit";
-import type { ErrorHandler, NotFoundHandler } from "hono";
+import type { ErrorHandler, MiddlewareHandler, NotFoundHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { Logger } from "pino";
-import { captureError } from "../../../common/sentry";
+import type { ErrorReporter } from "../../ports/error-reporter.port";
 
 export interface ErrorBody {
   error: { code: ErrorCode; message: string; requestId: string };
 }
+
+interface Rejection {
+  code: ErrorCode;
+  hint: string;
+}
+
+const INVALID_REQUEST: Rejection = {
+  code: "REQUEST_INVALID",
+  hint: "Fix the request body, headers or url and retry.",
+};
+
+const REJECTIONS: Partial<Record<number, Rejection>> = {
+  400: INVALID_REQUEST,
+  401: {
+    code: "REQUEST_UNAUTHORIZED",
+    hint: "Send valid credentials and retry.",
+  },
+  403: {
+    code: "REQUEST_FORBIDDEN",
+    hint: "These credentials do not allow this request.",
+  },
+  404: { code: "ROUTE_NOT_FOUND", hint: "Check the url and method." },
+  413: {
+    code: "REQUEST_BODY_INVALID",
+    hint: "Send a smaller request body and retry.",
+  },
+  429: {
+    code: "REQUEST_RATE_LIMITED",
+    hint: "Wait for the Retry-After delay, then retry.",
+  },
+};
+
+const HEADERS_SET_BY_JSON = new Set(["content-type", "content-length"]);
 
 export function errorBody(
   code: ErrorCode,
@@ -20,7 +53,20 @@ export function errorBody(
   return { error: { code, message, requestId } };
 }
 
-export function createErrorHandler(logger: Logger): ErrorHandler {
+export const rethrowNonErrors: MiddlewareHandler = async (_c, next) => {
+  try {
+    await next();
+  } catch (thrown) {
+    if (thrown instanceof Error) throw thrown;
+
+    throw new Error(String(thrown), { cause: thrown });
+  }
+};
+
+export function createErrorHandler(
+  logger: Logger,
+  report: ErrorReporter,
+): ErrorHandler {
   return (error, c) => {
     const requestId = c.get("requestId");
 
@@ -37,21 +83,24 @@ export function createErrorHandler(logger: Logger): ErrorHandler {
     }
 
     if (error instanceof HTTPException && error.status < 500) {
+      const { code, hint } = REJECTIONS[error.status] ?? INVALID_REQUEST;
       const reason = error.message || "The request was rejected";
-      logger.warn({ requestId, status: error.status }, reason);
+      logger.warn({ requestId, status: error.status, code }, reason);
+
+      error.getResponse().headers.forEach((value, name) => {
+        if (HEADERS_SET_BY_JSON.has(name)) return;
+
+        c.header(name, value, { append: true });
+      });
 
       return c.json(
-        errorBody(
-          "REQUEST_INVALID",
-          `${reason}. Fix the request body, headers or url and retry.`,
-          requestId,
-        ),
+        errorBody(code, `${reason}. ${hint}`, requestId),
         error.status,
       );
     }
 
     logger.error({ requestId, err: error }, "unexpected error");
-    captureError(error, requestId);
+    report(error, requestId);
 
     return c.json(
       errorBody(
