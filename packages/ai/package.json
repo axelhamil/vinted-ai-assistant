@@ -6,7 +6,8 @@
   "exports": {
     "./gemini-client": "./src/gemini-client.ts",
     "./models": "./src/models.ts",
-    "./failures": "./src/failures.ts"
+    "./failures": "./src/failures.ts",
+    "./images": "./src/images.ts"
   },
   "scripts": {
     "type-check": "tsc7 -v && tsc7 --noEmit",
@@ -15,6 +16,7 @@
   "dependencies": {
     "@google/genai": "^2.31.0",
     "@packages/ddd-kit": "workspace:*",
+    "sharp": "^0.35.5",
     "zod": "^4.6.7"
   },
   "devDependencies": {
