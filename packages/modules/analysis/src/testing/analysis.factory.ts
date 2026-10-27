@@ -1,4 +1,5 @@
 import { Option } from "@packages/ddd-kit";
+import type { ListingDto } from "../application/dto/analysis.dto";
 import {
   Analysis,
   type AnalysisInput,
@@ -161,4 +162,26 @@ export function buildAnalysis(options: BuildAnalysisOptions = {}): Analysis {
   const status = AnalysisStatus.create(options.status).getValue();
 
   return Analysis.reconstitute({ ...propsOf(created), status }, created.id);
+}
+
+export function buildListingDto(
+  overrides: Partial<ListingDto> = {},
+): ListingDto {
+  return {
+    vintedId: "4815162342",
+    url: "https://www.vinted.fr/items/4815162342-veste-en-jean",
+    title: "Veste en jean Levi's",
+    description: "Portée deux fois, très bon état.",
+    brand: "Levi's",
+    size: "M",
+    condition: "Très bon état",
+    priceCents: 2000,
+    totalPriceCents: null,
+    shippingCostCents: null,
+    listedAt: null,
+    photos: ["https://images1.vinted.net/t/01_abc/f800/1.jpeg"],
+    seller: { username: "marie_vintage", rating: 4.8, salesCount: 132 },
+    language: "fr",
+    ...overrides,
+  };
 }

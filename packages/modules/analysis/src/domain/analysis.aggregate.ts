@@ -150,6 +150,20 @@ export class Analysis extends Aggregate<AnalysisProps> {
     return new Analysis(props, new UUID(id.value));
   }
 
+  static suggestedOfferFor(
+    listing: Listing,
+    facts: ListingFacts,
+    now: Date,
+  ): Result<Price, InputInvalid> {
+    return assess(listing, facts, now).map(
+      (assessment) => assessment.suggestedOffer,
+    );
+  }
+
+  storedAs(id: AnalysisId): Analysis {
+    return new Analysis({ ...this._props }, new UUID(id.value));
+  }
+
   refresh(input: AnalysisInput): Result<void, InputInvalid> {
     const { listing, facts, groundingSources, negotiation, now } = input;
     const assessed = assess(listing, facts, now);
