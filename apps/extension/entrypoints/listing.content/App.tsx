@@ -18,15 +18,16 @@ import {
   type AnalyzeInput,
   sendMessage,
 } from "@/lib/messaging/protocol";
+import { DEFAULT_SETTINGS } from "@/lib/storage/settings";
 import {
   type BackgroundFailure,
   useBackground,
   useBackgroundMutation,
 } from "@/lib/ui/query";
+import { useSettings } from "@/lib/ui/use-settings";
 import { verdict } from "@/lib/verdict";
 import { completeSeller, loadAnalysis } from "@/lib/vinted/seller";
 import type { SidebarProps } from "./listing-reader";
-import { useSettings } from "./use-settings";
 
 interface AnalysisSidebarProps {
   vintedId: string;
@@ -199,7 +200,8 @@ function AnalysisSidebar({
 }
 
 export function App({ vintedId, page }: SidebarProps) {
-  const current = useSettings();
+  const { current: read } = useSettings();
+  const current = read.isError ? DEFAULT_SETTINGS : read.data;
   if (!current?.enabled) return null;
 
   if (page.kind === "stale")
