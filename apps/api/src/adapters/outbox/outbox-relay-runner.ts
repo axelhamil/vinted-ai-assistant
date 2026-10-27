@@ -83,7 +83,7 @@ export class OutboxRelayRunner {
   private eventDied(outbox: string, event: DeadEvent): void {
     this.deps.instrumentation.capture(
       new Error(
-        `[Outbox] ${event.eventType} dead after ${event.attempts} attempts, retried every 6 h: ${event.lastError}`,
+        `[Outbox] ${event.eventType} dead after ${event.attempts} attempts, retried every ${event.retryInSeconds / 3600} h: ${event.lastError}`,
       ),
       { tags: { component: "outbox", outbox, eventType: event.eventType } },
     );

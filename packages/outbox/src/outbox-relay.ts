@@ -5,8 +5,8 @@ import {
   type Result,
 } from "@packages/ddd-kit";
 import type {
-  DrizzleOutboxRepository,
   OutboxRecord,
+  OutboxStore,
   PendingState,
 } from "./drizzle-outbox.repository";
 import type { OutboxDeliveries } from "./outbox-table";
@@ -41,6 +41,7 @@ export interface DeadEvent {
   aggregateId: string;
   attempts: number;
   lastError: string;
+  retryInSeconds: number;
 }
 
 export interface DrainObserver {
@@ -118,7 +119,7 @@ export class OutboxRelay {
   private readonly concurrency: number;
 
   constructor(
-    private readonly repository: DrizzleOutboxRepository,
+    private readonly repository: OutboxStore,
     private readonly dispatcher: IEventDispatcher,
     routes: EventRoutes,
     {
@@ -202,6 +203,7 @@ export class OutboxRelay {
         aggregateId: record.aggregateId,
         attempts: record.attempts,
         lastError,
+        retryInSeconds: this.deadRetrySeconds,
       });
   }
 

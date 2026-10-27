@@ -70,6 +70,19 @@ async function dueNow(id: string) {
     .where(eq(clips.id, id));
 }
 
+const DIED_AT = new Date("2026-10-20T08:00:00Z");
+
+async function deadDueNow(id: string) {
+  await db
+    .update(clips)
+    .set({
+      deadAt: DIED_AT,
+      attempts: 10,
+      nextAttemptAt: sql`now() - interval '1 second'`,
+    })
+    .where(eq(clips.id, id));
+}
+
 async function rowOf(id: string | undefined) {
   const [row] = await db
     .select()
@@ -264,7 +277,7 @@ describe("relaying the outbox", () => {
       async (delivered) => {
         inFlight++;
         busiest = Math.max(busiest, inFlight);
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        await sleep(20);
         seen.push(delivered.eventId ?? "");
         inFlight--;
 
@@ -360,17 +373,10 @@ describe("relaying the outbox", () => {
     ).toEqual([[due.eventId, 11, true]]);
   });
 
-  it("keeps a claimed dead event out of the dead rows while its lease runs", async () => {
+  it("keeps a claimed dead event dead and unclaimable while its lease runs, due at the lease end", async () => {
     const rendered = event();
     await announce([rendered]);
-    await db
-      .update(clips)
-      .set({
-        deadAt: sql`now()`,
-        attempts: 10,
-        nextAttemptAt: sql`now() - interval '1 second'`,
-      })
-      .where(eq(clips.id, rendered.eventId));
+    await deadDueNow(rendered.eventId);
     const repository = new DrizzleOutboxRepository(db, clips);
     const claim = () =>
       repository.claim({
@@ -383,9 +389,14 @@ describe("relaying the outbox", () => {
 
     expect((await claim()).getValue()).toEqual([]);
     expect(await rowOf(rendered.eventId)).toMatchObject({
-      deadAt: null,
+      deadAt: DIED_AT,
       attempts: 11,
     });
+    const { dueInMs, oldestPendingSeconds } = await relayWith(async () =>
+      Result.ok(),
+    ).pendingState();
+    expect(Math.round(dueInMs.unwrapOr(0) / 1000)).toBe(120);
+    expect(oldestPendingSeconds).toBe(0);
   });
 
   it("writes nothing for the late marks of an attempt whose lease another claim replaced", async () => {
@@ -425,15 +436,7 @@ describe("relaying the outbox", () => {
   it("keeps the first death date of a dead event failing again, and clears it once the event is delivered", async () => {
     const rendered = event();
     await announce([rendered]);
-    const diedAt = new Date("2026-10-20T08:00:00Z");
-    await db
-      .update(clips)
-      .set({
-        deadAt: diedAt,
-        attempts: 10,
-        nextAttemptAt: sql`now() - interval '1 second'`,
-      })
-      .where(eq(clips.id, rendered.eventId));
+    await deadDueNow(rendered.eventId);
     const handler = mock(
       async (): Promise<Result<void>> => Result.fail("smtp down"),
     );
@@ -448,13 +451,35 @@ describe("relaying the outbox", () => {
     handler.mockImplementation(async () => Result.ok());
     await relay.drainOnce();
 
-    expect(failedAgain).toMatchObject({ deadAt: diedAt, attempts: 11 });
+    expect(failedAgain).toMatchObject({ deadAt: DIED_AT, attempts: 11 });
     expect(await rowOf(rendered.eventId)).toMatchObject({
       deadAt: null,
       nextAttemptAt: null,
       attempts: 12,
     });
     expect((await rowOf(rendered.eventId))?.dispatchedAt).toBeInstanceOf(Date);
+  });
+
+  it("keeps the death date of a dead event whose retry lease ended without a mark, and does not report it dead again", async () => {
+    const rendered = event();
+    await announce([rendered]);
+    await deadDueNow(rendered.eventId);
+    await new DrizzleOutboxRepository(db, clips).claim({
+      limit: 10,
+      eventTypes: ROUTES.handled,
+      leaseSeconds: 120,
+    });
+    await dueNow(rendered.eventId);
+    const died = mock();
+    const relay = relayWith(async () => Result.fail("smtp down"));
+
+    await relay.drainOnce({ delivered: () => {}, died });
+
+    expect(await rowOf(rendered.eventId)).toMatchObject({
+      deadAt: DIED_AT,
+      attempts: 12,
+    });
+    expect(died).not.toHaveBeenCalled();
   });
 
   it("claims again an event whose lease ended without a mark, as after a crash in its handler", async () => {

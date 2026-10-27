@@ -1,11 +1,7 @@
+import type { ILogger } from "@packages/ddd-kit";
 import { Client } from "pg";
 import { OUTBOX_CHANNEL } from "./outbox-table";
 import type { RelayWakeSource } from "./relay-loop";
-
-export interface ListenerLog {
-  info(meta: object, message: string): void;
-  warn(meta: object, message: string): void;
-}
 
 export interface ListenerMessages {
   connected: string;
@@ -24,7 +20,7 @@ const OUTBOX_MESSAGES: ListenerMessages = {
 
 export interface OutboxListenerOptions {
   connectionString: string;
-  logger: ListenerLog;
+  logger: Pick<ILogger, "info" | "warn">;
   channel?: string;
   messages?: ListenerMessages;
   onStateChange?: (connected: boolean) => void;
@@ -41,7 +37,7 @@ export class OutboxListener implements RelayWakeSource {
   private readonly connectionString: string;
   private readonly channel: string;
   private readonly messages: ListenerMessages;
-  private readonly logger: ListenerLog;
+  private readonly logger: Pick<ILogger, "info" | "warn">;
   private readonly onStateChange: (connected: boolean) => void;
   private readonly applicationName: string;
   private readonly minBackoffMs: number;

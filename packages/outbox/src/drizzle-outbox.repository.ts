@@ -38,6 +38,20 @@ export interface ClaimRequest {
   leaseSeconds: number;
 }
 
+export interface OutboxStore {
+  readonly outbox: string;
+  claim(request: ClaimRequest): Promise<Result<OutboxRecord[]>>;
+  pendingState(eventTypes: readonly string[]): Promise<Result<PendingState>>;
+  markDelivered(
+    lease: OutboxLease,
+    deliveries: OutboxDeliveries,
+  ): Promise<Result<void>>;
+  markFailed(
+    lease: OutboxLease,
+    failure: DeliveryFailure,
+  ): Promise<Result<void>>;
+}
+
 function unavailable(error: unknown): string {
   const cause = error instanceof Error ? error.message : String(error);
 
@@ -68,7 +82,7 @@ function toRecord(row: ClaimedRow): OutboxRecord {
   };
 }
 
-export class DrizzleOutboxRepository {
+export class DrizzleOutboxRepository implements OutboxStore {
   readonly outbox: string;
 
   constructor(
@@ -94,7 +108,7 @@ export class DrizzleOutboxRepository {
     try {
       const { rows } = await this.db.execute<ClaimedRow>(sql`
         with live as (
-          select id, dead_at, occurred_at from ${t}
+          select id, occurred_at from ${t}
           where dispatched_at is null and dead_at is null
             and event_type in (${types})
             and (next_attempt_at is null or next_attempt_at <= now())
@@ -102,7 +116,7 @@ export class DrizzleOutboxRepository {
           limit ${limit}
           for update skip locked
         ), dead as (
-          select id, dead_at, occurred_at from ${t}
+          select id, occurred_at from ${t}
           where dispatched_at is null and dead_at is not null
             and event_type in (${types})
             and next_attempt_at <= now()
@@ -118,12 +132,11 @@ export class DrizzleOutboxRepository {
         )
         update ${t} as leased
         set next_attempt_at = now() + make_interval(secs => ${leaseSeconds}),
-          attempts = leased.attempts + 1,
-          dead_at = null
+          attempts = leased.attempts + 1
         from due
         where leased.id = due.id
         returning leased.id, leased.event_type, leased.aggregate_id,
-          leased.payload, leased.occurred_at, leased.attempts, due.dead_at,
+          leased.payload, leased.occurred_at, leased.attempts, leased.dead_at,
           leased.deliveries`);
 
       return Result.ok(

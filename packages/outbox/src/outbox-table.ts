@@ -1,3 +1,4 @@
+import type { OutboxRow } from "@packages/ddd-kit";
 import { sql } from "drizzle-orm";
 import {
   check,
@@ -10,14 +11,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-export interface OutboxEventMetadata {
-  specversion: "1.0";
-  source: string;
-  subject?: string;
-  traceparent?: string;
-  requestId?: string;
-  datacontenttype: "application/json";
-}
+type OutboxEventMetadata = OutboxRow["metadata"];
 
 export type OutboxDeliveries = Readonly<Record<string, string>>;
 

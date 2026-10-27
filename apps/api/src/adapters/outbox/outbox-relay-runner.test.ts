@@ -7,6 +7,7 @@ import type {
   startRelayLoop,
 } from "@packages/outbox/relay-loop";
 import { mockPort } from "@packages/testing/port-mock";
+import { sleep } from "bun";
 import { OutboxRelayRunner, type RelayListener } from "./outbox-relay-runner";
 
 const EMPTY_DRAIN: DrainOutcome = { dispatched: 0, ignored: 0, failed: 0 };
@@ -53,8 +54,7 @@ function given(
 }
 
 async function until(condition: () => boolean): Promise<void> {
-  for (let tries = 0; !condition() && tries < 200; tries++)
-    await new Promise((resolve) => setTimeout(resolve, 1));
+  for (let tries = 0; !condition() && tries < 200; tries++) await sleep(1);
 }
 
 describe("the outbox relay runner", () => {
@@ -70,7 +70,7 @@ describe("the outbox relay runner", () => {
     await until(() => drainsRun() === 1);
 
     const stopped = runner.stop().then(() => events.push("stopped"));
-    await new Promise((resolve) => setTimeout(resolve, 5));
+    await sleep(5);
     events.push("drain released");
     release(EMPTY_DRAIN);
     await stopped;

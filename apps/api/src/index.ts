@@ -4,6 +4,7 @@ import { flushLogger } from "../common/logger";
 import { flushSentry, initSentry } from "../common/sentry";
 import { installProcessHandlers } from "./adapters/lifecycle/process-handlers";
 import {
+  API_SHUTDOWN_DEADLINE_MS,
   apiShutdownSteps,
   createShutdown,
 } from "./adapters/lifecycle/shutdown";
@@ -14,7 +15,6 @@ initSentry(env);
 
 const IDLE_TIMEOUT_SECONDS = 255;
 const SENTRY_FLUSH_TIMEOUT_MS = 2_000;
-const SHUTDOWN_DEADLINE_MS = 15_000;
 
 const container = buildContainer(env);
 const { logger, report } = container;
@@ -38,7 +38,7 @@ const stop = createShutdown(
     logger: () => flushLogger(logger),
   }),
   logger,
-  SHUTDOWN_DEADLINE_MS,
+  API_SHUTDOWN_DEADLINE_MS,
 );
 
 installProcessHandlers({

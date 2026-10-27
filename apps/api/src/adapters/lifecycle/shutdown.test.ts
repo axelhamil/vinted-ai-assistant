@@ -1,6 +1,8 @@
 import { describe, expect, it } from "bun:test";
+import { sleep } from "bun";
 import pino from "pino";
 import {
+  API_SHUTDOWN_DEADLINE_MS,
   type ApiStoppers,
   apiShutdownSteps,
   createShutdown,
@@ -116,7 +118,7 @@ describe("stopping the API", () => {
     const stoppers: ApiStoppers = {
       http: stopper("http"),
       outbox: async () => {
-        await new Promise((resolve) => setTimeout(resolve, 5));
+        await sleep(5);
         ran.push("outbox drained");
       },
       database: stopper("database"),
@@ -133,5 +135,20 @@ describe("stopping the API", () => {
       "sentry",
       "logger",
     ]);
+  });
+
+  it("gives every API step its full budget within the shutdown deadline", () => {
+    const noop = async () => {};
+    const steps = apiShutdownSteps({
+      http: noop,
+      outbox: noop,
+      database: noop,
+      sentry: noop,
+      logger: noop,
+    });
+
+    const budgetMs = steps.reduce((sum, step) => sum + step.timeoutMs, 0);
+
+    expect(budgetMs).toBeLessThan(API_SHUTDOWN_DEADLINE_MS);
   });
 });

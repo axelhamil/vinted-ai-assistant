@@ -7,17 +7,14 @@ import {
   Result,
 } from "@packages/ddd-kit";
 import { mockPort } from "@packages/testing/port-mock";
-import type {
-  DrizzleOutboxRepository,
-  OutboxRecord,
-} from "./drizzle-outbox.repository";
+import type { OutboxRecord, OutboxStore } from "./drizzle-outbox.repository";
 import { OutboxRelay, type OutboxRelayOptions } from "./outbox-relay";
 
 const ROUTES = { handled: ["clip.rendered"], ignored: [] };
 const LANES = { concurrency: 1, handlerBudgetSeconds: 25 };
 
 async function claimOf(options: OutboxRelayOptions): Promise<unknown> {
-  const repository = mockPort<DrizzleOutboxRepository>();
+  const repository = mockPort<OutboxStore>();
   repository.claim.mockResolvedValue(Result.ok([]));
   const relay = new OutboxRelay(
     repository,
@@ -79,7 +76,7 @@ function givenRelay(
   record: OutboxRecord,
   handlers: Record<string, EventHandlerFn>,
 ) {
-  const repository = mockPort<DrizzleOutboxRepository>();
+  const repository = mockPort<OutboxStore>();
   repository.claim.mockResolvedValue(Result.ok([record]));
   repository.markDelivered.mockResolvedValue(Result.ok());
   repository.markFailed.mockResolvedValue(Result.ok());
@@ -163,7 +160,11 @@ describe("OutboxRelay retry of a dead event", () => {
     expect(failure?.deadSince.isSome()).toBe(true);
     expect(retryInHours(failure?.retryAt)).toBe(6);
     expect(died).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "evt-1", attempts: 10 }),
+      expect.objectContaining({
+        id: "evt-1",
+        attempts: 10,
+        retryInSeconds: 6 * 3600,
+      }),
     );
   });
 
