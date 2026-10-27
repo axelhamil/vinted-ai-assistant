@@ -30,7 +30,8 @@
         "**/*.test.ts",
         "components/ui/*.tsx",
         "assets/styles.css"
-      ]
+      ],
+      "ignoreDependencies": ["@fontsource-variable/instrument-sans"]
     }
   },
   "ignoreWorkspaces": ["apps/backend", "packages/shared", "installer"],

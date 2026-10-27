@@ -1,0 +1,82 @@
+import {
+  QueryClient,
+  type QueryKey,
+  type UseMutationResult,
+  type UseQueryResult,
+  useMutation,
+  useQuery,
+} from "@tanstack/react-query";
+import type { ApiFailure, Reply } from "@/lib/api/failure";
+
+const UNREACHABLE: ApiFailure = {
+  kind: "local",
+  message: "L'extension ne répond plus. Rechargez la page puis réessayez.",
+};
+
+const DISABLED_MESSAGE =
+  "L'assistant est désactivé. Activez-le depuis le popup de l'extension.";
+
+export class BackgroundFailure extends Error {
+  readonly failure: ApiFailure;
+
+  constructor(failure: ApiFailure) {
+    super(failureMessage(failure));
+    this.name = "BackgroundFailure";
+    this.failure = failure;
+  }
+}
+
+interface BackgroundQuery<T> {
+  key: QueryKey;
+  request: () => Promise<Reply<T>>;
+  enabled?: boolean;
+}
+
+export function failureMessage(failure: ApiFailure): string {
+  return failure.kind === "disabled" ? DISABLED_MESSAGE : failure.message;
+}
+
+export function createQueryClient(): QueryClient {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        staleTime: Number.POSITIVE_INFINITY,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+      },
+      mutations: { retry: false },
+    },
+  });
+}
+
+async function unwrap<T>(request: () => Promise<Reply<T>>): Promise<T> {
+  const reply = await request().catch(
+    (): Reply<T> => ({ ok: false, failure: UNREACHABLE }),
+  );
+  if (!reply.ok) throw new BackgroundFailure(reply.failure);
+
+  return reply.data;
+}
+
+export function useBackground<T>({
+  key,
+  request,
+  enabled = true,
+}: BackgroundQuery<T>): UseQueryResult<T, BackgroundFailure> {
+  return useQuery<T, BackgroundFailure>({
+    queryKey: key,
+    queryFn: () => unwrap(request),
+    enabled,
+  });
+}
+
+export function useBackgroundMutation<I, T>(
+  request: (input: I) => Promise<Reply<T>>,
+  onSuccess: (data: T) => void,
+): UseMutationResult<T, BackgroundFailure, I> {
+  return useMutation<T, BackgroundFailure, I>({
+    mutationFn: (input) => unwrap(() => request(input)),
+    onSuccess,
+  });
+}

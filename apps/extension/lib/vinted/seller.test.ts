@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchSellerProfile } from "./seller";
+import { loadPage } from "./__fixtures__/load";
+import { fetchSellerProfile, readSellerProfilePath } from "./seller";
 
 const PROFILE = `<html><body>
   <div data-testid="user-rating" content="4.6"></div>
@@ -21,13 +22,13 @@ describe("fetchSellerProfile", () => {
 
     const profile = await fetchSellerProfile({
       host: "www.vinted.fr",
-      username: "fixture_seller",
+      profilePath: "/member/1000001-fixture_seller",
       fetchImpl,
     });
 
     expect(profile).toEqual({ rating: 4.6, salesCount: 87 });
     expect(fetchImpl).toHaveBeenCalledWith(
-      "https://www.vinted.fr/member/fixture_seller",
+      "https://www.vinted.fr/member/1000001-fixture_seller",
       expect.anything(),
     );
   });
@@ -45,7 +46,7 @@ describe("fetchSellerProfile", () => {
 
     const pending = fetchSellerProfile({
       host: "www.vinted.fr",
-      username: "fixture_seller",
+      profilePath: "/member/1000001-fixture_seller",
       fetchImpl,
     });
     await vi.advanceTimersByTimeAsync(3000);
@@ -57,7 +58,7 @@ describe("fetchSellerProfile", () => {
     await expect(
       fetchSellerProfile({
         host: "www.vinted.fr",
-        username: "fixture_seller",
+        profilePath: "/member/1000001-fixture_seller",
         fetchImpl: respond(PROFILE, 503),
       }),
     ).resolves.toEqual(NOTHING);
@@ -71,7 +72,7 @@ describe("fetchSellerProfile", () => {
       await expect(
         fetchSellerProfile({
           host,
-          username: "fixture_seller",
+          profilePath: "/member/1000001-fixture_seller",
           fetchImpl,
         }),
       ).resolves.toEqual(NOTHING);
@@ -83,9 +84,35 @@ describe("fetchSellerProfile", () => {
     await expect(
       fetchSellerProfile({
         host: "www.vinted.fr",
-        username: "fixture_seller",
+        profilePath: "/member/1000001-fixture_seller",
         fetchImpl: respond('<div data-testid="user-rating">9,5</div>'),
       }),
     ).resolves.toEqual(NOTHING);
+  });
+});
+
+describe("readSellerProfilePath", () => {
+  it("reads the seller profile link of the page", () => {
+    expect(readSellerProfilePath(loadPage("item"))).toBe(
+      "/member/1000001-fixture_seller",
+    );
+  });
+
+  it("refuses a link that leaves the member pages", async () => {
+    const doc = new DOMParser().parseFromString(
+      '<a href="https://evil.example.com/member/../admin">x</a>',
+      "text/html",
+    );
+    const fetchImpl = respond(PROFILE);
+
+    expect(readSellerProfilePath(doc)).toBeNull();
+    await expect(
+      fetchSellerProfile({
+        host: "www.vinted.fr",
+        profilePath: "//evil.example.com/member/x",
+        fetchImpl,
+      }),
+    ).resolves.toEqual(NOTHING);
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 });

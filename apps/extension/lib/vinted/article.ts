@@ -17,7 +17,7 @@ const MIN_PRICE = 0.01;
 
 const MAX_PRICE = 10_000_000;
 
-const UNKNOWN = "Unknown";
+export const UNKNOWN = "Unknown";
 
 const LISTING_ID = /\/items\/(\d+)/;
 

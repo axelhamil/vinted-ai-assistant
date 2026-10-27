@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@fontsource-variable/instrument-sans";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -30,6 +29,26 @@
 
   --shadow-panel: 0 8px 24px
     color-mix(in srgb, var(--color-ink) 18%, transparent);
+
+  --spacing-gutter: 1rem;
+  --spacing-row: 0.5rem;
+  --spacing-stack: 0.75rem;
+  --spacing-section: 1.25rem;
+
+  --container-sidebar: 23.75rem;
+
+  --animate-sticker-drop: sticker-drop 200ms ease-out both;
+
+  @keyframes sticker-drop {
+    from {
+      opacity: 0;
+      transform: translateY(-0.5rem) rotate(-4deg);
+    }
+    to {
+      opacity: 1;
+      transform: rotate(-2deg);
+    }
+  }
 }
 
 @theme inline {
@@ -91,5 +110,75 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  [data-slot="skeleton"] {
+    animation: none;
+  }
+
+  .sidebar-panel {
+    @apply bg-surface font-sans text-sm text-ink shadow-panel;
+  }
+
+  .sidebar-header {
+    @apply border-b border-border;
+  }
+
+  .sidebar-actions {
+    @apply border-t border-border bg-surface;
+  }
+
+  .sticker {
+    @apply -rotate-2 rounded-md bg-sticker px-stack py-row text-ink tabular-nums animate-sticker-drop motion-reduce:animate-none;
+  }
+
+  .sticker-score {
+    @apply text-score;
+  }
+
+  .sticker-margin {
+    @apply text-sm font-semibold;
+  }
+
+  .sticker-mini {
+    @apply text-base font-bold;
+  }
+
+  .verdict {
+    @apply text-base font-semibold text-ink;
+  }
+
+  .fact-label {
+    @apply text-muted-foreground;
+  }
+
+  .fact-value {
+    @apply font-medium tabular-nums;
+  }
+
+  .fact-note {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .section-title {
+    @apply text-sm font-semibold;
+  }
+
+  .tone-profit {
+    @apply text-profit;
+  }
+
+  .tone-loss {
+    @apply text-loss;
+  }
+
+  .offer-script {
+    @apply rounded-md bg-shelf p-stack whitespace-pre-line;
+  }
+
+  .error-message {
+    @apply text-base text-ink;
   }
 }

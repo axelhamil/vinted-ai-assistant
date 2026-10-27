@@ -9,7 +9,7 @@ interface SellerStats {
 
 interface ProfileRequest {
   host: string;
-  username: string;
+  profilePath: string;
   fetchImpl: typeof fetch;
   timeoutMs?: number;
 }
@@ -47,6 +47,8 @@ const SALES = [
   SELLER_CARD,
 ];
 
+const PROFILE_PATH = /^\/member\/[^/?#]+$/;
+
 const RATED_OUT_OF = /(\d+(?:[.,]\d+)?)\s*sur\s*\d+/i;
 
 const SALES_COUNT = /(\d+)\s*vente/i;
@@ -80,22 +82,39 @@ export const readSellerStats = (root: ParentNode): SellerStats => ({
 export const readSellerUsername = (doc: Document): string | null =>
   firstText(doc, USERNAMES);
 
+const profilePathOf = (link: Element | null): string | null => {
+  const href = link?.getAttribute("href");
+  if (!href) return null;
+
+  const { pathname } = new URL(href, "https://www.vinted.fr");
+
+  return PROFILE_PATH.test(pathname) ? pathname : null;
+};
+
+export const readSellerProfilePath = (doc: Document): string | null =>
+  profilePathOf(doc.querySelector(`${SELLER_CARD} ${SELLER_LINK}`)) ??
+  profilePathOf(doc.querySelector(SELLER_LINK));
+
+export const memberProfilePath = (username: string): string =>
+  `/member/${encodeURIComponent(username)}`;
+
 export const fetchSellerProfile = async ({
   host,
-  username,
+  profilePath,
   fetchImpl,
   timeoutMs = PROFILE_TIMEOUT_MS,
 }: ProfileRequest): Promise<SellerStats> => {
-  if (languageForHost(host) === null || !username) return NO_STATS;
+  if (languageForHost(host) === null || !PROFILE_PATH.test(profilePath))
+    return NO_STATS;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetchImpl(
-      `https://${host}/member/${encodeURIComponent(username)}`,
-      { credentials: "include", signal: controller.signal },
-    );
+    const response = await fetchImpl(`https://${host}${profilePath}`, {
+      credentials: "include",
+      signal: controller.signal,
+    });
 
     if (!response.ok) return NO_STATS;
 

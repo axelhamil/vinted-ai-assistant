@@ -1,10 +1,26 @@
+import { createRequire } from "node:module";
 import tailwindcss from "@tailwindcss/vite";
 import remToPx from "postcss-rem-to-responsive-pixel";
 import { defineConfig } from "wxt";
+import { FONT_FILES } from "./lib/ui/font-files";
 import { hostPatterns } from "./lib/vinted/hosts";
+
+const require = createRequire(import.meta.url);
 
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],
+  hooks: {
+    "build:publicAssets": (_wxt, files) => {
+      files.push(
+        ...FONT_FILES.map(({ file }) => ({
+          absoluteSrc: require.resolve(
+            `@fontsource-variable/instrument-sans/files/${file}`,
+          ),
+          relativeDest: `assets/${file}`,
+        })),
+      );
+    },
+  },
   vite: () => ({
     plugins: [tailwindcss()],
     css: {
