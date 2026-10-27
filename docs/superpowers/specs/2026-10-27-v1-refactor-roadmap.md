@@ -82,13 +82,21 @@ Stateless module served under `/api/studio`: the 5 system presets are a typed co
 
 Carried from step 4 and delivered: `updateNegotiation` writes only when `analyzed_at` is the one read; a concurrent re-analysis or delete answers `ANALYSIS_STATUS_CONFLICT`.
 
-### 7. Extension on WXT
+### 7. Extension on WXT (delivered 27/10/2026)
 
-`apps/extension` rebuilt on WXT with the same screens. One typed messaging client, one background API client built on the Hono RPC type of `apps/api`, score and margin thresholds read from the API contract, Tailwind 4 tokens, shadcn components, Dexie cache kept. Dead stores, hooks and badge folder removed. Host permissions cover every Vinted TLD the language detector supports. Every front task runs `frontend-design:frontend-design` first for the visual direction, then `lean-ui` on every touched file.
+`apps/extension` rebuilt on WXT 0.21: one background owns the Hono RPC client, the Dexie cache (1 h TTL) and the settings; the two content-script sidebars (item page, listing form) render in shadow roots with a px-fixed type scale, and the popup holds the stats, the virtualised portfolio and the settings. Everything talks through one typed `@webext-core/messaging` protocol and reads server state with TanStack Query. Thresholds, statuses, transitions and negotiation tones come from `@packages/analysis/contract`, language codes from `@packages/ai/languages`. Proven twice in an isolated Chromium at 390, 768 and 1440 px, with no extension error or warning in the console.
 
-### 8. Cut-over
+- D1. Item page reading never mounts while the page still shows the previous item (title, price and description compared, inline photo scripts filtered by item id); after the retries the sidebar says the listing is not loaded yet.
+- D2. The seller profile is fetched only when no fresh stored analysis exists; "Réanalyser" sends `forceRefresh`.
+- D3. Status buttons follow the allowed transitions; the listing form sidebar stays available when the assistant is switched off; settings changes apply to open tabs without a reload.
+- D4. Not ported on purpose: the photo studio drag and drop, before/after preview, lightbox and per-photo selection, the source listing examples (the API no longer returns them) and the custom studio presets. Switch: add them back as product features after the brainstorm.
 
-Legacy `apps/backend` and `packages/shared` deleted, one-shot `scripts/import-sqlite.ts` moves an existing SQLite portfolio into Postgres, installer replaced by `docker compose --profile prod up`, README and CLAUDE.md rewritten, image budget check.
+### 8. Cut-over (delivered 27/10/2026)
+
+Legacy `apps/backend`, `packages/shared` and `installer` deleted. `pnpm import:sqlite <legacy.db>` (`apps/api/scripts`) moves an old SQLite portfolio into Postgres through the analysis repository: values validated by the domain value objects, scores recomputed by today's rules, status and date restored, existing rows skipped, WAL files read from a temporary copy, only `DATABASE_URL` required. Production runs with `docker compose --profile prod up -d --build --wait api-live` (Postgres not published, api on `127.0.0.1`), with an image budget of 510 MB checked in CI (406 MB measured). README, CLAUDE.md, `docs/deploy.md` and `docs/releasing.md` rewritten.
+
+- D1. Releases by release-please with the GitHub App token (`BOT_CLIENT_ID`, `BOT_PRIVATE_KEY`): manifest `0.0.0` with `bump-minor-pre-major`, `bootstrap-sha` on the last legacy commit, root, api and extension versions bumped together, the extension zip attached to each release. `1.0.0` is kept for the commercial v1. No container image is published.
+- D2. CI fails on any action not pinned to a commit sha.
 
 ## After the refactor
 
