@@ -1,153 +1,92 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code in this repository.
 
-## Build & Development Commands
+## Commands
 
 ```bash
-# Development (all apps in watch mode)
-pnpm dev
+pnpm install
+pnpm db                 # Postgres dev (127.0.0.1:5442) and test (127.0.0.1:5445) containers
+pnpm dev                # compose profile dev: db, migrate, api on :3000 with watch
+pnpm dev:up / dev:down  # same stack detached / stop everything
+pnpm dev:smoke          # production image on :3001, checks /health/ready
+pnpm dev:ext            # WXT dev: Chrome with the extension loaded
+pnpm dev:psql           # psql into the dev database
 
-# Build all apps
-pnpm build
+pnpm db:generate        # drizzle-kit migration from packages/modules/*/schemas
+pnpm db:migrate         # apply migrations (DATABASE_URL from root .env)
+pnpm db:drift           # fail if schemas and migrations diverge
 
-# Type checking
-pnpm typecheck
+pnpm check              # Biome
+pnpm fix                # Biome with --write
+pnpm type-check         # tsc7 per workspace (turbo)
+pnpm test               # unit tests (turbo)
+pnpm test:db            # *.db.test.ts against the test Postgres
+pnpm check:boundaries   # dependency-cruiser
+pnpm check:unused       # knip
+pnpm check:duplication  # jscpd
+pnpm check:all          # all of the above, run by the pre-push hook
+pnpm build              # turbo build (the extension)
 
-# Lint and format (uses Biome)
-pnpm lint
-pnpm lint:fix
-
-# Run specific app
-pnpm --filter backend dev
-pnpm --filter extension dev
-
-# Database (Drizzle ORM)
-pnpm --filter backend db:push      # Push schema changes
-pnpm --filter backend db:generate  # Generate migrations
-pnpm --filter backend db:studio    # Open Drizzle Studio GUI
+pnpm import:sqlite <legacy.db> [--dry-run]   # one-shot legacy SQLite portfolio import
+pnpm check:image                             # production image size budget
+docker compose --profile prod up -d          # production: db-prod, migrate-live, api-live
 ```
 
-## Architecture Overview
+Single workspace: `pnpm --filter <name> <script>` with `api`, `extension`, `@packages/analysis`, `@packages/studio`, `@packages/ai`, `@packages/ddd-kit`, `@packages/drizzle`, `@packages/outbox`, `@packages/testing`.
 
-This is a **pnpm monorepo** with Turborepo orchestration for a Chrome extension that analyzes Vinted listings using AI.
+## Architecture
 
-### Monorepo Structure
-
-- `apps/backend/` - Hono + Bun API server with Clean Architecture
-- `apps/extension/` - Chrome Extension (React 19 + Vite + Manifest V3)
-- `packages/shared/` - Shared TypeScript types
-
-### Backend Architecture (Clean Architecture + DDD)
+pnpm workspaces with Turbo. Bun runs the api and the tests, Node 24 runs the tooling.
 
 ```
-apps/backend/src/
-├── adapters/
-│   ├── controllers/     # HTTP request handlers
-│   ├── http/
-│   │   ├── *.routes.ts  # Route definitions
-│   │   ├── middleware/  # Error handling, validation
-│   │   └── schemas/     # Zod validation schemas
-│   ├── providers/ai/    # AI provider implementations (Gemini, OpenAI)
-│   └── persistence/     # Drizzle ORM repository + schema
-├── application/
-│   ├── container.ts     # Inversify DI configuration
-│   ├── di-types.ts      # DI symbols
-│   ├── use-cases/       # Business logic orchestration
-│   ├── interfaces/      # Repository & provider abstractions
-│   └── dtos/            # Data transfer objects
-├── domain/
-│   ├── entities/        # Core domain models
-│   ├── value-objects/   # Score, Price, Margin (encapsulated validation)
-│   └── errors/          # Domain-specific errors
-└── index.ts             # Hono server entry
+apps/
+  api/                Hono on Bun; common/ (Zod env, pino logger, Sentry), src/composition/ (inwire container, app.ts exporting AppType), src/adapters/ (http, health, lifecycle, outbox runner, persistence probe), Dockerfile (dev, production)
+  extension/          WXT: entrypoints/{background.ts, listing.content, new-listing.content, popup}, lib/, components/ (shadcn in components/ui)
+packages/
+  modules/analysis/   src/{domain,application,infrastructure}, schemas/ (pgSchema "analysis"), analysis.module.ts, contract.ts
+  modules/studio/     stateless: presets, photo edits, listing suggestions; no table, no event
+  ai/                 Gemini client on @google/genai (structured output with Zod, Google Search, image edit, retry)
+  ddd-kit/            Result, Option, Aggregate, ValueObject, events, ambient unit of work context
+  drizzle/            pg pool, DrizzleUnitOfWork, migrator, migrations/
+  outbox/             outbox table factory, flush handler, relay (LISTEN/NOTIFY plus poll)
+  testing/            port mocks, unit of work mock, template database clones, fetch guard
+  typescript-config/  shared tsconfig and the tsc7 binary
 ```
 
-**Key patterns:**
-- Inversify for dependency injection (`@injectable()`, `@inject()` decorators)
-- Value objects enforce business rules (e.g., `Score` only accepts 1-10)
-- Repositories abstracted behind interfaces for testability
-- Single AI call for complete analysis (photos + opportunity + negotiation)
+- Postgres 18 in Docker, Drizzle ORM, one `pgSchema` per module. SQL only in repositories.
+- `apps/api/src/composition/container.ts` is the only composition root: it adds each `*.module.ts` (inwire `defineModule`) and wires the outbox relay.
+- The model returns facts; the analysis domain computes score, margin and offer.
+- Business failures are `Result` with a typed `ErrorCode`; the suffix gives the HTTP status (`_NOT_FOUND` 404, `_CONFLICT` 409, see `packages/ddd-kit/src/application/error-code.ts`).
+- Extension: the background service worker owns the Hono RPC client (`lib/api/client.ts`, typed by `AppType`) and the handlers; content scripts and popup only send typed messages (`lib/messaging/protocol.ts`). Dexie caches analyses, WXT storage holds settings.
 
-### Extension Architecture (Manifest V3)
+### Boundaries (`.dependency-cruiser.cjs`)
 
-```
-apps/extension/src/
-├── background/          # Service Worker
-│   ├── index.ts         # Event listeners
-│   ├── message-handler.ts
-│   ├── message-types.ts # 13+ typed message definitions
-│   └── api-client.ts    # Backend HTTP calls
-├── content/             # Injected into vinted.fr/items/*
-├── popup/               # React UI
-│   ├── views/           # MainView, PortfolioView, SettingsView
-│   ├── components/
-│   ├── hooks/           # usePortfolio, usePopupData
-│   └── stores/          # Zustand state management
-└── db/                  # IndexedDB cache (Dexie) with 1-hour TTL
-```
+- A module never imports another module or an app.
+- `domain/` and `application/` import no framework, database or infrastructure; `domain/` never imports `application/`.
+- Only apps import a `*.module.ts`. Libs never import modules or apps.
+- Only `packages/ai` imports `@google/genai` and `sharp`.
+- The extension imports only `packages/modules/analysis/src/contract.ts` and the api `AppType` from `apps/api/src/composition/app.ts`.
+- No circular imports in packages.
 
-**Key patterns:**
-- Message-based communication: popup → service worker → backend
-- Two-level caching: IndexedDB (local) + backend (server-side)
-- Zustand for React state management
+## Tests
 
-## Tech Stack
+- `bun test` everywhere except the extension; `bunfig.toml` preloads the fetch guard and randomizes order.
+- `*.db.test.ts` run with `bunfig.db.toml` on a clone of a template database (`pnpm db` first).
+- The extension uses Vitest with `WxtVitest`, happy-dom and fake-indexeddb (`apps/extension/vitest.config.ts`).
 
-| Layer             | Technologies                     |
-| ----------------- | -------------------------------- |
-| Backend runtime   | Bun                              |
-| Backend framework | Hono                             |
-| Database          | SQLite + Drizzle ORM             |
-| DI                | Inversify                        |
-| Validation        | Zod                              |
-| Frontend          | React 19, Vite, Tailwind CSS     |
-| State             | Zustand                          |
-| Local DB          | Dexie (IndexedDB)                |
-| AI                | Vercel AI SDK with Gemini/OpenAI |
-| Linting           | Biome                            |
+## Code style
 
-## Code Style
+- Biome 2 (`biome.json`): 2 spaces, double quotes, semicolons, line width 80, LF.
+- Errors: `noUnusedImports`, `noUnusedVariables`, `noUndeclaredVariables`, `noImportCycles`, `noExplicitAny`, `noNonNullAssertion`.
+- Commits follow Conventional Commits (commitlint). Hooks: pre-commit runs lint-staged and type-check, pre-push runs `pnpm check:all` on a clean tree.
+- No useless abstraction: a class that only delegates is a function. No dead or commented code. `as` must be justified, prefer `unknown` plus a guard.
 
-- **Biome 2** for linting and formatting (not ESLint/Prettier), config in `biome.json`
-- 2-space indentation, double quotes, semicolons, line width 80, LF line endings
-- `noUnusedImports`, `noUnusedVariables`, `noUndeclaredVariables` and `noImportCycles` are errors
-- `noExplicitAny` and `noNonNullAssertion` are errors
-- Legacy `apps/backend`, `apps/extension`, `packages/shared` and `installer` are excluded from Biome until the v1 rewrite
-- Target architecture and migration steps: `docs/superpowers/specs/2026-10-27-v1-refactor-roadmap.md`
+## Environment
 
-## Environment Setup
+Root `.env` from `.env.example`: `DATABASE_URL`, `TEST_DATABASE_URL`, `PORT`, `LOG_LEVEL`, `SENTRY_DSN`, `GEMINI_API_KEY` (required). Validated at startup by `apps/api/common/env.ts`. Production adds `POSTGRES_PASSWORD` and `API_PORT`.
 
-Backend requires `.env` file:
-```env
-GOOGLE_GENERATIVE_AI_API_KEY=your_key  # or OPENAI_API_KEY
-PORT=3000
-```
+## Docs
 
-Extension settings are stored in Chrome storage and configured via popup UI.
-
-## Code Quality Rules
-
-### NO Useless Abstractions
-
-- **NEVER** create a service/interface that only wraps a function
-- If a class only delegates → use the function directly
-- DI only for: repositories, providers, services with real business logic
-
-### NO Dead Code
-
-- Delete commented code immediately
-- Delete unused imports
-- Delete identical conditional branches (e.g., `x ? 'A' : 'A'`)
-
-### Type Safety
-
-- `any` forbidden except for documented exceptions (poorly-typed external SDKs)
-- Prefer `unknown` + type guards over `any`
-- Type assertions (`as`) must be justified
-
-### Clean Architecture
-
-- Adapters don't import other adapters
-- Use cases orchestrate, they don't do low-level logic
-- Controllers return DTOs, not HTTP Response objects
+- Roadmap: `docs/superpowers/specs/2026-10-27-v1-refactor-roadmap.md`
+- Deploy: `docs/deploy.md`; releases: `docs/releasing.md`
