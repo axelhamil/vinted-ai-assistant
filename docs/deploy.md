@@ -38,14 +38,14 @@ docker compose --profile prod exec -T db-prod pg_restore -U postgres -d vinted -
 
 ## Import a legacy SQLite portfolio
 
-The script ships in the image. Mount the legacy file read only and run it once with the prod database:
+Stop the legacy backend first so that its SQLite file is complete, then copy `legacy.db` next to `docker-compose.yaml`. The script ships in the image. Mount the file read only and run it once with the prod database:
 
 ```bash
 docker compose --profile prod run --rm -v "$PWD/legacy.db:/import/legacy.db:ro" migrate-live bun scripts/import-sqlite.ts /import/legacy.db --dry-run
 docker compose --profile prod run --rm -v "$PWD/legacy.db:/import/legacy.db:ro" migrate-live bun scripts/import-sqlite.ts /import/legacy.db
 ```
 
-It reads only `DATABASE_URL`, no Gemini key, and prints one JSON report. Rows already in Postgres are skipped, so a second run imports nothing.
+It reads only `DATABASE_URL`, no Gemini key, and prints one JSON report. It reads a temporary copy of the file, so a database left in WAL mode by the legacy backend imports from a read only mount. Rows already in Postgres are skipped, so a second run imports nothing.
 
 ## Image size budget
 

@@ -28,9 +28,9 @@ pnpm check:duplication  # jscpd
 pnpm check:all          # all of the above, run by the pre-push hook
 pnpm build              # turbo build (the extension)
 
-pnpm import:sqlite <legacy.db> [--dry-run]   # one-shot legacy SQLite portfolio import
-pnpm check:image                             # production image size budget
-docker compose --profile prod up -d          # production: db-prod, migrate-live, api-live
+pnpm import:sqlite </abs/legacy.db> [--dry-run]   # legacy SQLite import into the .env DATABASE_URL (dev); prod: docs/deploy.md
+pnpm check:image                                  # production image size budget
+docker compose --profile prod up -d --build --wait api-live   # production: db-prod, migrate-live, api-live
 ```
 
 Single workspace: `pnpm --filter <name> <script>` with `api`, `extension`, `@packages/analysis`, `@packages/studio`, `@packages/ai`, `@packages/ddd-kit`, `@packages/drizzle`, `@packages/outbox`, `@packages/testing`.

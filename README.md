@@ -36,21 +36,21 @@ Open a Vinted item page: the sidebar shows the analysis. To load a build in your
 
 ```bash
 cp .env.example .env        # set POSTGRES_PASSWORD and GEMINI_API_KEY, optionally API_PORT
-docker compose --profile prod up -d
+docker compose --profile prod up -d --build --wait api-live
 ```
 
 The api listens on `127.0.0.1:${API_PORT:-3000}` and Postgres is not published. Updates, backups and the full setup are in [docs/deploy.md](docs/deploy.md).
 
 ### Import a legacy SQLite portfolio
 
-A portfolio from the legacy SQLite backend moves to Postgres once:
+In development, `pnpm import:sqlite` writes into the database of `DATABASE_URL` in `.env`, the dev Postgres. Pass an absolute path, the command runs from `apps/api`:
 
 ```bash
-pnpm import:sqlite path/to/legacy.db --dry-run   # report only
-pnpm import:sqlite path/to/legacy.db
+pnpm import:sqlite /absolute/path/to/legacy.db --dry-run   # report only
+pnpm import:sqlite /absolute/path/to/legacy.db
 ```
 
-The command needs only `DATABASE_URL`. Items already in Postgres are skipped, never overwritten. Rows that fail validation are listed and the command exits 1.
+The production import runs in the image, see [docs/deploy.md](docs/deploy.md#import-a-legacy-sqlite-portfolio). Items already in Postgres are skipped, never overwritten. Rows that fail validation are listed and the command exits 1.
 
 ## Architecture
 
