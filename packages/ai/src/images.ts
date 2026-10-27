@@ -7,6 +7,7 @@ export type FetchImage = (url: URL, init: RequestInit) => Promise<Response>;
 
 export interface ImageIntakeOptions {
   allowedHost?: (host: string) => boolean;
+  allowInsecure?: boolean;
   fetch?: FetchImage;
   timeoutMs?: number;
 }
@@ -16,29 +17,50 @@ const FETCH_TIMEOUT_MS = 10_000;
 const MAX_IMAGES = 10;
 const LONGEST_SIDE_PX = 1600;
 const WEBP_QUALITY = 85;
+const MAX_INPUT_PIXELS = 40_000_000;
+const VINTED_IMAGE_HOST = /^([a-z0-9-]+\.)+vinted\.net$/i;
 const DATA_URL = /^data:image\/[a-z0-9.+-]+;base64,([A-Za-z0-9+/]+={0,2})$/i;
 const WEB_PROTOCOLS = new Set(["http:", "https:"]);
 
 export function isVintedImageHost(host: string): boolean {
-  return host.toLowerCase().endsWith(".vinted.net");
-}
-
-function parseUrl(input: string): Option<URL> {
-  return Option.fromNullable(URL.parse(input));
+  return VINTED_IMAGE_HOST.test(host);
 }
 
 function isAllowed(url: URL, options: ImageIntakeOptions): boolean {
-  if (!WEB_PROTOCOLS.has(url.protocol)) return false;
-  if (options.allowedHost) return options.allowedHost(url.hostname);
+  const allowedHost = options.allowedHost ?? isVintedImageHost;
+  if (url.username !== "" || url.password !== "") return false;
+  if (!allowedHost(url.hostname)) return false;
+  if (options.allowInsecure) return WEB_PROTOCOLS.has(url.protocol);
 
-  return url.protocol === "https:" && isVintedImageHost(url.hostname);
+  return url.protocol === "https:" && url.port === "";
+}
+
+function checkedUrl(
+  input: string,
+  options: ImageIntakeOptions,
+): Result<URL, AiFailure> {
+  const url = URL.parse(input);
+  if (!url)
+    return Result.fail(
+      aiFailure("IMAGE_INVALID", "The photo URL is not a URL."),
+    );
+
+  if (!isAllowed(url, options))
+    return Result.fail(
+      aiFailure(
+        "IMAGE_HOST_FORBIDDEN",
+        `Refused ${url.protocol}//${url.host}: not an https Vinted image host.`,
+      ),
+    );
+
+  return Result.ok(url);
 }
 
 async function normalize(
   bytes: Uint8Array,
 ): Promise<Result<InlineImage, AiFailure>> {
   try {
-    const webp = await sharp(bytes)
+    const webp = await sharp(bytes, { limitInputPixels: MAX_INPUT_PIXELS })
       .rotate()
       .resize({
         width: LONGEST_SIDE_PX,
@@ -139,29 +161,24 @@ async function download(
   }
 }
 
+async function downloadImage(
+  url: URL,
+  options: ImageIntakeOptions,
+): Promise<Result<InlineImage, AiFailure>> {
+  const bytes = await download(url, options);
+  if (bytes.isFailure) return Result.fail(bytes.getError());
+
+  return normalize(bytes.getValue());
+}
+
 export async function fetchListingImage(
   input: string,
   options: ImageIntakeOptions = {},
 ): Promise<Result<InlineImage, AiFailure>> {
-  const url = parseUrl(input);
-  if (url.isNone())
-    return Result.fail(
-      aiFailure("IMAGE_INVALID", "The photo URL is not a URL."),
-    );
+  const url = checkedUrl(input, options);
+  if (url.isFailure) return Result.fail(url.getError());
 
-  const target = url.unwrap();
-  if (!isAllowed(target, options))
-    return Result.fail(
-      aiFailure(
-        "IMAGE_HOST_FORBIDDEN",
-        `Refused ${target.protocol}//${target.hostname}: not an https Vinted image host.`,
-      ),
-    );
-
-  const bytes = await download(target, options);
-  if (bytes.isFailure) return Result.fail(bytes.getError());
-
-  return normalize(bytes.getValue());
+  return downloadImage(url.getValue(), options);
 }
 
 async function decodeDataUrl(
@@ -173,8 +190,7 @@ async function decodeDataUrl(
       aiFailure("IMAGE_INVALID", "The data URL is not a base64 image."),
     );
 
-  const bytes = Buffer.from(payload, "base64");
-  if (bytes.byteLength > MAX_IMAGE_BYTES)
+  if ((payload.length * 3) / 4 > MAX_IMAGE_BYTES)
     return Result.fail(
       aiFailure(
         "IMAGE_TOO_LARGE",
@@ -182,7 +198,7 @@ async function decodeDataUrl(
       ),
     );
 
-  return normalize(bytes);
+  return normalize(Buffer.from(payload, "base64"));
 }
 
 export function parseImageInput(
@@ -206,16 +222,12 @@ export async function fetchListingImages(
       ),
     );
 
-  const results = await Promise.all(
-    urls.map((url) => fetchListingImage(url, options)),
+  const checked = Result.all(urls.map((url) => checkedUrl(url, options)));
+  if (checked.isFailure) return Result.fail(checked.getError());
+
+  const images = await Promise.all(
+    checked.getValue().map((url) => downloadImage(url, options)),
   );
-  const images: InlineImage[] = [];
 
-  for (const result of results) {
-    if (result.isFailure) return Result.fail(result.getError());
-
-    images.push(result.getValue());
-  }
-
-  return Result.ok(images);
+  return Result.all(images);
 }
