@@ -18,6 +18,7 @@ import {
   rethrowNonErrors,
 } from "../adapters/http/error-handler";
 import { createHealthRoutes } from "../adapters/http/health.routes";
+import { requestContext } from "../adapters/http/request-context.middleware";
 import type { IDatabaseProbe } from "../ports/database-probe.port";
 import type { ErrorReporter } from "../ports/error-reporter.port";
 
@@ -47,6 +48,7 @@ export function createApp(deps: AppDeps) {
 
   app.use(rethrowNonErrors);
   app.use(requestId());
+  app.use(requestContext);
   app.use(
     pinoLogger({
       pino: deps.logger,

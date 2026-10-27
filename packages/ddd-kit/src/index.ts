@@ -5,6 +5,7 @@ export * from "./application/instrumentation";
 export * from "./application/logger";
 export * from "./application/pagination";
 export * from "./application/repository";
+export * from "./application/request-context";
 export * from "./application/scope";
 export * from "./application/unit-of-work";
 export * from "./application/unit-of-work-context";

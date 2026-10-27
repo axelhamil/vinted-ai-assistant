@@ -1,4 +1,8 @@
-import type { IInstrumentation, ILogger } from "@packages/ddd-kit";
+import {
+  type IInstrumentation,
+  type ILogger,
+  RequestContext,
+} from "@packages/ddd-kit";
 import * as Sentry from "@sentry/bun";
 
 export function createSentryInstrumentation(logger: ILogger): IInstrumentation {
@@ -11,11 +15,17 @@ export function createSentryInstrumentation(logger: ILogger): IInstrumentation {
 
       if (!Sentry.isEnabled()) return;
 
+      const requestId =
+        context.requestId ??
+        RequestContext.current()
+          .map((scope) => scope.requestId)
+          .toUndefined();
+
       Sentry.withScope((scope) => {
         scope.setLevel(context.level ?? "error");
         scope.setTags({
           ...context.tags,
-          ...(context.requestId && { requestId: context.requestId }),
+          ...(requestId && { requestId }),
           ...(context.method && { method: context.method }),
           ...(context.route && { route: context.route }),
         });

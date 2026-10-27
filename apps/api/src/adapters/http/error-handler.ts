@@ -72,7 +72,7 @@ export function createErrorHandler(
 
     if (error instanceof AppErrorException) {
       logger.warn(
-        { requestId, code: error.code, metadata: error.metadata },
+        { code: error.code, metadata: error.metadata },
         error.message,
       );
 
@@ -85,7 +85,7 @@ export function createErrorHandler(
     if (error instanceof HTTPException && error.status < 500) {
       const { code, hint } = REJECTIONS[error.status] ?? INVALID_REQUEST;
       const reason = error.message || "The request was rejected";
-      logger.warn({ requestId, status: error.status, code }, reason);
+      logger.warn({ status: error.status, code }, reason);
 
       error.getResponse().headers.forEach((value, name) => {
         if (HEADERS_SET_BY_JSON.has(name)) return;
