@@ -214,6 +214,9 @@ importers:
       '@packages/drizzle':
         specifier: workspace:*
         version: link:../../packages/drizzle
+      '@packages/studio':
+        specifier: workspace:*
+        version: link:../../packages/modules/studio
       '@sentry/bun':
         specifier: ^11.8.0
         version: 11.9.0(rollup@4.55.1)
@@ -493,12 +496,21 @@ importers:
 
   packages/modules/studio:
     dependencies:
+      '@hono/zod-validator':
+        specifier: ^0.9.1
+        version: 0.9.1(hono@4.13.14)(zod@4.6.7)
       '@packages/ai':
         specifier: workspace:*
         version: link:../../ai
       '@packages/ddd-kit':
         specifier: workspace:*
         version: link:../../ddd-kit
+      hono:
+        specifier: ^4.13.14
+        version: 4.13.14
+      inwire:
+        specifier: ^4.0.1
+        version: 4.0.1
       zod:
         specifier: ^4.6.7
         version: 4.6.7

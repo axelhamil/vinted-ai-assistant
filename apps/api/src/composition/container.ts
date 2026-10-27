@@ -6,6 +6,7 @@ import {
 import type { IInstrumentation } from "@packages/ddd-kit";
 import { createDb } from "@packages/drizzle/config";
 import { DrizzleUnitOfWork } from "@packages/drizzle/unit-of-work";
+import { studioAiModule, studioModule } from "@packages/studio/studio.module";
 import { container } from "inwire";
 import type { Env } from "../../common/env";
 import { createLogger } from "../../common/logger";
@@ -44,7 +45,9 @@ export function createContainer(env: Env) {
       createGeminiClient({ apiKey: c.env.GEMINI_API_KEY }),
     )
     .addModule(analysisAiModule)
-    .addModule(analysisModule);
+    .addModule(analysisModule)
+    .addModule(studioAiModule)
+    .addModule(studioModule);
 }
 
 export function buildContainer(env: Env) {

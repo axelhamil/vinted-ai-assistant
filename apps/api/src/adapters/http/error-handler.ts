@@ -34,7 +34,7 @@ const REJECTIONS: Partial<Record<number, Rejection>> = {
   },
   404: { code: "ROUTE_NOT_FOUND", hint: "Check the url and method." },
   413: {
-    code: "REQUEST_BODY_INVALID",
+    code: "REQUEST_TOO_LARGE",
     hint: "Send a smaller request body and retry.",
   },
   429: {

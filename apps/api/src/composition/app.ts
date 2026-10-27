@@ -2,6 +2,10 @@ import {
   type AnalysisRoutesDeps,
   createAnalysisRoutes,
 } from "@packages/analysis/infrastructure/http/analysis.routes";
+import {
+  createStudioRoutes,
+  type StudioRoutesDeps,
+} from "@packages/studio/infrastructure/http/studio.routes";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { requestId } from "hono/request-id";
@@ -68,8 +72,12 @@ export function createApp(deps: AppDeps) {
   return app.route("/health", createHealthRoutes(deps));
 }
 
-export function createApi(deps: AppDeps & AnalysisRoutesDeps) {
-  return createApp(deps).route("/api", createAnalysisRoutes(deps));
+export function createApi(
+  deps: AppDeps & AnalysisRoutesDeps & StudioRoutesDeps,
+) {
+  return createApp(deps)
+    .route("/api", createAnalysisRoutes(deps))
+    .route("/api/studio", createStudioRoutes(deps));
 }
 
 export type AppType = ReturnType<typeof createApi>;

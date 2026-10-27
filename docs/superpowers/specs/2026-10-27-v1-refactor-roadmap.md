@@ -66,9 +66,9 @@ Pins (`.bun-version`, `.nvmrc`, `packageManager`), pnpm workspace settings, `pac
 
 Aggregate `Analysis` with value objects (`VintedId`, `Score`, `Price`, `PriceRange`, `Margin`, `AnalysisStatus`, `Language`, `NegotiationTone`), status transitions, events. Use cases: analyze listing (with 1 h cache), get analysis, list portfolio, portfolio stats, change status, delete, regenerate negotiation (persisted), export markdown. Drizzle repository in `pgSchema("analysis")` with indexes on status, opportunity score and analyzed date. Reliability: the model returns facts only, the domain computes opportunity score, margin and suggested offer with tested rules; an out-of-range or malformed model answer is a typed failure, never a thrown error, and never breaks reading a stored analysis. Fixes from the inventory: stats count in SQL, atomic upsert and status update, negotiation rules in one place, score and margin thresholds exposed once.
 
-### 5. Module studio
+### 5. Module studio (delivered 27/10/2026)
 
-Aggregate `StudioPreset` (system presets cannot be deleted), photo editing (single, custom, batch with concurrency 3), listing form suggestions. `pgSchema("studio")`, system presets seeded by migration.
+Stateless module served under `/api/studio`: the 5 system presets are a typed constant (no aggregate nor table, the UI never creates a custom preset), photo edits by preset or by a free instruction return the model bytes untouched (no re-encode, no template variables), and listing suggestions take the model facts and one price while the domain computes the ±20 % range, fits the title to 50 characters and refuses a price out of bounds. No server batch route: a 10 photo batch exceeds Bun's 255 s idle timeout, so the extension runs single edits 3 at a time. Bodies are capped at 15 MB per edit and 40 MB per suggestion (typed 413), and the language list and AI failure mapping are shared with analysis through `@packages/ai`.
 
 ### 6. Outbox
 
