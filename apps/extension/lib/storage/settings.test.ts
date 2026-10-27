@@ -1,0 +1,37 @@
+import { beforeEach, describe, expect, it } from "vitest";
+import { fakeBrowser } from "wxt/testing/fake-browser";
+import { normalizeBackendUrl, settings } from "./settings";
+
+describe("settings", () => {
+  beforeEach(() => {
+    fakeBrowser.reset();
+  });
+
+  it("drops scoreThreshold from the legacy settings", async () => {
+    await fakeBrowser.storage.local.set({
+      vinted_ai_settings: {
+        backendUrl: "http://x:1",
+        scoreThreshold: 7,
+        autoOpenSidebar: false,
+        enabled: true,
+      },
+    });
+
+    await settings.migrate();
+
+    expect(await settings.getValue()).toEqual({
+      backendUrl: "http://x:1",
+      autoOpenSidebar: false,
+      enabled: true,
+    });
+  });
+
+  it.each([
+    ["localhost:3000/", null],
+    ["http://localhost:3010/", "http://localhost:3010"],
+    ["  https://api.example.com//  ", "https://api.example.com"],
+    ["ftp://x", null],
+  ])("normalizes the backend url %s to %s", (raw, expected) => {
+    expect(normalizeBackendUrl(raw)).toBe(expected);
+  });
+});
