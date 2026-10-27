@@ -12,17 +12,12 @@ import type {
   PortfolioStatsInput,
 } from "../dto/analysis.dto";
 import type {
-  AnalysisNotFound,
   AnalysisStoreUnavailable,
   IAnalysisRepository,
   PortfolioQuery,
   PortfolioStats,
 } from "../ports/analysis.repository.port";
-import {
-  type AnalysisInputInvalid,
-  INPUT_INVALID,
-  parseVintedId,
-} from "./analysis-input";
+import { type AnalysisInputInvalid, INPUT_INVALID } from "./analysis-input";
 import { exportAnalysisMarkdown } from "./analysis-markdown";
 import {
   findStoredAnalysis,
@@ -111,19 +106,5 @@ export class PortfolioService {
     const found = await findStoredAnalysis(this.repository, vintedId);
 
     return found.map(exportAnalysisMarkdown);
-  }
-
-  async delete({
-    vintedId,
-  }: AnalysisLookup): Promise<
-    Result<
-      void,
-      AnalysisInputInvalid | AnalysisNotFound | AnalysisStoreUnavailable
-    >
-  > {
-    const parsed = parseVintedId(vintedId);
-    if (parsed.isFailure) return Result.fail(parsed.getError());
-
-    return this.repository.delete(parsed.getValue());
   }
 }

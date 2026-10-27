@@ -22,6 +22,7 @@
     "@packages/ai": "workspace:*",
     "@packages/ddd-kit": "workspace:*",
     "@packages/drizzle": "workspace:*",
+    "@packages/outbox": "workspace:*",
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.14",
     "inwire": "^4.0.1",

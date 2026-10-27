@@ -2,7 +2,10 @@ import { type IUnitOfWork, Result, type UseCase } from "@packages/ddd-kit";
 import type { Analysis } from "../../domain/analysis.aggregate";
 import { NegotiationTone } from "../../domain/value-objects/negotiation-tone.vo";
 import type { RegenerateNegotiationInput } from "../dto/analysis.dto";
-import type { IAnalysisRepository } from "../ports/analysis.repository.port";
+import type {
+  AnalysisStatusConflict,
+  IAnalysisRepository,
+} from "../ports/analysis.repository.port";
 import type { AnalysisAiFailure } from "../ports/listing-facts-reader.port";
 import type { INegotiationWriter } from "../ports/negotiation-writer.port";
 import { INPUT_INVALID } from "../services/analysis-input";
@@ -14,6 +17,7 @@ import {
 
 export type RegenerateNegotiationFailure =
   | StoredAnalysisFailure
+  | AnalysisStatusConflict
   | AnalysisAiFailure;
 
 export class RegenerateNegotiationUseCase
@@ -49,7 +53,11 @@ export class RegenerateNegotiationUseCase
     if (negotiation.isFailure) return Result.fail(negotiation.getError());
 
     const updated = await this.unitOfWork.run(() =>
-      this.repository.updateNegotiation(analysis.id, negotiation.getValue()),
+      this.repository.updateNegotiation(
+        analysis.id,
+        analysis.get("analyzedAt"),
+        negotiation.getValue(),
+      ),
     );
     if (updated.isFailure) return Result.fail(updated.getError());
 

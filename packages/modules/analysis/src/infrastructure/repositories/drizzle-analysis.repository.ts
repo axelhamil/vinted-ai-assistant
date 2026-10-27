@@ -290,20 +290,26 @@ export class DrizzleAnalysisRepository implements IAnalysisRepository {
 
   updateNegotiation(
     id: AnalysisId,
+    expectedAnalyzedAt: Date,
     negotiation: Negotiation,
-  ): Promise<Result<void, AnalysisNotFound | AnalysisStoreUnavailable>> {
+  ): Promise<Result<void, AnalysisStatusConflict | AnalysisStoreUnavailable>> {
     return this.traced(
       "updateNegotiation",
-      async (): Promise<Result<void, AnalysisNotFound>> => {
+      async (): Promise<Result<void, AnalysisStatusConflict>> => {
         const updated = await resolveExecutor(this.database)
           .update(analyses)
           .set({
             negotiation: negotiationToPersistence(negotiation),
             updatedAt: sql`now()`,
           })
-          .where(eq(analyses.id, String(id.value)))
+          .where(
+            and(
+              eq(analyses.id, String(id.value)),
+              eq(analyses.analyzedAt, expectedAnalyzedAt),
+            ),
+          )
           .returning({ id: analyses.id });
-        if (updated.length === 0) return Result.fail(NOT_FOUND);
+        if (updated.length === 0) return Result.fail(STATUS_CONFLICT);
 
         return Result.ok();
       },

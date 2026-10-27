@@ -8,6 +8,13 @@
       "when": 1793100812910,
       "tag": "0000_perfect_tomas",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793106139644,
+      "tag": "0001_analysis_outbox",
+      "breakpoints": true
     }
   ]
 }

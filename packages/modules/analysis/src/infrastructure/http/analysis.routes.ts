@@ -16,12 +16,14 @@ import {
 import type { PortfolioService } from "../../application/services/portfolio.service";
 import type { AnalyzeListingUseCase } from "../../application/use-cases/analyze-listing.use-case";
 import type { ChangeAnalysisStatusUseCase } from "../../application/use-cases/change-analysis-status.use-case";
+import type { DeleteAnalysisUseCase } from "../../application/use-cases/delete-analysis.use-case";
 import type { RegenerateNegotiationUseCase } from "../../application/use-cases/regenerate-negotiation.use-case";
 
 export interface AnalysisRoutesDeps {
   AnalyzeListingUseCase: AnalyzeListingUseCase;
   ChangeAnalysisStatusUseCase: ChangeAnalysisStatusUseCase;
   RegenerateNegotiationUseCase: RegenerateNegotiationUseCase;
+  DeleteAnalysisUseCase: DeleteAnalysisUseCase;
   PortfolioService: PortfolioService;
 }
 
@@ -223,7 +225,7 @@ export function createAnalysisRoutes(deps: AnalysisRoutesDeps) {
     )
     .delete("/portfolio/:vintedId", async (c) => {
       succeeded(
-        await deps.PortfolioService.delete({
+        await deps.DeleteAnalysisUseCase.execute({
           vintedId: c.req.param("vintedId"),
         }),
       );

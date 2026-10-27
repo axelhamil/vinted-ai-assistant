@@ -1,4 +1,5 @@
 import {
+  EventCollector,
   type ILogger,
   type IUnitOfWork,
   Option,
@@ -81,13 +82,17 @@ export class AnalyzeListingUseCase
     if (assessed.isFailure) return Result.fail(assessed.getError());
 
     const analysis = assessed.getValue();
-    const saved = await this.unitOfWork.run(() =>
-      this.repository.save(analysis),
-    );
 
-    return saved.map(({ id, status, createdAt }) =>
-      analysis.storedAs(id, status, createdAt),
-    );
+    return this.unitOfWork.run(async () => {
+      const saved = await this.repository.save(analysis);
+      if (saved.isFailure) return Result.fail(saved.getError());
+
+      const { id, status, createdAt } = saved.getValue();
+      const stored = analysis.storedAs(id, status, createdAt);
+      EventCollector.collectFrom(stored);
+
+      return Result.ok(stored);
+    });
   }
 
   private async findStored(

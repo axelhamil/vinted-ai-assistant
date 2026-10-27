@@ -17,6 +17,28 @@ import { Score } from "./value-objects/score.vo";
 
 const MINUTE_MS = 60_000;
 
+function completed(analysis: Analysis, marginPercent: number) {
+  return {
+    eventType: "analysis.completed",
+    aggregateId: String(analysis.id.value),
+    payload: {
+      vintedId: analysis.get("listing").vintedId.value,
+      score: analysis.opportunityScore().value,
+      marginPercent,
+    },
+  };
+}
+
+function eventsOf(analysis: Analysis) {
+  return analysis
+    .pullDomainEvents()
+    .map(({ eventType, aggregateId, payload }) => ({
+      eventType,
+      aggregateId,
+      payload,
+    }));
+}
+
 const ALLOWED: Record<AnalysisStatusValue, AnalysisStatusValue[]> = {
   ANALYZED: ["WATCHING", "BOUGHT", "ARCHIVED"],
   WATCHING: ["BOUGHT", "ARCHIVED"],
@@ -156,5 +178,59 @@ describe("Analysis", () => {
     );
 
     expect(reconstituted.opportunityScore().value).toBe(2);
+  });
+
+  it("records analysis.completed with its score and margin when created", () => {
+    const analysis = Analysis.create(analysisInput()).getValue();
+
+    expect(eventsOf(analysis)).toEqual([
+      completed(analysis, analysis.margin().value.percent),
+    ]);
+  });
+
+  it("records analysis.completed with the recomputed score when refreshed", () => {
+    const analysis = buildAnalysis({ status: "BOUGHT" });
+
+    analysis.refresh(
+      analysisInput({
+        facts: buildFacts({ averageCents: 4000, highCents: 5000 }),
+        now: new Date(ANALYZED_AT.getTime() + 90 * MINUTE_MS),
+      }),
+    );
+
+    expect(eventsOf(analysis)).toEqual([completed(analysis, 100)]);
+  });
+
+  it("records analysis.status_changed from the old status to the new one, and nothing on a refused move", () => {
+    const analysis = buildAnalysis({ status: "WATCHING" });
+
+    analysis.changeStatus(AnalysisStatus.create("BOUGHT").getValue());
+    analysis.changeStatus(AnalysisStatus.create("WATCHING").getValue());
+
+    expect(eventsOf(analysis)).toEqual([
+      {
+        eventType: "analysis.status_changed",
+        aggregateId: String(analysis.id.value),
+        payload: {
+          vintedId: analysis.get("listing").vintedId.value,
+          from: "WATCHING",
+          to: "BOUGHT",
+        },
+      },
+    ]);
+  });
+
+  it("records analysis.deleted when marked deleted", () => {
+    const analysis = buildAnalysis();
+
+    analysis.markDeleted();
+
+    expect(eventsOf(analysis)).toEqual([
+      {
+        eventType: "analysis.deleted",
+        aggregateId: String(analysis.id.value),
+        payload: { vintedId: analysis.get("listing").vintedId.value },
+      },
+    ]);
   });
 });

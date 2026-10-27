@@ -168,8 +168,8 @@ describe("analysing a listing", () => {
     expect(transaction.outcome()).toBe("committed");
   });
 
-  it("answers with the stored id when a parallel first analysis saved the row before", async () => {
-    const { repository, analyze } = given(STALE_NOW);
+  it("answers with the stored id, and records analysis.completed under it, when a parallel first analysis saved the row before", async () => {
+    const { repository, transaction, analyze } = given(STALE_NOW);
     const winner = AnalysisId.create(new UUID<string>());
     repository.save.mockResolvedValue(
       Result.ok({
@@ -182,6 +182,13 @@ describe("analysing a listing", () => {
     const result = await analyze();
 
     expect(result.getValue().id.value).toBe(winner.value);
+    expect(
+      transaction
+        .writtenEvents()
+        .map(({ eventType, aggregateId }) => ({ eventType, aggregateId })),
+    ).toEqual([
+      { eventType: "analysis.completed", aggregateId: String(winner.value) },
+    ]);
   });
 
   it("answers the status stored by the save when it moved during the analysis", async () => {

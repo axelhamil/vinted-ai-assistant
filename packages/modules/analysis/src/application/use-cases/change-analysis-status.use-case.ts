@@ -1,4 +1,9 @@
-import { type IUnitOfWork, Result, type UseCase } from "@packages/ddd-kit";
+import {
+  EventCollector,
+  type IUnitOfWork,
+  Result,
+  type UseCase,
+} from "@packages/ddd-kit";
 import type { Analysis } from "../../domain/analysis.aggregate";
 import { AnalysisStatus } from "../../domain/value-objects/analysis-status.vo";
 import type { ChangeAnalysisStatusInput } from "../dto/analysis.dto";
@@ -39,9 +44,16 @@ export class ChangeAnalysisStatusUseCase
     const moved = analysis.changeStatus(next.getValue());
     if (moved.isFailure) return Result.fail(moved.getError());
 
-    const updated = await this.unitOfWork.run(() =>
-      this.repository.updateStatus(analysis.id, from, next.getValue()),
-    );
+    const updated = await this.unitOfWork.run(async () => {
+      const written = await this.repository.updateStatus(
+        analysis.id,
+        from,
+        next.getValue(),
+      );
+      EventCollector.collectFrom(analysis);
+
+      return written;
+    });
     if (updated.isFailure) return Result.fail(updated.getError());
 
     return Result.ok(analysis);

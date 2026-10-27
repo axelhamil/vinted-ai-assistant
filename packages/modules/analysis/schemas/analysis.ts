@@ -1,3 +1,4 @@
+import { createOutboxTable } from "@packages/outbox/outbox-table";
 import { sql } from "drizzle-orm";
 import {
   check,
@@ -63,3 +64,5 @@ export const analyses = analysisSchema.table(
     ),
   ],
 );
+
+export const analysisOutbox = createOutboxTable(analysisSchema);

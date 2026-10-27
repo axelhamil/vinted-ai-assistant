@@ -1,9 +1,10 @@
 import { db } from "@packages/testing/clone-database";
 import { count, eq } from "drizzle-orm";
-import { analyses } from "../../schemas/analysis";
+import { analyses, analysisOutbox } from "../../schemas/analysis";
 
 export async function clearAnalyses(): Promise<void> {
   await db.delete(analyses);
+  await db.delete(analysisOutbox);
 }
 
 export async function rowsFor(vintedId: string): Promise<number> {

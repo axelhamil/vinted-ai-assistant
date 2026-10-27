@@ -5,7 +5,6 @@ import {
 } from "@packages/analysis/analysis.module";
 import type { IInstrumentation } from "@packages/ddd-kit";
 import { createDb } from "@packages/drizzle/config";
-import { DrizzleUnitOfWork } from "@packages/drizzle/unit-of-work";
 import { studioAiModule, studioModule } from "@packages/studio/studio.module";
 import { container } from "inwire";
 import type { Env } from "../../common/env";
@@ -35,7 +34,6 @@ export function createContainer(env: Env) {
       },
     )
     .add("pool", (c) => c.db.$client)
-    .add("unitOfWork", (c) => new DrizzleUnitOfWork(c.db))
     .add("databaseProbe", (c) => new PostgresDatabaseProbe(c.pool, c.logger))
     .add(
       "IInstrumentation",

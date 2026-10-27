@@ -25,7 +25,7 @@ export const ANALYSIS_ERROR_MESSAGES: Record<AnalysisErrorCode, string> = {
   ANALYSIS_NOT_FOUND:
     "No analysis exists for this Vinted listing. Analyze the listing first, then retry.",
   ANALYSIS_STATUS_CONFLICT:
-    "This status change is not allowed from the current status of the listing. Reload the analysis, then pick a status it can move to.",
+    "The analysis changed since it was read, or its current status cannot move to the requested one. Reload the analysis, then retry.",
   ANALYSIS_RECORD_INTEGRITY_FAILED:
     "The stored analysis of this listing can no longer be read. Analyze the listing again to replace it.",
   ANALYSIS_STORE_UNAVAILABLE:

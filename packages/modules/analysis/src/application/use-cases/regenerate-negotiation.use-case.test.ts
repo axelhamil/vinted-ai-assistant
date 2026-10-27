@@ -52,6 +52,7 @@ describe("regenerating the negotiation script", () => {
     expect(analysis.get("negotiation").tone.value).toBe("urgent");
     expect(repository.updateNegotiation).toHaveBeenCalledWith(
       analysis.id,
+      analysis.get("analyzedAt"),
       analysis.get("negotiation"),
     );
     expect(repository.save).not.toHaveBeenCalled();

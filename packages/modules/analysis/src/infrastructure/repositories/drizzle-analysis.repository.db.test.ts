@@ -276,32 +276,39 @@ describe("DrizzleAnalysisRepository", () => {
     expect((await find("5001")).get("status").value).toBe("BOUGHT");
   });
 
-  it("rewrites only the negotiation, so a re-analysis saved meanwhile keeps its facts", async () => {
-    const stale = await store({ vintedId: "7001", hoursAgo: 2 });
-    const refreshed = analysisOf({ vintedId: "7001" });
+  it("rewrites only the negotiation of the analysis it read", async () => {
+    const stored = await store({ vintedId: "7001" });
+
+    const updated = await repository.updateNegotiation(
+      stored.id,
+      stored.get("analyzedAt"),
+      buildNegotiation({ script: "Je propose 17 €.", tone: "urgent" }),
+    );
+
+    const found = await find("7001");
+    expect(updated.isSuccess).toBe(true);
+    expect(found.get("negotiation").script).toBe("Je propose 17 €.");
+    expect(found.get("negotiation").tone.value).toBe("urgent");
+    expect(found.get("analyzedAt")).toEqual(stored.get("analyzedAt"));
+  });
+
+  it("answers a conflict and keeps the re-analysis when one was saved since the analysis was read", async () => {
+    const stale = await store({ vintedId: "7002", hoursAgo: 2 });
+    const refreshed = analysisOf({ vintedId: "7002" });
     await repository.save(refreshed);
 
     const updated = await repository.updateNegotiation(
       stale.id,
+      stale.get("analyzedAt"),
       buildNegotiation({ script: "Je propose 17 €.", tone: "urgent" }),
     );
 
-    const stored = await find("7001");
-    expect(updated.isSuccess).toBe(true);
-    expect(stored.get("negotiation").script).toBe("Je propose 17 €.");
-    expect(stored.get("negotiation").tone.value).toBe("urgent");
-    expect(stored.get("analyzedAt")).toEqual(ANALYZED_AT);
-  });
-
-  it("answers not found when the negotiation of a missing analysis is rewritten", async () => {
-    const missing = buildAnalysis();
-
-    const updated = await repository.updateNegotiation(
-      missing.id,
-      buildNegotiation(),
+    const found = await find("7002");
+    expect(updated.getError()).toBe("ANALYSIS_STATUS_CONFLICT");
+    expect(found.get("negotiation").script).toBe(
+      refreshed.get("negotiation").script,
     );
-
-    expect(updated.getError()).toBe("ANALYSIS_NOT_FOUND");
+    expect(found.get("analyzedAt")).toEqual(ANALYZED_AT);
   });
 
   it("deletes a stored analysis, and answers not found for a missing one", async () => {

@@ -1,6 +1,9 @@
 import { Aggregate, Result, UUID } from "@packages/ddd-kit";
 import { ANALYSIS_FRESH_FOR_MS } from "../contract";
 import { AnalysisId } from "./analysis-id";
+import { AnalysisCompletedEvent } from "./events/analysis-completed.event";
+import { AnalysisDeletedEvent } from "./events/analysis-deleted.event";
+import { AnalysisStatusChangedEvent } from "./events/analysis-status-changed.event";
 import type { Listing } from "./listing";
 import type { ListingFacts } from "./listing-facts";
 import { computeOpportunityScore } from "./services/opportunity-score";
@@ -128,22 +131,22 @@ export class Analysis extends Aggregate<AnalysisProps> {
     if (assessed.isFailure) return Result.fail(INPUT_INVALID);
 
     const [assessment, status] = assessed.getValue();
-
-    return Result.ok(
-      new Analysis(
-        {
-          listing,
-          facts,
-          groundingSources,
-          negotiation,
-          ...assessment,
-          status,
-          analyzedAt: now,
-          createdAt: now,
-        },
-        new UUID<string>(),
-      ),
+    const analysis = new Analysis(
+      {
+        listing,
+        facts,
+        groundingSources,
+        negotiation,
+        ...assessment,
+        status,
+        analyzedAt: now,
+        createdAt: now,
+      },
+      new UUID<string>(),
     );
+    analysis.recordCompleted();
+
+    return Result.ok(analysis);
   }
 
   static reconstitute(props: AnalysisProps, id: AnalysisId): Analysis {
@@ -161,10 +164,18 @@ export class Analysis extends Aggregate<AnalysisProps> {
   }
 
   storedAs(id: AnalysisId, status: AnalysisStatus, createdAt: Date): Analysis {
-    return new Analysis(
+    const stored = new Analysis(
       { ...this._props, status, createdAt },
       new UUID(id.value),
     );
+    stored.addEvents(
+      this.pullDomainEvents().map((event) => ({
+        ...event,
+        aggregateId: stored.aggregateId(),
+      })),
+    );
+
+    return stored;
   }
 
   refresh(input: AnalysisInput): Result<void, InputInvalid> {
@@ -183,15 +194,31 @@ export class Analysis extends Aggregate<AnalysisProps> {
     this._props.suggestedOffer = assessment.suggestedOffer;
     this._props.resale = assessment.resale;
     this._props.analyzedAt = now;
+    this.recordCompleted();
     return Result.ok();
   }
 
   changeStatus(next: AnalysisStatus): Result<void, "ANALYSIS_STATUS_CONFLICT"> {
-    if (!this.get("status").canMoveTo(next))
-      return Result.fail("ANALYSIS_STATUS_CONFLICT");
+    const from = this.get("status");
+    if (!from.canMoveTo(next)) return Result.fail("ANALYSIS_STATUS_CONFLICT");
 
     this._props.status = next;
+    this.addEvent(
+      new AnalysisStatusChangedEvent(this.aggregateId(), {
+        vintedId: this.vintedId(),
+        from: from.value,
+        to: next.value,
+      }),
+    );
     return Result.ok();
+  }
+
+  markDeleted(): void {
+    this.addEvent(
+      new AnalysisDeletedEvent(this.aggregateId(), {
+        vintedId: this.vintedId(),
+      }),
+    );
   }
 
   replaceNegotiation(negotiation: Negotiation): void {
@@ -218,5 +245,27 @@ export class Analysis extends Aggregate<AnalysisProps> {
 
   resale(): Resale {
     return this.get("resale");
+  }
+
+  private recordCompleted(): void {
+    this.addEvent(
+      new AnalysisCompletedEvent(
+        this.aggregateId(),
+        {
+          vintedId: this.vintedId(),
+          score: this.get("opportunityScore").value,
+          marginPercent: this.get("margin").value.percent,
+        },
+        this.get("analyzedAt"),
+      ),
+    );
+  }
+
+  private aggregateId(): string {
+    return String(this.id.value);
+  }
+
+  private vintedId(): string {
+    return this.get("listing").vintedId.value;
   }
 }
