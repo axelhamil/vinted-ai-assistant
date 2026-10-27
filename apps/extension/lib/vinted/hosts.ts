@@ -1,18 +1,4 @@
-export type LanguageCode =
-  | "fr"
-  | "en"
-  | "de"
-  | "es"
-  | "it"
-  | "nl"
-  | "pt"
-  | "pl"
-  | "cs"
-  | "sk"
-  | "hu"
-  | "ro"
-  | "lt"
-  | "hr";
+import type { LanguageCode } from "@packages/ai/languages";
 
 export type VintedTld =
   | "fr"

@@ -1,4 +1,5 @@
-import { type LanguageCode, languageForHost, VINTED_HOSTS } from "./hosts";
+import type { LanguageCode } from "@packages/ai/languages";
+import { languageForHost, VINTED_HOSTS } from "./hosts";
 
 const DEFAULT_LANGUAGE: LanguageCode = "fr";
 

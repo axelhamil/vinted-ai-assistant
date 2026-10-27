@@ -312,6 +312,9 @@ importers:
         specifier: ^4.6.7
         version: 4.6.7
     devDependencies:
+      '@packages/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@packages/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config

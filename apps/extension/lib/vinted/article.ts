@@ -1,6 +1,6 @@
+import type { LanguageCode } from "@packages/ai/languages";
 import type { AnalyzeInput } from "@/lib/messaging/protocol";
 import { firstMatch, firstText, textOf } from "./dom";
-import type { LanguageCode } from "./hosts";
 import { type JsonLdProduct, readJsonLdProduct } from "./json-ld";
 import { detectLanguage } from "./language";
 import { readPhotos } from "./photos";

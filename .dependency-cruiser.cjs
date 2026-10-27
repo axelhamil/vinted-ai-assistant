@@ -86,7 +86,7 @@ module.exports = {
     {
       name: "extension-boundary",
       comment:
-        "The extension reads only the analysis contract and the api's AppType type.",
+        "The extension reads only the analysis contract, the language codes and the api's AppType type.",
       severity: "error",
       from: { path: "^apps/extension/" },
       to: {
@@ -94,6 +94,7 @@ module.exports = {
         pathNot: [
           "^apps/extension/",
           "^packages/modules/analysis/src/contract\\.ts$",
+          "^packages/ai/src/languages\\.ts$",
           "^apps/api/src/composition/app\\.ts$",
         ],
       },
