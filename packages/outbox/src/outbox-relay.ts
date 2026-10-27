@@ -26,7 +26,7 @@ export interface OutboxRelayOptions {
   maxAttempts?: number;
   leaseSeconds?: number;
   deadRetrySeconds?: number;
-  lanes?: RelayLanes;
+  lanes: RelayLanes;
 }
 
 export interface DrainOutcome {
@@ -91,10 +91,8 @@ async function eachBounded<T>(
 function claimLimitOf(
   batchSize: number,
   leaseSeconds: number,
-  lanes: RelayLanes | undefined,
+  lanes: RelayLanes,
 ): number {
-  if (!lanes) return batchSize;
-
   const roundsWithinLease = Math.max(
     1,
     Math.floor(leaseSeconds / lanes.handlerBudgetSeconds),
@@ -129,7 +127,7 @@ export class OutboxRelay {
       leaseSeconds = 120,
       deadRetrySeconds = DEAD_RETRY_SECONDS,
       lanes,
-    }: OutboxRelayOptions = {},
+    }: OutboxRelayOptions,
   ) {
     this.outbox = repository.outbox;
     this.knownTypes = [...new Set([...routes.handled, ...routes.ignored])];
@@ -138,7 +136,7 @@ export class OutboxRelay {
     this.maxAttempts = maxAttempts;
     this.leaseSeconds = leaseSeconds;
     this.deadRetrySeconds = deadRetrySeconds;
-    this.concurrency = Math.max(1, lanes?.concurrency ?? 1);
+    this.concurrency = Math.max(1, lanes.concurrency);
   }
 
   async drainOnce(observer?: DrainObserver): Promise<DrainOutcome> {

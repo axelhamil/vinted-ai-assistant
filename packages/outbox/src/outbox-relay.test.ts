@@ -14,6 +14,7 @@ import type {
 import { OutboxRelay, type OutboxRelayOptions } from "./outbox-relay";
 
 const ROUTES = { handled: ["clip.rendered"], ignored: [] };
+const LANES = { concurrency: 1, handlerBudgetSeconds: 25 };
 
 async function claimOf(options: OutboxRelayOptions): Promise<unknown> {
   const repository = mockPort<DrizzleOutboxRepository>();
@@ -32,7 +33,7 @@ async function claimOf(options: OutboxRelayOptions): Promise<unknown> {
 
 describe("OutboxRelay claim size", () => {
   it.each([
-    [{}, 50],
+    [{ lanes: { concurrency: 1, handlerBudgetSeconds: 1 } }, 50],
     [{ lanes: { concurrency: 8, handlerBudgetSeconds: 25 } }, 32],
     [{ lanes: { concurrency: 4, handlerBudgetSeconds: 25 } }, 16],
     [{ lanes: { concurrency: 1, handlerBudgetSeconds: 25 } }, 4],
@@ -86,7 +87,10 @@ function givenRelay(
   for (const [name, handler] of Object.entries(handlers))
     dispatcher.subscribe("clip.rendered", name, handler);
 
-  return { repository, relay: new OutboxRelay(repository, dispatcher, ROUTES) };
+  return {
+    repository,
+    relay: new OutboxRelay(repository, dispatcher, ROUTES, { lanes: LANES }),
+  };
 }
 
 describe("OutboxRelay delivery per handler", () => {

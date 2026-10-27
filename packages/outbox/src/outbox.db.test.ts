@@ -17,7 +17,11 @@ import { eq, sql } from "drizzle-orm";
 import { DrizzleOutboxRepository } from "./drizzle-outbox.repository";
 import { createOutboxFlushHandler } from "./outbox-flush-handler";
 import { OutboxListener } from "./outbox-listener";
-import { type EventRoutes, OutboxRelay } from "./outbox-relay";
+import {
+  type EventRoutes,
+  OutboxRelay,
+  type OutboxRelayOptions,
+} from "./outbox-relay";
 import type { OutboxTable } from "./outbox-table";
 import { startRelayLoop } from "./relay-loop";
 import { clips, createTestOutboxes, notes } from "./testing/outbox-test-schema";
@@ -26,6 +30,8 @@ const ROUTES: EventRoutes = {
   handled: ["clip.rendered"],
   ignored: ["clip.archived"],
 };
+
+const ONE_LANE = { concurrency: 1, handlerBudgetSeconds: 25 };
 
 const quietLog = { info: () => {}, warn: () => {} };
 
@@ -75,7 +81,7 @@ async function rowOf(id: string | undefined) {
 
 function relayWith(
   handler: (event: IDomainEvent) => Promise<Result<void>>,
-  options: ConstructorParameters<typeof OutboxRelay>[3] = {},
+  options: Partial<OutboxRelayOptions> = {},
 ) {
   const dispatcher = new InMemoryEventDispatcher();
   dispatcher.subscribe("clip.rendered", "clip-handler", handler);
@@ -84,7 +90,7 @@ function relayWith(
     new DrizzleOutboxRepository(db, clips),
     dispatcher,
     ROUTES,
-    options,
+    { lanes: ONE_LANE, ...options },
   );
 }
 
@@ -304,7 +310,7 @@ describe("relaying the outbox", () => {
       new DrizzleOutboxRepository(db, clips),
       dispatcher,
       ROUTES,
-      { maxAttempts: 1 },
+      { lanes: ONE_LANE, maxAttempts: 1 },
     );
 
     await relay.drainOnce();
@@ -521,6 +527,19 @@ describe("relaying the outbox", () => {
       dispatchedAt: null,
     });
     expect((await relay.pendingState()).dueInMs.isNone()).toBe(true);
+  });
+
+  it("reports fresh events due now even while another event waits out its backoff", async () => {
+    const backingOff = event();
+    await announce([event(), event(), backingOff]);
+    await db
+      .update(clips)
+      .set({ nextAttemptAt: sql`now() + interval '1 hour'`, attempts: 1 })
+      .where(eq(clips.id, backingOff.eventId));
+
+    const { dueInMs } = await relayWith(async () => Result.ok()).pendingState();
+
+    expect(dueInMs.toNull()).toBe(0);
   });
 
   it("wakes the relay on commit through the listening connection, long before its poll", async () => {

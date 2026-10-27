@@ -152,7 +152,7 @@ export class DrizzleOutboxRepository {
           ? []
           : await this.db
               .select({
-                dueInMs: sql<number>`greatest(0, extract(epoch from (coalesce(min(${t.nextAttemptAt}), clock_timestamp()) - clock_timestamp())) * 1000)`,
+                dueInMs: sql<number>`greatest(0, extract(epoch from (min(coalesce(${t.nextAttemptAt}, clock_timestamp())) - clock_timestamp())) * 1000)`,
                 waiting: sql<number>`count(*)`,
               })
               .from(t)
