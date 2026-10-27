@@ -46,15 +46,15 @@ packages/
 
 ## Steps, in order
 
-### 0. Toolchain and quality guards
+### 0. Toolchain and quality guards (delivered 27/10/2026)
 
 Pins (`.bun-version`, `.nvmrc`, `packageManager`), pnpm workspace settings, `packages/typescript-config`, Biome 2 config, knip, jscpd, dependency-cruiser boundaries, husky + lint-staged + commitlint, CI workflow, release-please workflow, `package-lock.json` files removed. Legacy apps ignored by the new checks.
 
-### 1. Kernel and test database
+### 1. Kernel and test database (delivered 27/10/2026)
 
 `packages/ddd-kit`, `packages/drizzle` (UoW, migrator), `packages/testing` (port mock, UoW mock, template database cloned per test file), `docker-compose.yaml` with `db` and `postgres-test`, `bunfig.toml` and `bunfig.db.toml`. `pnpm db`, `pnpm test`, `pnpm test:db` work.
 
-### 2. API host
+### 2. API host (delivered 27/10/2026)
 
 `apps/api`: env Zod, pino with requestId, central error handler mapping typed codes to HTTP, `/health/live` and `/health/ready`, graceful shutdown steps, Sentry no-op without DSN, inwire composition root. Dockerfile (dev, production on `debian:trixie-slim` + Bun) and compose `api` service with `develop.watch`, `migrate` service.
 
