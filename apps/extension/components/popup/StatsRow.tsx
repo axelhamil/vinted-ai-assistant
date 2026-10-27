@@ -1,10 +1,9 @@
 import { OPPORTUNITY_MIN_SCORE } from "@packages/analysis/contract";
-import { useQuery } from "@tanstack/react-query";
 import { ErrorPanel } from "@/components/sidebar/ErrorPanel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { sendMessage } from "@/lib/messaging/protocol";
-import { dailyCount } from "@/lib/storage/daily-count";
 import { useBackground } from "@/lib/ui/query";
+import { useDailyCount } from "@/lib/ui/use-daily-count";
 
 interface StatProps {
   label: string;
@@ -24,10 +23,7 @@ function Stat({ label, value, pending }: StatProps) {
 }
 
 export function StatsRow() {
-  const today = useQuery({
-    queryKey: ["daily-count"],
-    queryFn: () => dailyCount.current(),
-  });
+  const today = useDailyCount();
   const stats = useBackground({
     key: ["portfolio-stats"],
     request: () => sendMessage("portfolioStats", OPPORTUNITY_MIN_SCORE),

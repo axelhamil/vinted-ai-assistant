@@ -1,4 +1,3 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Header } from "@/components/popup/Header";
@@ -9,36 +8,15 @@ import { ErrorPanel } from "@/components/sidebar/ErrorPanel";
 import { Button } from "@/components/ui/button";
 import { LOCAL_FAILURE_MESSAGE } from "@/lib/api/failure";
 import { sendMessage } from "@/lib/messaging/protocol";
-import {
-  type Settings,
-  settings,
-  updateSettings,
-} from "@/lib/storage/settings";
 import { useBackground } from "@/lib/ui/query";
-
-const SAVE_FAILED =
-  "Les réglages n'ont pas pu être enregistrés. Rechargez l'extension puis réessayez.";
+import { useSettings } from "@/lib/ui/use-settings";
 
 export function App() {
   const [view, setView] = useState<"portfolio" | "settings">("portfolio");
-  const queryClient = useQueryClient();
-  const current = useQuery({
-    queryKey: ["settings"],
-    queryFn: () => settings.getValue(),
-  });
+  const { current, save } = useSettings();
   const backend = useBackground({
     key: ["backend"],
     request: () => sendMessage("checkBackend", undefined),
-  });
-  const save = useMutation({
-    mutationFn: (change: Partial<Settings>) => updateSettings(change),
-    onSuccess: (next) => {
-      queryClient.setQueryData(["settings"], next);
-      void queryClient.invalidateQueries({
-        predicate: ({ queryKey }) => queryKey[0] !== "settings",
-      });
-    },
-    onError: () => toast.error(SAVE_FAILED),
   });
 
   if (current.isError)
