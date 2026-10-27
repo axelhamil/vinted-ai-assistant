@@ -21,7 +21,7 @@ CREATE TABLE "analysis"."analyses" (
 	"negotiation" jsonb NOT NULL,
 	"opportunity_score" numeric(3, 1) NOT NULL,
 	"margin_cents" integer NOT NULL,
-	"margin_percent" numeric(7, 1) NOT NULL,
+	"margin_percent" numeric NOT NULL,
 	"suggested_offer_cents" integer NOT NULL,
 	"resale" jsonb NOT NULL,
 	"status" text NOT NULL,
@@ -34,4 +34,4 @@ CREATE TABLE "analysis"."analyses" (
 --> statement-breakpoint
 CREATE INDEX "analyses_status_idx" ON "analysis"."analyses" USING btree ("status");--> statement-breakpoint
 CREATE INDEX "analyses_opportunity_score_idx" ON "analysis"."analyses" USING btree ("opportunity_score");--> statement-breakpoint
-CREATE INDEX "analyses_analyzed_at_idx" ON "analysis"."analyses" USING btree ("analyzed_at" DESC NULLS LAST);
+CREATE INDEX "analyses_analyzed_at_id_idx" ON "analysis"."analyses" USING btree ("analyzed_at" DESC NULLS FIRST,"id" DESC NULLS FIRST);

@@ -43,11 +43,7 @@ export const analyses = analysisSchema.table(
       mode: "number",
     }).notNull(),
     marginCents: integer("margin_cents").notNull(),
-    marginPercent: numeric("margin_percent", {
-      precision: 7,
-      scale: 1,
-      mode: "number",
-    }).notNull(),
+    marginPercent: numeric("margin_percent", { mode: "number" }).notNull(),
     suggestedOfferCents: integer("suggested_offer_cents").notNull(),
     resale: jsonb("resale").notNull(),
     status: text("status").notNull(),
@@ -61,6 +57,9 @@ export const analyses = analysisSchema.table(
     check("analyses_status_check", sql`${table.status} in (${STATUS_LIST})`),
     index("analyses_status_idx").on(table.status),
     index("analyses_opportunity_score_idx").on(table.opportunityScore),
-    index("analyses_analyzed_at_idx").on(table.analyzedAt.desc()),
+    index("analyses_analyzed_at_id_idx").on(
+      table.analyzedAt.desc().nullsFirst(),
+      table.id.desc().nullsFirst(),
+    ),
   ],
 );

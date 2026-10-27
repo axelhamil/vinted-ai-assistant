@@ -1,11 +1,13 @@
 import type { Option, Result } from "@packages/ddd-kit";
 import type { Analysis } from "../../domain/analysis.aggregate";
+import type { AnalysisId } from "../../domain/analysis-id";
 import type { AnalysisStatus } from "../../domain/value-objects/analysis-status.vo";
 import type { VintedId } from "../../domain/value-objects/vinted-id.vo";
 
 export type AnalysisStoreUnavailable = "ANALYSIS_STORE_UNAVAILABLE";
 export type AnalysisRecordIntegrityFailed = "ANALYSIS_RECORD_INTEGRITY_FAILED";
 export type AnalysisNotFound = "ANALYSIS_NOT_FOUND";
+export type AnalysisStatusConflict = "ANALYSIS_STATUS_CONFLICT";
 
 export interface PortfolioQuery {
   limit: number;
@@ -27,7 +29,9 @@ export interface PortfolioStats {
 }
 
 export interface IAnalysisRepository {
-  save(analysis: Analysis): Promise<Result<void, AnalysisStoreUnavailable>>;
+  save(
+    analysis: Analysis,
+  ): Promise<Result<AnalysisId, AnalysisStoreUnavailable>>;
   findByVintedId(
     vintedId: VintedId,
   ): Promise<
@@ -43,8 +47,10 @@ export interface IAnalysisRepository {
     minScore: number,
   ): Promise<Result<PortfolioStats, AnalysisStoreUnavailable>>;
   updateStatus(
-    analysis: Analysis,
-  ): Promise<Result<void, AnalysisNotFound | AnalysisStoreUnavailable>>;
+    id: AnalysisId,
+    from: AnalysisStatus,
+    to: AnalysisStatus,
+  ): Promise<Result<void, AnalysisStatusConflict | AnalysisStoreUnavailable>>;
   delete(
     vintedId: VintedId,
   ): Promise<Result<void, AnalysisNotFound | AnalysisStoreUnavailable>>;

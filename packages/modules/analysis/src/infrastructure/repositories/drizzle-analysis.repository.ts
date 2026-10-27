@@ -3,6 +3,7 @@ import {
   type ILogger,
   Option,
   Result,
+  UUID,
 } from "@packages/ddd-kit";
 import type { Db } from "@packages/drizzle/config";
 import { resolveExecutor } from "@packages/drizzle/unit-of-work";
@@ -20,6 +21,7 @@ import { analyses } from "../../../schemas/analysis";
 import type {
   AnalysisNotFound,
   AnalysisRecordIntegrityFailed,
+  AnalysisStatusConflict,
   AnalysisStoreUnavailable,
   IAnalysisRepository,
   PortfolioPage,
@@ -27,6 +29,8 @@ import type {
   PortfolioStats,
 } from "../../application/ports/analysis.repository.port";
 import type { Analysis } from "../../domain/analysis.aggregate";
+import { AnalysisId } from "../../domain/analysis-id";
+import type { AnalysisStatus } from "../../domain/value-objects/analysis-status.vo";
 import type { VintedId } from "../../domain/value-objects/vinted-id.vo";
 import {
   type AnalysisRecord,
@@ -39,6 +43,7 @@ const STORE_UNAVAILABLE: AnalysisStoreUnavailable =
 const INTEGRITY_FAILED: AnalysisRecordIntegrityFailed =
   "ANALYSIS_RECORD_INTEGRITY_FAILED";
 const NOT_FOUND: AnalysisNotFound = "ANALYSIS_NOT_FOUND";
+const STATUS_CONFLICT: AnalysisStatusConflict = "ANALYSIS_STATUS_CONFLICT";
 
 function excluded(column: Column): SQL {
   return sql`excluded.${sql.identifier(column.name)}`;
@@ -90,9 +95,11 @@ export class DrizzleAnalysisRepository implements IAnalysisRepository {
     });
   }
 
-  save(analysis: Analysis): Promise<Result<void, AnalysisStoreUnavailable>> {
+  save(
+    analysis: Analysis,
+  ): Promise<Result<AnalysisId, AnalysisStoreUnavailable>> {
     return this.traced("save", async () => {
-      await resolveExecutor(this.database)
+      const [stored] = await resolveExecutor(this.database)
         .insert(analyses)
         .values(analysisToPersistence(analysis))
         .onConflictDoUpdate({
@@ -122,9 +129,11 @@ export class DrizzleAnalysisRepository implements IAnalysisRepository {
             analyzedAt: excluded(analyses.analyzedAt),
             updatedAt: sql`now()`,
           },
-        });
+        })
+        .returning({ id: analyses.id });
+      if (!stored) return Result.fail(STORE_UNAVAILABLE);
 
-      return Result.ok();
+      return Result.ok(AnalysisId.create(new UUID(stored.id)));
     });
   }
 
@@ -218,17 +227,24 @@ export class DrizzleAnalysisRepository implements IAnalysisRepository {
   }
 
   updateStatus(
-    analysis: Analysis,
-  ): Promise<Result<void, AnalysisNotFound | AnalysisStoreUnavailable>> {
+    id: AnalysisId,
+    from: AnalysisStatus,
+    to: AnalysisStatus,
+  ): Promise<Result<void, AnalysisStatusConflict | AnalysisStoreUnavailable>> {
     return this.traced(
       "updateStatus",
-      async (): Promise<Result<void, AnalysisNotFound>> => {
+      async (): Promise<Result<void, AnalysisStatusConflict>> => {
         const updated = await resolveExecutor(this.database)
           .update(analyses)
-          .set({ status: analysis.get("status").value, updatedAt: sql`now()` })
-          .where(eq(analyses.vintedId, analysis.get("listing").vintedId.value))
+          .set({ status: to.value, updatedAt: sql`now()` })
+          .where(
+            and(
+              eq(analyses.id, String(id.value)),
+              eq(analyses.status, from.value),
+            ),
+          )
           .returning({ id: analyses.id });
-        if (updated.length === 0) return Result.fail(NOT_FOUND);
+        if (updated.length === 0) return Result.fail(STATUS_CONFLICT);
 
         return Result.ok();
       },

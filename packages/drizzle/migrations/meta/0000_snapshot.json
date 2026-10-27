@@ -1,5 +1,5 @@
 {
-  "id": "4fd63c95-ccb9-491b-b443-6e26de7b3c04",
+  "id": "b8ec84f3-0a9a-4c05-b788-b9a76b8269af",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -130,7 +130,7 @@
         },
         "margin_percent": {
           "name": "margin_percent",
-          "type": "numeric(7, 1)",
+          "type": "numeric",
           "primaryKey": false,
           "notNull": true
         },
@@ -203,14 +203,20 @@
           "method": "btree",
           "with": {}
         },
-        "analyses_analyzed_at_idx": {
-          "name": "analyses_analyzed_at_idx",
+        "analyses_analyzed_at_id_idx": {
+          "name": "analyses_analyzed_at_id_idx",
           "columns": [
             {
               "expression": "analyzed_at",
               "isExpression": false,
               "asc": false,
-              "nulls": "last"
+              "nulls": "first"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "first"
             }
           ],
           "isUnique": false,

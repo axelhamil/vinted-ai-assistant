@@ -8,6 +8,7 @@ import {
   AnalysisStatus,
   type AnalysisStatusValue,
 } from "../../domain/value-objects/analysis-status.vo";
+import { Margin } from "../../domain/value-objects/margin.vo";
 import { Score } from "../../domain/value-objects/score.vo";
 import { VintedId } from "../../domain/value-objects/vinted-id.vo";
 import {
@@ -64,6 +65,10 @@ async function store(options: StoredOptions): Promise<Analysis> {
   return analysis;
 }
 
+function status(value: AnalysisStatusValue): AnalysisStatus {
+  return AnalysisStatus.create(value).getValue();
+}
+
 function vintedId(raw: string): VintedId {
   return VintedId.create(raw).getValue();
 }
@@ -99,10 +104,33 @@ describe("DrizzleAnalysisRepository", () => {
     expect(found.getValue().isNone()).toBe(true);
   });
 
+  it("stores a margin percent far beyond any fixed precision", async () => {
+    const built = analysisOf({ vintedId: "1004" });
+    const analysis = Analysis.reconstitute(
+      {
+        ...propsOf(built),
+        margin: Margin.create({
+          amountCents: 1_999_999_900,
+          percent: 2_000_000,
+        }).getValue(),
+      },
+      built.id,
+    );
+
+    expect((await repository.save(analysis)).isSuccess).toBe(true);
+    const found = await find("1004");
+
+    expect(found.margin().value.percent).toBe(2_000_000);
+  });
+
   it("keeps the id, the status and the creation date when a re-analysis of the listing is saved", async () => {
     const first = await store({ vintedId: "1002" });
-    first.changeStatus(AnalysisStatus.create("BOUGHT").getValue());
-    expect((await repository.updateStatus(first)).isSuccess).toBe(true);
+    const moved = await repository.updateStatus(
+      first.id,
+      status("ANALYZED"),
+      status("BOUGHT"),
+    );
+    expect(moved.isSuccess).toBe(true);
     const later = new Date(ANALYZED_AT.getTime() + 2 * HOUR_MS);
     const reanalysis = Analysis.create(
       analysisInput({
@@ -111,9 +139,10 @@ describe("DrizzleAnalysisRepository", () => {
       }),
     ).getValue();
 
-    expect((await repository.save(reanalysis)).isSuccess).toBe(true);
+    const saved = await repository.save(reanalysis);
     const found = await find("1002");
 
+    expect(String(saved.getValue().value)).toBe(String(first.id.value));
     expect(String(found.id.value)).toBe(String(first.id.value));
     expect(found.get("status").value).toBe("BOUGHT");
     expect(found.get("createdAt")).toEqual(first.get("createdAt"));
@@ -121,15 +150,39 @@ describe("DrizzleAnalysisRepository", () => {
     expect(found.get("analyzedAt")).toEqual(later);
   });
 
-  it("ends with one row when two analyses of the same listing are saved at once", async () => {
+  it("ends with one row, and gives both callers its id, when two first analyses of a listing are saved at once", async () => {
     const [left, right] = await Promise.all([
       repository.save(analysisOf({ vintedId: "1003" })),
       repository.save(analysisOf({ vintedId: "1003" })),
     ]);
+    const stored = await find("1003");
 
-    expect(left?.isSuccess).toBe(true);
-    expect(right?.isSuccess).toBe(true);
     expect(await rowsFor("1003")).toBe(1);
+    expect(String(left?.getValue().value)).toBe(String(stored.id.value));
+    expect(String(right?.getValue().value)).toBe(String(stored.id.value));
+  });
+
+  it("lets only one of two concurrent status changes from the same status through", async () => {
+    const watched = await store({ vintedId: "1005", status: "WATCHING" });
+
+    const outcomes = await Promise.all([
+      repository.updateStatus(
+        watched.id,
+        status("WATCHING"),
+        status("ARCHIVED"),
+      ),
+      repository.updateStatus(watched.id, status("WATCHING"), status("BOUGHT")),
+    ]);
+    const winner = outcomes.findIndex((outcome) => outcome.isSuccess);
+    const found = await find("1005");
+
+    expect(outcomes.filter((outcome) => outcome.isSuccess)).toHaveLength(1);
+    expect(outcomes.find((outcome) => outcome.isFailure)?.getError()).toBe(
+      "ANALYSIS_STATUS_CONFLICT",
+    );
+    expect(found.get("status").value).toBe(
+      winner === 0 ? "ARCHIVED" : "BOUGHT",
+    );
   });
 
   it("lists the newest analyses first, filtered by minimum score and status, with the total", async () => {
@@ -208,13 +261,17 @@ describe("DrizzleAnalysisRepository", () => {
     });
   });
 
-  it("changes nothing and answers not found when the status of an unknown listing is updated", async () => {
+  it("changes nothing and answers a conflict when the stored status is no longer the one read", async () => {
+    const bought = await store({ vintedId: "5001", status: "BOUGHT" });
+
     const updated = await repository.updateStatus(
-      analysisOf({ vintedId: "5001", status: "WATCHING" }),
+      bought.id,
+      status("WATCHING"),
+      status("ARCHIVED"),
     );
 
-    expect(updated.getError()).toBe("ANALYSIS_NOT_FOUND");
-    expect(await rowsFor("5001")).toBe(0);
+    expect(updated.getError()).toBe("ANALYSIS_STATUS_CONFLICT");
+    expect((await find("5001")).get("status").value).toBe("BOUGHT");
   });
 
   it("deletes a stored analysis, and answers not found for a missing one", async () => {
