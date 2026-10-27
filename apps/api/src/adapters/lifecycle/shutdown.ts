@@ -6,6 +6,8 @@ export interface ShutdownStep {
   run(): Promise<void>;
 }
 
+const DEADLINE_FLUSH_TIMEOUT_MS = 1_000;
+
 type StepOutcome =
   | { kind: "done" }
   | { kind: "failed"; error: unknown }
@@ -35,7 +37,15 @@ function runStep(step: ShutdownStep): Promise<StepOutcome> {
   return withTimeout<StepOutcome>(settled, step.timeoutMs, { kind: "timeout" });
 }
 
-async function runAll(steps: ShutdownStep[], logger: Logger): Promise<"done"> {
+export function flushLogger(logger: Logger): Promise<void> {
+  return new Promise<void>((resolve, reject) =>
+    logger.flush((error) => (error ? reject(error) : resolve())),
+  );
+}
+
+async function runAll(steps: ShutdownStep[], logger: Logger): Promise<boolean> {
+  let allDone = true;
+
   for (const step of steps) {
     const outcome = await runStep(step);
 
@@ -43,6 +53,8 @@ async function runAll(steps: ShutdownStep[], logger: Logger): Promise<"done"> {
       logger.info({ step: step.name }, "[Shutdown] step done");
       continue;
     }
+
+    allDone = false;
 
     if (outcome.kind === "failed") {
       logger.error(
@@ -55,25 +67,33 @@ async function runAll(steps: ShutdownStep[], logger: Logger): Promise<"done"> {
     logger.error({ step: step.name }, "[Shutdown] step timed out, going on");
   }
 
-  return "done";
+  return allDone;
 }
 
 export function createShutdown(
   steps: ShutdownStep[],
   logger: Logger,
   deadlineMs: number,
-): () => Promise<void> {
-  let stopping: Promise<void> | undefined;
+): () => Promise<boolean> {
+  let stopping: Promise<boolean> | undefined;
 
   const stop = async () => {
-    const outcome = await withTimeout<"done" | "deadline">(
+    const outcome = await withTimeout<boolean | "deadline">(
       runAll(steps, logger),
       deadlineMs,
       "deadline",
     );
 
-    if (outcome === "deadline")
-      logger.error({ deadlineMs }, "[Shutdown] deadline reached, giving up");
+    if (outcome !== "deadline") return outcome;
+
+    logger.error({ deadlineMs }, "[Shutdown] deadline reached, giving up");
+    await runStep({
+      name: "deadline flush",
+      timeoutMs: DEADLINE_FLUSH_TIMEOUT_MS,
+      run: () => flushLogger(logger),
+    });
+
+    return false;
   };
 
   return () => {

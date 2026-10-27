@@ -54,8 +54,9 @@ describe("stopping the API", () => {
       1_000,
     );
 
-    await stop();
+    const ok = await stop();
 
+    expect(ok).toBe(true);
     expect(ran).toEqual(["http", "database"]);
     expect(lines.map((line) => line.step)).toEqual(["http", "database"]);
   });
@@ -66,20 +67,25 @@ describe("stopping the API", () => {
     const hang = step("database", () => new Promise<void>(() => {}), 10);
     const stop = createShutdown([boom, hang, step("logger")], logger, 1_000);
 
-    await stop();
+    const ok = await stop();
 
+    expect(ok).toBe(false);
     expect(ran).toEqual(["http", "database", "logger"]);
     expect(failedSteps()).toEqual(["http", "database"]);
   });
 
   it("gives up at the deadline without waiting for a step that never ends", async () => {
-    const { logger, ran, step } = given();
+    const { lines, logger, ran, step } = given();
     const hang = step("http", () => new Promise<void>(() => {}), 200);
     const stop = createShutdown([hang, step("logger")], logger, 20);
 
-    await stop();
+    const ok = await stop();
 
+    expect(ok).toBe(false);
     expect(ran).toEqual(["http"]);
+    expect(lines.map((line) => line.msg)).toContain(
+      "[Shutdown] deadline reached, giving up",
+    );
   });
 
   it("runs the steps once when the signal arrives twice", async () => {

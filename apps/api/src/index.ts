@@ -1,7 +1,7 @@
 import { serve } from "bun";
 import { env } from "../common/load-env";
-import { flushSentry, initSentry } from "../common/sentry";
-import { createShutdown } from "./adapters/lifecycle/shutdown";
+import { captureError, flushSentry, initSentry } from "../common/sentry";
+import { createShutdown, flushLogger } from "./adapters/lifecycle/shutdown";
 import { createApp } from "./composition/app";
 import { buildContainer } from "./composition/container";
 
@@ -49,18 +49,40 @@ const stop = createShutdown(
     {
       name: "logger",
       timeoutMs: LOGGER_FLUSH_TIMEOUT_MS,
-      run: () =>
-        new Promise<void>((resolve, reject) =>
-          logger.flush((error) => (error ? reject(error) : resolve())),
-        ),
+      run: () => flushLogger(logger),
     },
   ],
   logger,
   SHUTDOWN_DEADLINE_MS,
 );
 
-for (const signal of SIGNALS)
-  process.on(signal, () => {
-    logger.info({ signal }, "[Shutdown] signal received, stopping");
-    void stop().then(() => process.exit(0));
-  });
+let stopping = false;
+let crashed = false;
+
+async function stopAndExit(): Promise<void> {
+  stopping = true;
+  const ok = await stop();
+
+  process.exit(ok && !crashed ? 0 : 1);
+}
+
+function onSignal(signal: NodeJS.Signals): void {
+  if (stopping) {
+    logger.warn({ signal }, "[Shutdown] second signal, exiting now");
+    process.exit(1);
+  }
+
+  logger.info({ signal }, "[Shutdown] signal received, stopping");
+  void stopAndExit();
+}
+
+function onCrash(error: unknown): void {
+  crashed = true;
+  logger.fatal({ err: error }, "[Api] crashed, stopping");
+  captureError(error);
+  void stopAndExit();
+}
+
+for (const signal of SIGNALS) process.on(signal, onSignal);
+process.on("uncaughtException", onCrash);
+process.on("unhandledRejection", onCrash);

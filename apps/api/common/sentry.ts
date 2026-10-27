@@ -27,7 +27,7 @@ export async function flushSentry(timeoutMs: number): Promise<void> {
   await Sentry.flush(timeoutMs);
 }
 
-export function captureError(error: unknown, requestId: string): void {
+export function captureError(error: unknown, requestId?: string): void {
   if (!Sentry.isEnabled()) return;
 
   Sentry.captureException(error, { tags: { requestId } });
