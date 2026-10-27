@@ -25,16 +25,30 @@ export interface AnalysisRoutesDeps {
 
 const DEFAULT_LANGUAGE = "fr";
 
-const euros = z.number().finite();
+const MAX_EUROS = 10_000_000;
+
+const euros = z.number().max(MAX_EUROS);
+
+const priceEuros = euros.min(0.01);
+
+const vintedListingUrl = z.url({
+  protocol: /^https$/,
+  hostname: /^(www\.)?vinted\.[a-z]{2,}(\.[a-z]{2,})?$/i,
+});
+
+const optionalNumber = z.preprocess(
+  (raw) => (raw === "" ? undefined : raw),
+  z.coerce.number().optional(),
+);
 
 const analyzeBodySchema = z.object({
   vintedId: z.string().min(1),
-  url: z.url(),
+  url: vintedListingUrl,
   title: z.string().min(1),
   description: z.string(),
-  price: euros.positive(),
-  totalPrice: euros.positive().nullable(),
-  shippingCost: euros.nonnegative().nullable(),
+  price: priceEuros,
+  totalPrice: priceEuros.nullable(),
+  shippingCost: euros.min(0).nullable(),
   brand: z.string().nullable(),
   size: z.string().nullable(),
   condition: z.string().min(1),
@@ -54,15 +68,13 @@ const statusBodySchema = z.object({ status: z.string() });
 const toneBodySchema = z.object({ tone: z.string() });
 
 const portfolioQuerySchema = z.object({
-  limit: z.coerce.number().optional(),
-  offset: z.coerce.number().optional(),
-  minScore: z.coerce.number().optional(),
+  limit: optionalNumber,
+  offset: optionalNumber,
+  minScore: optionalNumber,
   status: z.string().optional(),
 });
 
-const statsQuerySchema = z.object({
-  minScore: z.coerce.number().optional(),
-});
+const statsQuerySchema = z.object({ minScore: optionalNumber });
 
 type AnalyzeBody = z.infer<typeof analyzeBodySchema>;
 

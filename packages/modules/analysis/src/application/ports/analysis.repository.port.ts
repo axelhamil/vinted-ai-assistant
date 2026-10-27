@@ -9,6 +9,12 @@ export type AnalysisRecordIntegrityFailed = "ANALYSIS_RECORD_INTEGRITY_FAILED";
 export type AnalysisNotFound = "ANALYSIS_NOT_FOUND";
 export type AnalysisStatusConflict = "ANALYSIS_STATUS_CONFLICT";
 
+export interface SavedAnalysis {
+  id: AnalysisId;
+  status: AnalysisStatus;
+  createdAt: Date;
+}
+
 export interface PortfolioQuery {
   limit: number;
   offset: number;
@@ -31,7 +37,12 @@ export interface PortfolioStats {
 export interface IAnalysisRepository {
   save(
     analysis: Analysis,
-  ): Promise<Result<AnalysisId, AnalysisStoreUnavailable>>;
+  ): Promise<
+    Result<
+      SavedAnalysis,
+      AnalysisRecordIntegrityFailed | AnalysisStoreUnavailable
+    >
+  >;
   findByVintedId(
     vintedId: VintedId,
   ): Promise<

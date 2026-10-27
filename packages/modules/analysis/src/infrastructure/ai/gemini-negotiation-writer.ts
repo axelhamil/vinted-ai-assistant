@@ -17,11 +17,19 @@ const negotiationSchema = z.object({
   arguments: z.array(z.string()).min(1),
 });
 
+function offerPattern(offer: Price): string {
+  const euros = Math.floor(offer.value / 100);
+  const cents = offer.value % 100;
+  if (cents === 0) return `${euros}(?:[.,]00?)?`;
+
+  const twoDigits = String(cents).padStart(2, "0");
+  const decimals = cents % 10 === 0 ? `${twoDigits.charAt(0)}0?` : twoDigits;
+
+  return `${euros}[.,]${decimals}`;
+}
+
 function mentionsOffer(script: string, offer: Price): boolean {
-  const wholeEuros = Math.round(offer.value / 100);
-  const figure = new RegExp(
-    `(?<![\\d.,])${wholeEuros}(?:[.,]\\d{1,2})?(?![.,]?\\d)`,
-  );
+  const figure = new RegExp(`(?<![\\d.,])${offerPattern(offer)}(?![.,]?\\d)`);
 
   return figure.test(script);
 }

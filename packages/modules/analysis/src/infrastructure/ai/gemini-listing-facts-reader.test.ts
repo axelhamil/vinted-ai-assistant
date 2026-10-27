@@ -112,6 +112,10 @@ describe("GeminiListingFactsReader", () => {
     ["an average below the low price", modelAnswer({ averageEuros: 20 })],
     ["a photo score of 0", modelAnswer({}, 0)],
     [
+      "an average above the largest price",
+      modelAnswer({ averageEuros: 20_000_000, highEuros: 20_000_001 }),
+    ],
+    [
       "a negative source price",
       modelAnswer({
         sources: [{ name: "eBay", priceEuros: -3, searchQuery: "q", count: 1 }],

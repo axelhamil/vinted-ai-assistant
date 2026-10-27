@@ -7,7 +7,6 @@ import {
 } from "@packages/ddd-kit";
 import { Analysis, type AnalysisInput } from "../../domain/analysis.aggregate";
 import type { Listing } from "../../domain/listing";
-import { daysListed } from "../../domain/services/pricing";
 import { NegotiationTone } from "../../domain/value-objects/negotiation-tone.vo";
 import type { AnalyzeListingInput } from "../dto/analysis.dto";
 import type {
@@ -26,9 +25,11 @@ import {
   type AnalysisInputInvalid,
   toListing,
 } from "../services/analysis-input";
+import { toNegotiationRequest } from "../services/negotiation-request";
 
 export type AnalyzeListingFailure =
   | AnalysisInputInvalid
+  | AnalysisRecordIntegrityFailed
   | AnalysisStoreUnavailable
   | AnalysisAiFailure
   | AnalysisPhotoFailure;
@@ -84,7 +85,9 @@ export class AnalyzeListingUseCase
       this.repository.save(analysis),
     );
 
-    return saved.map((id) => analysis.storedAs(id));
+    return saved.map(({ id, status, createdAt }) =>
+      analysis.storedAs(id, status, createdAt),
+    );
   }
 
   private async findStored(
@@ -113,16 +116,17 @@ export class AnalyzeListingUseCase
     const offer = Analysis.suggestedOfferFor(listing, facts, now);
     if (offer.isFailure) return this.refuseFacts(listing);
 
-    const negotiation = await this.negotiationWriter.write({
-      listing,
-      offerCents: offer.getValue(),
-      marketAverageCents: facts.market.averageCents,
-      daysListed: daysListed(listing.listedAt, now),
-      tone: stored
-        .map((analysis) => analysis.get("negotiation").tone)
-        .unwrapOr(DEFAULT_TONE.getValue()),
-      language: listing.language,
-    });
+    const negotiation = await this.negotiationWriter.write(
+      toNegotiationRequest({
+        listing,
+        offerCents: offer.getValue(),
+        marketAverageCents: facts.market.averageCents,
+        tone: stored
+          .map((analysis) => analysis.get("negotiation").tone)
+          .unwrapOr(DEFAULT_TONE.getValue()),
+        now,
+      }),
+    );
     if (negotiation.isFailure) return Result.fail(negotiation.getError());
 
     const analysisInput: AnalysisInput = {

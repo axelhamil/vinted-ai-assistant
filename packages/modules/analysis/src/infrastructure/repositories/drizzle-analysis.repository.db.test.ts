@@ -143,7 +143,8 @@ describe("DrizzleAnalysisRepository", () => {
     const saved = await repository.save(reanalysis);
     const found = await find("1002");
 
-    expect(String(saved.getValue().value)).toBe(String(first.id.value));
+    expect(String(saved.getValue().id.value)).toBe(String(first.id.value));
+    expect(saved.getValue().status.value).toBe("BOUGHT");
     expect(String(found.id.value)).toBe(String(first.id.value));
     expect(found.get("status").value).toBe("BOUGHT");
     expect(found.get("createdAt")).toEqual(first.get("createdAt"));
@@ -159,8 +160,8 @@ describe("DrizzleAnalysisRepository", () => {
     const stored = await find("1003");
 
     expect(await rowsFor("1003")).toBe(1);
-    expect(String(left?.getValue().value)).toBe(String(stored.id.value));
-    expect(String(right?.getValue().value)).toBe(String(stored.id.value));
+    expect(String(left?.getValue().id.value)).toBe(String(stored.id.value));
+    expect(String(right?.getValue().id.value)).toBe(String(stored.id.value));
   });
 
   it("lets only one of two concurrent status changes from the same status through", async () => {

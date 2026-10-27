@@ -14,6 +14,7 @@ import {
   desc,
   eq,
   gte,
+  ne,
   type SQL,
   sql,
 } from "drizzle-orm";
@@ -27,10 +28,15 @@ import type {
   PortfolioPage,
   PortfolioQuery,
   PortfolioStats,
+  SavedAnalysis,
 } from "../../application/ports/analysis.repository.port";
 import type { Analysis, Negotiation } from "../../domain/analysis.aggregate";
 import { AnalysisId } from "../../domain/analysis-id";
-import type { AnalysisStatus } from "../../domain/value-objects/analysis-status.vo";
+import {
+  ANALYSIS_STATUS,
+  AnalysisStatus,
+  EXCLUDED_FROM_OPPORTUNITIES,
+} from "../../domain/value-objects/analysis-status.vo";
 import type { VintedId } from "../../domain/value-objects/vinted-id.vo";
 import {
   type AnalysisRecord,
@@ -98,44 +104,74 @@ export class DrizzleAnalysisRepository implements IAnalysisRepository {
 
   save(
     analysis: Analysis,
-  ): Promise<Result<AnalysisId, AnalysisStoreUnavailable>> {
-    return this.traced("save", async () => {
-      const [stored] = await resolveExecutor(this.database)
-        .insert(analyses)
-        .values(analysisToPersistence(analysis))
-        .onConflictDoUpdate({
-          target: analyses.vintedId,
-          set: {
-            url: excluded(analyses.url),
-            title: excluded(analyses.title),
-            description: excluded(analyses.description),
-            brand: excluded(analyses.brand),
-            size: excluded(analyses.size),
-            condition: excluded(analyses.condition),
-            language: excluded(analyses.language),
-            priceCents: excluded(analyses.priceCents),
-            totalPriceCents: excluded(analyses.totalPriceCents),
-            shippingCostCents: excluded(analyses.shippingCostCents),
-            listedAt: excluded(analyses.listedAt),
-            photos: excluded(analyses.photos),
-            seller: excluded(analyses.seller),
-            facts: excluded(analyses.facts),
-            groundingSources: excluded(analyses.groundingSources),
-            negotiation: excluded(analyses.negotiation),
-            opportunityScore: excluded(analyses.opportunityScore),
-            marginCents: excluded(analyses.marginCents),
-            marginPercent: excluded(analyses.marginPercent),
-            suggestedOfferCents: excluded(analyses.suggestedOfferCents),
-            resale: excluded(analyses.resale),
-            analyzedAt: excluded(analyses.analyzedAt),
-            updatedAt: sql`now()`,
-          },
-        })
-        .returning({ id: analyses.id });
-      if (!stored) return Result.fail(STORE_UNAVAILABLE);
+  ): Promise<
+    Result<
+      SavedAnalysis,
+      AnalysisRecordIntegrityFailed | AnalysisStoreUnavailable
+    >
+  > {
+    return this.traced(
+      "save",
+      async (): Promise<
+        Result<
+          SavedAnalysis,
+          AnalysisRecordIntegrityFailed | AnalysisStoreUnavailable
+        >
+      > => {
+        const [stored] = await resolveExecutor(this.database)
+          .insert(analyses)
+          .values(analysisToPersistence(analysis))
+          .onConflictDoUpdate({
+            target: analyses.vintedId,
+            set: {
+              url: excluded(analyses.url),
+              title: excluded(analyses.title),
+              description: excluded(analyses.description),
+              brand: excluded(analyses.brand),
+              size: excluded(analyses.size),
+              condition: excluded(analyses.condition),
+              language: excluded(analyses.language),
+              priceCents: excluded(analyses.priceCents),
+              totalPriceCents: excluded(analyses.totalPriceCents),
+              shippingCostCents: excluded(analyses.shippingCostCents),
+              listedAt: excluded(analyses.listedAt),
+              photos: excluded(analyses.photos),
+              seller: excluded(analyses.seller),
+              facts: excluded(analyses.facts),
+              groundingSources: excluded(analyses.groundingSources),
+              negotiation: excluded(analyses.negotiation),
+              opportunityScore: excluded(analyses.opportunityScore),
+              marginCents: excluded(analyses.marginCents),
+              marginPercent: excluded(analyses.marginPercent),
+              suggestedOfferCents: excluded(analyses.suggestedOfferCents),
+              resale: excluded(analyses.resale),
+              analyzedAt: excluded(analyses.analyzedAt),
+              updatedAt: sql`now()`,
+            },
+          })
+          .returning({
+            id: analyses.id,
+            status: analyses.status,
+            createdAt: analyses.createdAt,
+          });
+        if (!stored) return Result.fail(STORE_UNAVAILABLE);
 
-      return Result.ok(AnalysisId.create(new UUID(stored.id)));
-    });
+        const status = AnalysisStatus.parse(stored.status);
+        if (status.isFailure) {
+          this.logger.error(
+            { analysisId: stored.id, status: stored.status },
+            "[Analysis] stored status unreadable after save",
+          );
+          return Result.fail(INTEGRITY_FAILED);
+        }
+
+        return Result.ok({
+          id: AnalysisId.create(new UUID(stored.id)),
+          status: status.getValue(),
+          createdAt: stored.createdAt,
+        });
+      },
+    );
   }
 
   findByVintedId(
@@ -212,11 +248,11 @@ export class DrizzleAnalysisRepository implements IAnalysisRepository {
     return this.traced("stats", async () => {
       const [row] = await resolveExecutor(this.database)
         .select({
-          watching: countWhere(sql`${analyses.status} = 'WATCHING'`),
-          bought: countWhere(sql`${analyses.status} = 'BOUGHT'`),
-          sold: countWhere(sql`${analyses.status} = 'SOLD'`),
+          watching: countWhere(eq(analyses.status, ANALYSIS_STATUS.WATCHING)),
+          bought: countWhere(eq(analyses.status, ANALYSIS_STATUS.BOUGHT)),
+          sold: countWhere(eq(analyses.status, ANALYSIS_STATUS.SOLD)),
           opportunities: countWhere(
-            sql`${analyses.opportunityScore} >= ${minScore} and ${analyses.status} <> 'ARCHIVED'`,
+            sql`${gte(analyses.opportunityScore, minScore)} and ${ne(analyses.status, EXCLUDED_FROM_OPPORTUNITIES)}`,
           ),
         })
         .from(analyses);

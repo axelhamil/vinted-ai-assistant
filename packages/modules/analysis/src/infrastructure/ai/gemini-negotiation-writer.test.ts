@@ -92,6 +92,26 @@ describe("GeminiNegotiationWriter", () => {
     },
   );
 
+  it.each([
+    ["12,50 €", "Je vous propose 12,50 € pour la veste.", true],
+    ["12.50 €", "I offer 12.50 € for the jacket.", true],
+    ["12.5€", "I offer 12.5€ for the jacket.", true],
+    ["13 €", "Je vous propose 13 € pour la veste.", false],
+    ["12 €", "Je vous propose 12 € pour la veste.", false],
+  ])(
+    "checks a capped offer of 1250 cents stated as %s",
+    async (_, script, accepted) => {
+      const { writer, request } = given(script);
+
+      const result = await writer.write({
+        ...request,
+        offerCents: Price.create(1250).getValue(),
+      });
+
+      expect(result.isSuccess).toBe(accepted);
+    },
+  );
+
   it("asks the model for at least one argument and a non-empty script", async () => {
     const { gemini, writer, request } = given();
 

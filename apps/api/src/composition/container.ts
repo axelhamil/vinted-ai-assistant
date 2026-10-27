@@ -10,7 +10,7 @@ import { container } from "inwire";
 import type { Env } from "../../common/env";
 import { createLogger } from "../../common/logger";
 import { captureError } from "../../common/sentry";
-import { sentryInstrumentation } from "../adapters/instrumentation/sentry-instrumentation";
+import { createSentryInstrumentation } from "../adapters/instrumentation/sentry-instrumentation";
 import { watchPoolErrors } from "../adapters/lifecycle/pool";
 import { PostgresDatabaseProbe } from "../adapters/persistence/postgres-database-probe";
 
@@ -36,7 +36,10 @@ export function createContainer(env: Env) {
     .add("pool", (c) => c.db.$client)
     .add("unitOfWork", (c) => new DrizzleUnitOfWork(c.db))
     .add("databaseProbe", (c) => new PostgresDatabaseProbe(c.pool, c.logger))
-    .add("IInstrumentation", (): IInstrumentation => sentryInstrumentation)
+    .add(
+      "IInstrumentation",
+      (c): IInstrumentation => createSentryInstrumentation(c.logger),
+    )
     .add("GeminiClient", (c) =>
       createGeminiClient({ apiKey: c.env.GEMINI_API_KEY }),
     )

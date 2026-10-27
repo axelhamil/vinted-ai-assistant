@@ -1,12 +1,12 @@
 import { type IUnitOfWork, Result, type UseCase } from "@packages/ddd-kit";
 import type { Analysis } from "../../domain/analysis.aggregate";
-import { daysListed } from "../../domain/services/pricing";
 import { NegotiationTone } from "../../domain/value-objects/negotiation-tone.vo";
 import type { RegenerateNegotiationInput } from "../dto/analysis.dto";
 import type { IAnalysisRepository } from "../ports/analysis.repository.port";
 import type { AnalysisAiFailure } from "../ports/listing-facts-reader.port";
 import type { INegotiationWriter } from "../ports/negotiation-writer.port";
 import { INPUT_INVALID } from "../services/analysis-input";
+import { toNegotiationRequest } from "../services/negotiation-request";
 import {
   findStoredAnalysis,
   type StoredAnalysisFailure,
@@ -37,15 +37,15 @@ export class RegenerateNegotiationUseCase
     if (found.isFailure) return Result.fail(found.getError());
 
     const analysis = found.getValue();
-    const listing = analysis.get("listing");
-    const negotiation = await this.negotiationWriter.write({
-      listing,
-      offerCents: analysis.suggestedOfferCents(),
-      marketAverageCents: analysis.get("facts").market.averageCents,
-      daysListed: daysListed(listing.listedAt, this.clock()),
-      tone: tone.getValue(),
-      language: listing.language,
-    });
+    const negotiation = await this.negotiationWriter.write(
+      toNegotiationRequest({
+        listing: analysis.get("listing"),
+        offerCents: analysis.suggestedOfferCents(),
+        marketAverageCents: analysis.get("facts").market.averageCents,
+        tone: tone.getValue(),
+        now: this.clock(),
+      }),
+    );
     if (negotiation.isFailure) return Result.fail(negotiation.getError());
 
     const updated = await this.unitOfWork.run(() =>

@@ -11,6 +11,16 @@ export const ANALYSIS_STATUSES = [
 
 export type AnalysisStatusValue = (typeof ANALYSIS_STATUSES)[number];
 
+export const ANALYSIS_STATUS = {
+  ANALYZED: "ANALYZED",
+  WATCHING: "WATCHING",
+  BOUGHT: "BOUGHT",
+  SOLD: "SOLD",
+  ARCHIVED: "ARCHIVED",
+} as const satisfies { [Status in AnalysisStatusValue]: Status };
+
+export const EXCLUDED_FROM_OPPORTUNITIES = ANALYSIS_STATUS.ARCHIVED;
+
 const NEXT_STATUSES: Record<
   AnalysisStatusValue,
   readonly AnalysisStatusValue[]

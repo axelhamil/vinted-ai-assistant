@@ -160,8 +160,11 @@ export class Analysis extends Aggregate<AnalysisProps> {
     );
   }
 
-  storedAs(id: AnalysisId): Analysis {
-    return new Analysis({ ...this._props }, new UUID(id.value));
+  storedAs(id: AnalysisId, status: AnalysisStatus, createdAt: Date): Analysis {
+    return new Analysis(
+      { ...this._props, status, createdAt },
+      new UUID(id.value),
+    );
   }
 
   refresh(input: AnalysisInput): Result<void, InputInvalid> {

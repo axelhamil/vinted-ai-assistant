@@ -3,6 +3,7 @@ import { type ILogger, Option, Result, UUID } from "@packages/ddd-kit";
 import { mockPort } from "@packages/testing/port-mock";
 import { mockUnitOfWork } from "@packages/testing/unit-of-work-mock";
 import { AnalysisId } from "../../domain/analysis-id";
+import { AnalysisStatus } from "../../domain/value-objects/analysis-status.vo";
 import {
   ANALYZED_AT,
   buildAnalysis,
@@ -30,7 +31,11 @@ function given(now: Date) {
 
   repository.findByVintedId.mockResolvedValue(Result.ok(Option.none()));
   repository.save.mockImplementation(async (analysis) =>
-    Result.ok(analysis.id),
+    Result.ok({
+      id: analysis.id,
+      status: analysis.get("status"),
+      createdAt: analysis.get("createdAt"),
+    }),
   );
   factsReader.read.mockResolvedValue(
     Result.ok({ facts: buildFacts(), groundingSources: [] }),
@@ -166,10 +171,33 @@ describe("analysing a listing", () => {
   it("answers with the stored id when a parallel first analysis saved the row before", async () => {
     const { repository, analyze } = given(STALE_NOW);
     const winner = AnalysisId.create(new UUID<string>());
-    repository.save.mockResolvedValue(Result.ok(winner));
+    repository.save.mockResolvedValue(
+      Result.ok({
+        id: winner,
+        status: AnalysisStatus.create("ANALYZED").getValue(),
+        createdAt: ANALYZED_AT,
+      }),
+    );
 
     const result = await analyze();
 
     expect(result.getValue().id.value).toBe(winner.value);
+  });
+
+  it("answers the status stored by the save when it moved during the analysis", async () => {
+    const { repository, analyze } = given(STALE_NOW);
+    const createdAt = new Date(ANALYZED_AT.getTime() - HOUR_MS);
+    repository.save.mockImplementation(async (analysis) =>
+      Result.ok({
+        id: analysis.id,
+        status: AnalysisStatus.create("BOUGHT").getValue(),
+        createdAt,
+      }),
+    );
+
+    const result = await analyze();
+
+    expect(result.getValue().get("status").value).toBe("BOUGHT");
+    expect(result.getValue().get("createdAt")).toEqual(createdAt);
   });
 });

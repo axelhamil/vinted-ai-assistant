@@ -32,7 +32,7 @@ const listingBody = {
   language: "fr",
 };
 
-function apiWithFakeModel() {
+function givenApi() {
   const env = parseEnv({
     NODE_ENV: "test",
     DATABASE_URL: process.env.DATABASE_URL,
@@ -54,11 +54,11 @@ function apiWithFakeModel() {
     .override("INegotiationWriter", () => negotiationWriter)
     .build();
 
-  return createApi(container);
+  return { api: createApi(container), factsReader };
 }
 
 function send(method: string, path: string, body?: unknown) {
-  return apiWithFakeModel().request(path, {
+  return givenApi().api.request(path, {
     method,
     headers: { "content-type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -137,5 +137,37 @@ describe("the analysis routes on the real database", () => {
       /^attachment; filename=".+\.md"$/,
     );
     expect(await response.text()).toContain("# Veste en jean Levi's");
+  });
+
+  it.each([
+    ["a price above 10 000 000 euros", { price: 30_000_000 }],
+    ["a listing url outside Vinted", { url: "javascript:alert(1)" }],
+    ["a listing url over http", { url: "http://www.vinted.fr/items/1" }],
+  ])(
+    "answers 400 ANALYSIS_INPUT_INVALID for %s before calling the model",
+    async (_, change) => {
+      const { api, factsReader } = givenApi();
+
+      const response = await api.request("/api/analyses", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...listingBody, ...change }),
+      });
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({
+        error: { code: "ANALYSIS_INPUT_INVALID" },
+      });
+      expect(factsReader.read).not.toHaveBeenCalled();
+    },
+  );
+
+  it("treats a blank portfolio limit as unset", async () => {
+    await send("POST", "/api/analyses", listingBody);
+
+    const response = await send("GET", "/api/portfolio?limit=&minScore=");
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ total: 1, hasMore: false });
   });
 });
