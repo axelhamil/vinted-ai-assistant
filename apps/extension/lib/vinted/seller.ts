@@ -1,3 +1,6 @@
+import { ANALYSIS_FRESH_FOR_MS } from "@packages/analysis/contract";
+import type { Reply } from "@/lib/api/failure";
+import type { AnalysisDto, AnalyzeInput } from "@/lib/messaging/protocol";
 import { firstMatch, firstText, textOf } from "./dom";
 import { languageForHost } from "./hosts";
 import { parsePrice } from "./price";
@@ -14,7 +17,31 @@ interface ProfileRequest {
   timeoutMs?: number;
 }
 
+type Seller = AnalyzeInput["seller"];
+
+interface SellerCompletion {
+  listing: AnalyzeInput;
+  profilePath: string | null;
+  fetchImpl: typeof fetch;
+}
+
+interface AnalysisSender {
+  getAnalysis: (vintedId: string) => Promise<Reply<AnalysisDto>>;
+  analyze: (input: AnalyzeInput) => Promise<Reply<AnalysisDto>>;
+}
+
+interface AnalysisLoad {
+  listing: AnalyzeInput;
+  seller: () => Promise<Seller>;
+  send: AnalysisSender;
+  now?: number;
+}
+
 const PROFILE_TIMEOUT_MS = 3000;
+
+const TRUSTED_RATING = 4;
+
+const TRUSTED_SALES = 5;
 
 const MAX_RATING = 5;
 
@@ -126,4 +153,56 @@ export const fetchSellerProfile = async ({
   } finally {
     clearTimeout(timer);
   }
+};
+
+export const completeSeller = async ({
+  listing,
+  profilePath,
+  fetchImpl,
+}: SellerCompletion): Promise<Seller> => {
+  const { seller } = listing;
+  const complete = seller.rating !== null && seller.salesCount !== null;
+  if (complete || !profilePath) return seller;
+
+  const profile = await fetchSellerProfile({
+    host: new URL(listing.url).host,
+    profilePath,
+    fetchImpl,
+  });
+
+  return {
+    username: seller.username,
+    rating: seller.rating ?? profile.rating,
+    salesCount: seller.salesCount ?? profile.salesCount,
+  };
+};
+
+export const needsSellerCheck = ({ rating, salesCount }: Seller): boolean =>
+  rating === null ||
+  salesCount === null ||
+  rating < TRUSTED_RATING ||
+  salesCount < TRUSTED_SALES;
+
+const isFresh = (reply: Reply<AnalysisDto>, now: number): boolean =>
+  reply.ok && Date.parse(reply.data.analyzedAt) + ANALYSIS_FRESH_FOR_MS > now;
+
+const isMissing = (reply: Reply<AnalysisDto>): boolean =>
+  !reply.ok &&
+  reply.failure.kind === "api" &&
+  reply.failure.code === "ANALYSIS_NOT_FOUND";
+
+export const loadAnalysis = async ({
+  listing,
+  seller,
+  send,
+  now = Date.now(),
+}: AnalysisLoad): Promise<Reply<AnalysisDto>> => {
+  if (!listing.forceRefresh) {
+    const stored = await send.getAnalysis(listing.vintedId);
+    if (isFresh(stored, now)) return stored;
+
+    if (!stored.ok && !isMissing(stored)) return stored;
+  }
+
+  return send.analyze({ ...listing, seller: await seller() });
 };
