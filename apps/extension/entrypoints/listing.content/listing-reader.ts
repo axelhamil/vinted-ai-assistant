@@ -1,37 +1,58 @@
+import type { AnalyzeInput } from "@/lib/messaging/protocol";
 import { parseArticle, UNKNOWN } from "@/lib/vinted/article";
 import { memberProfilePath, readSellerProfilePath } from "@/lib/vinted/seller";
-import type { SidebarProps } from "./App";
+
+export type ListingPage =
+  | { kind: "ready"; listing: AnalyzeInput; sellerProfilePath: string | null }
+  | { kind: "stale" };
+
+export interface SidebarProps {
+  vintedId: string;
+  page: ListingPage;
+}
 
 interface ListingReaderOptions {
   doc: Document;
-  autoOpen: boolean;
 }
 
 const sellerProfilePath = (doc: Document, username: string): string | null =>
   readSellerProfilePath(doc) ??
   (username === UNKNOWN ? null : memberProfilePath(username));
 
-export function createListingReader({ doc, autoOpen }: ListingReaderOptions) {
-  let previous: SidebarProps | null = null;
+const showsSameListing = (
+  previous: AnalyzeInput,
+  current: AnalyzeInput,
+): boolean =>
+  previous.title === current.title &&
+  previous.price === current.price &&
+  previous.description === current.description;
+
+export function createListingReader({ doc }: ListingReaderOptions) {
+  let previous: AnalyzeInput | null = null;
 
   return (url: URL, lastAttempt: boolean): SidebarProps | null => {
     const article = parseArticle(doc, url);
     if (!article) return null;
 
-    const previousPage =
+    const listing = { ...article, forceRefresh: false };
+    const stale =
       previous !== null &&
-      previous.vintedId !== article.vintedId &&
-      previous.listing.title === article.title &&
-      previous.listing.photos[0] === article.photos[0];
-    if (previousPage && !lastAttempt) return null;
+      previous.vintedId !== listing.vintedId &&
+      showsSameListing(previous, listing);
+    if (stale)
+      return lastAttempt
+        ? { vintedId: listing.vintedId, page: { kind: "stale" } }
+        : null;
 
-    previous = {
-      vintedId: article.vintedId,
-      listing: { ...article, forceRefresh: false },
-      sellerProfilePath: sellerProfilePath(doc, article.seller.username),
-      autoOpen,
+    previous = listing;
+
+    return {
+      vintedId: listing.vintedId,
+      page: {
+        kind: "ready",
+        listing,
+        sellerProfilePath: sellerProfilePath(doc, listing.seller.username),
+      },
     };
-
-    return previous;
   };
 }

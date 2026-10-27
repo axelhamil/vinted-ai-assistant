@@ -1,5 +1,6 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { toast } from "sonner";
 import { AnalysisTab } from "@/components/analysis/AnalysisTab";
 import { NegotiateTab } from "@/components/analysis/NegotiateTab";
 import { ResaleTab } from "@/components/analysis/ResaleTab";
@@ -11,71 +12,103 @@ import { ScoreSticker } from "@/components/sidebar/ScoreSticker";
 import { SidebarShell } from "@/components/sidebar/SidebarShell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Reply } from "@/lib/api/failure";
 import { signedEuros } from "@/lib/format";
 import {
   type AnalysisDto,
   type AnalyzeInput,
   sendMessage,
 } from "@/lib/messaging/protocol";
-import { useBackground } from "@/lib/ui/query";
+import {
+  type BackgroundFailure,
+  useBackground,
+  useBackgroundMutation,
+} from "@/lib/ui/query";
 import { verdict } from "@/lib/verdict";
-import { fetchSellerProfile } from "@/lib/vinted/seller";
+import { completeSeller, loadAnalysis } from "@/lib/vinted/seller";
+import type { SidebarProps } from "./listing-reader";
+import { useSettings } from "./use-settings";
 
-export interface SidebarProps {
+interface AnalysisSidebarProps {
   vintedId: string;
   listing: AnalyzeInput;
   sellerProfilePath: string | null;
   autoOpen: boolean;
 }
 
-async function withSellerProfile(
-  listing: AnalyzeInput,
-  profilePath: string | null,
-): Promise<AnalyzeInput> {
-  const { seller } = listing;
-  const complete = seller.rating !== null && seller.salesCount !== null;
-  if (complete || !profilePath) return listing;
-
-  const profile = await fetchSellerProfile({
-    host: new URL(listing.url).host,
-    profilePath,
-    fetchImpl: (input, init) => fetch(input, init),
-  });
-
-  return {
-    ...listing,
-    seller: {
-      username: seller.username,
-      rating: seller.rating ?? profile.rating,
-      salesCount: seller.salesCount ?? profile.salesCount,
-    },
-  };
+interface StaleSidebarProps {
+  autoOpen: boolean;
 }
 
-async function analyze(
-  listing: AnalyzeInput,
-  profilePath: string | null,
-): Promise<Reply<AnalysisDto>> {
-  return sendMessage("analyze", await withSellerProfile(listing, profilePath));
+const STALE_MESSAGE =
+  "La page affiche encore l'annonce précédente. Rechargez la page pour analyser celle-ci.";
+
+const ANALYSIS_SENDER = {
+  getAnalysis: (vintedId: string) => sendMessage("getAnalysis", vintedId),
+  analyze: (input: AnalyzeInput) => sendMessage("analyze", input),
+};
+
+const showFailure = (error: BackgroundFailure) => toast.error(error.message);
+
+function StaleSidebar({ autoOpen }: StaleSidebarProps) {
+  const [open, setOpen] = useState(autoOpen);
+
+  if (!open)
+    return <Launcher label="Analyser l'annonce" onOpen={() => setOpen(true)} />;
+
+  return (
+    <SidebarShell
+      onClose={() => setOpen(false)}
+      header={<p className="verdict">Annonce pas encore chargée</p>}
+    >
+      <ErrorPanel
+        message={STALE_MESSAGE}
+        onRetry={() => window.location.reload()}
+      />
+    </SidebarShell>
+  );
 }
 
-export function App({
+function AnalysisSidebar({
   vintedId,
   listing,
   sellerProfilePath,
   autoOpen,
-}: SidebarProps) {
+}: AnalysisSidebarProps) {
   const [open, setOpen] = useState(autoOpen);
   const [started, setStarted] = useState(autoOpen);
   const queryClient = useQueryClient();
   const key = ["analysis", vintedId];
+  const sellerQuery = {
+    queryKey: ["seller", vintedId],
+    queryFn: () =>
+      completeSeller({
+        listing,
+        profilePath: sellerProfilePath,
+        fetchImpl: (input, init) => fetch(input, init),
+      }),
+    staleTime: Number.POSITIVE_INFINITY,
+  };
+  const load = (forceRefresh: boolean) =>
+    loadAnalysis({
+      listing: { ...listing, forceRefresh },
+      seller: () => queryClient.fetchQuery(sellerQuery),
+      send: ANALYSIS_SENDER,
+    });
   const analysis = useBackground({
     key,
-    request: () => analyze(listing, sellerProfilePath),
+    request: () => load(false),
     enabled: started,
   });
+  const seller = useQuery({ ...sellerQuery, enabled: analysis.isSuccess });
   const update = (dto: AnalysisDto) => queryClient.setQueryData(key, dto);
+  const reanalyze = useBackgroundMutation(
+    () => load(true),
+    (dto) => {
+      update(dto);
+      toast.success("Analyse mise à jour");
+    },
+    showFailure,
+  );
 
   if (!open)
     return (
@@ -118,7 +151,16 @@ export function App({
           </div>
         )
       }
-      actions={data && <ActionBar analysis={data} onChange={update} />}
+      actions={
+        data && (
+          <ActionBar
+            analysis={data}
+            onChange={update}
+            onReanalyze={() => reanalyze.mutate()}
+            reanalyzing={reanalyze.isPending}
+          />
+        )
+      }
     >
       {error && (
         <ErrorPanel
@@ -127,7 +169,7 @@ export function App({
         />
       )}
       {data && (
-        <Tabs defaultValue="analysis">
+        <Tabs defaultValue="analysis" aria-busy={reanalyze.isPending}>
           <TabsList variant="line" className="mx-gutter">
             <TabsTrigger value="analysis">Analyse</TabsTrigger>
             <TabsTrigger value="negotiate">Négocier</TabsTrigger>
@@ -135,7 +177,11 @@ export function App({
             <TabsTrigger value="sources">Sources</TabsTrigger>
           </TabsList>
           <TabsContent value="analysis" className="p-gutter">
-            <AnalysisTab analysis={data} />
+            <AnalysisTab
+              analysis={data}
+              seller={seller.data ?? listing.seller}
+              shippingCost={listing.shippingCost}
+            />
           </TabsContent>
           <TabsContent value="negotiate" className="p-gutter">
             <NegotiateTab analysis={data} onChange={update} />
@@ -149,5 +195,22 @@ export function App({
         </Tabs>
       )}
     </SidebarShell>
+  );
+}
+
+export function App({ vintedId, page }: SidebarProps) {
+  const current = useSettings();
+  if (!current?.enabled) return null;
+
+  if (page.kind === "stale")
+    return <StaleSidebar autoOpen={current.autoOpenSidebar} />;
+
+  return (
+    <AnalysisSidebar
+      vintedId={vintedId}
+      listing={page.listing}
+      sellerProfilePath={page.sellerProfilePath}
+      autoOpen={current.autoOpenSidebar}
+    />
   );
 }

@@ -1,10 +1,19 @@
-import { CONFIDENCE_LABELS } from "@/lib/analysis-copy";
+import {
+  BACKGROUND_LABELS,
+  CONFIDENCE_LABELS,
+  LIGHTING_LABELS,
+} from "@/lib/analysis-copy";
 import { euros, percent, signedEuros } from "@/lib/format";
-import type { AnalysisDto } from "@/lib/messaging/protocol";
+import type { AnalysisDto, AnalyzeInput } from "@/lib/messaging/protocol";
+import { needsSellerCheck } from "@/lib/vinted/seller";
 
 export interface AnalysisTabProps {
   analysis: AnalysisDto;
+  seller: AnalyzeInput["seller"];
+  shippingCost: number | null;
 }
+
+const RATING = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
 
 type SignalType = AnalysisDto["opportunity"]["signals"][number]["type"];
 
@@ -14,7 +23,11 @@ const SIGNAL_TONES: Record<SignalType, string> = {
   neutral: "",
 };
 
-export function AnalysisTab({ analysis }: AnalysisTabProps) {
+export function AnalysisTab({
+  analysis,
+  seller,
+  shippingCost,
+}: AnalysisTabProps) {
   const { opportunity, marketPrice, authenticityCheck, photoQuality } =
     analysis;
   const marginTone = opportunity.margin < 0 ? "tone-loss" : "tone-profit";
@@ -28,6 +41,12 @@ export function AnalysisTab({ analysis }: AnalysisTabProps) {
           <>
             <dt className="fact-label">Prix avec frais</dt>
             <dd className="fact-value">{euros(analysis.totalPrice)}</dd>
+          </>
+        )}
+        {shippingCost !== null && (
+          <>
+            <dt className="fact-label">Frais de port</dt>
+            <dd className="fact-value">{euros(shippingCost)}</dd>
           </>
         )}
         <dt className="fact-label">Prix du marché</dt>
@@ -50,7 +69,10 @@ export function AnalysisTab({ analysis }: AnalysisTabProps) {
           {percent(opportunity.marginPercent)})
         </dd>
         <dt className="fact-label">Authenticité</dt>
-        <dd className="fact-value">{authenticityCheck.score}/10</dd>
+        <dd className="fact-value">
+          {authenticityCheck.score}/10, analyse{" "}
+          {CONFIDENCE_LABELS[authenticityCheck.confidence]}
+        </dd>
         <dt className="fact-label">Photos</dt>
         <dd className="fact-value">{photoQuality.score}/10</dd>
       </dl>
@@ -70,6 +92,42 @@ export function AnalysisTab({ analysis }: AnalysisTabProps) {
           ))}
         </ul>
       )}
+      <section className="flex flex-col gap-row">
+        <h3 className="section-title">Photos</h3>
+        <p className="fact-note">
+          Lumière {LIGHTING_LABELS[photoQuality.lighting]}, fond{" "}
+          {BACKGROUND_LABELS[photoQuality.background]},{" "}
+          {photoQuality.hasModel ? "article porté" : "article non porté"}.
+        </p>
+        {photoQuality.issues.length > 0 && (
+          <ul className="flex flex-col gap-row">
+            {photoQuality.issues.map((issue) => (
+              <li key={issue}>{issue}</li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <section className="flex flex-col gap-row">
+        <h3 className="section-title">Vendeur</h3>
+        <dl className="grid grid-cols-[1fr_auto] gap-x-stack gap-y-row">
+          <dt className="fact-label">Pseudo</dt>
+          <dd className="fact-value">{seller.username}</dd>
+          <dt className="fact-label">Note</dt>
+          <dd className="fact-value">
+            {seller.rating === null
+              ? "inconnue"
+              : `${RATING.format(seller.rating)}/5`}
+          </dd>
+          <dt className="fact-label">Ventes</dt>
+          <dd className="fact-value">{seller.salesCount ?? "inconnues"}</dd>
+        </dl>
+        {needsSellerCheck(seller) && (
+          <p className="fact-note tone-loss">
+            Vérifiez le profil du vendeur avant d'acheter : sa note ou son
+            nombre de ventes ne suffit pas à juger sa fiabilité.
+          </p>
+        )}
+      </section>
       {authenticityCheck.flags.length > 0 && (
         <section className="flex flex-col gap-row">
           <h3 className="section-title tone-loss">Points de vigilance</h3>
