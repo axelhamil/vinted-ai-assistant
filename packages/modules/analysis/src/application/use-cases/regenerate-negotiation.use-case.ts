@@ -10,7 +10,6 @@ import { INPUT_INVALID } from "../services/analysis-input";
 import {
   findStoredAnalysis,
   type StoredAnalysisFailure,
-  storeAnalysis,
 } from "../services/stored-analysis";
 
 export type RegenerateNegotiationFailure =
@@ -49,8 +48,13 @@ export class RegenerateNegotiationUseCase
     });
     if (negotiation.isFailure) return Result.fail(negotiation.getError());
 
+    const updated = await this.unitOfWork.run(() =>
+      this.repository.updateNegotiation(analysis.id, negotiation.getValue()),
+    );
+    if (updated.isFailure) return Result.fail(updated.getError());
+
     analysis.replaceNegotiation(negotiation.getValue());
 
-    return storeAnalysis(this.repository, this.unitOfWork, analysis);
+    return Result.ok(analysis);
   }
 }

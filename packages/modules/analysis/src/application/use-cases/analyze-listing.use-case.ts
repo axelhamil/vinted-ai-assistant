@@ -1,7 +1,7 @@
 import {
   type ILogger,
   type IUnitOfWork,
-  type Option,
+  Option,
   Result,
   type UseCase,
 } from "@packages/ddd-kit";
@@ -26,15 +26,15 @@ import {
   type AnalysisInputInvalid,
   toListing,
 } from "../services/analysis-input";
-import { storeAnalysis } from "../services/stored-analysis";
 
 export type AnalyzeListingFailure =
   | AnalysisInputInvalid
-  | AnalysisRecordIntegrityFailed
   | AnalysisStoreUnavailable
   | AnalysisAiFailure
   | AnalysisPhotoFailure;
 
+const INTEGRITY_FAILED: AnalysisRecordIntegrityFailed =
+  "ANALYSIS_RECORD_INTEGRITY_FAILED";
 const FACTS_REFUSED = "ANALYSIS_AI_PROVIDER_FAILURE";
 const DEFAULT_TONE = NegotiationTone.create("friendly");
 
@@ -59,7 +59,7 @@ export class AnalyzeListingUseCase
     const listing = parsed.getValue();
     const now = this.clock();
 
-    const found = await this.repository.findByVintedId(listing.vintedId);
+    const found = await this.findStored(listing);
     if (found.isFailure) return Result.fail(found.getError());
 
     const stored = found.getValue();
@@ -80,7 +80,28 @@ export class AnalyzeListingUseCase
     if (assessed.isFailure) return Result.fail(assessed.getError());
 
     const analysis = assessed.getValue();
-    return storeAnalysis(this.repository, this.unitOfWork, analysis);
+    const saved = await this.unitOfWork.run(() =>
+      this.repository.save(analysis),
+    );
+
+    return saved.map((id) => analysis.storedAs(id));
+  }
+
+  private async findStored(
+    listing: Listing,
+  ): Promise<Result<Option<Analysis>, AnalysisStoreUnavailable>> {
+    const found = await this.repository.findByVintedId(listing.vintedId);
+    if (found.isSuccess) return Result.ok(found.getValue());
+
+    const error = found.getError();
+    if (error !== INTEGRITY_FAILED) return Result.fail(error);
+
+    this.logger.warn(
+      { vintedId: listing.vintedId.value, cause: error },
+      "[Analysis] unreadable stored analysis replaced by a new one",
+    );
+
+    return Result.ok(Option.none());
   }
 
   private async assess(
@@ -97,7 +118,9 @@ export class AnalyzeListingUseCase
       offerCents: offer.getValue(),
       marketAverageCents: facts.market.averageCents,
       daysListed: daysListed(listing.listedAt, now),
-      tone: DEFAULT_TONE.getValue(),
+      tone: stored
+        .map((analysis) => analysis.get("negotiation").tone)
+        .unwrapOr(DEFAULT_TONE.getValue()),
       language: listing.language,
     });
     if (negotiation.isFailure) return Result.fail(negotiation.getError());

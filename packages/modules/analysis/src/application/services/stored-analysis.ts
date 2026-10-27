@@ -1,4 +1,4 @@
-import { type IUnitOfWork, Result } from "@packages/ddd-kit";
+import { Result } from "@packages/ddd-kit";
 import type { Analysis } from "../../domain/analysis.aggregate";
 import type {
   AnalysisNotFound,
@@ -25,14 +25,4 @@ export async function findStoredAnalysis(
   if (found.isFailure) return Result.fail(found.getError());
 
   return found.getValue().toResult<AnalysisNotFound>("ANALYSIS_NOT_FOUND");
-}
-
-export async function storeAnalysis(
-  repository: IAnalysisRepository,
-  unitOfWork: IUnitOfWork,
-  analysis: Analysis,
-): Promise<Result<Analysis, AnalysisStoreUnavailable>> {
-  const saved = await unitOfWork.run(() => repository.save(analysis));
-
-  return saved.map((id) => analysis.storedAs(id));
 }

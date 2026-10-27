@@ -1,7 +1,7 @@
 import { Option, Result, UUID } from "@packages/ddd-kit";
 import { z } from "zod";
 import type { analyses } from "../../../schemas/analysis";
-import { Analysis } from "../../domain/analysis.aggregate";
+import { Analysis, type Negotiation } from "../../domain/analysis.aggregate";
 import { AnalysisId } from "../../domain/analysis-id";
 import type { Listing } from "../../domain/listing";
 import type { ListingFacts } from "../../domain/listing-facts";
@@ -201,9 +201,14 @@ export function analysisToDomain(record: AnalysisRecord): Result<Analysis> {
   );
 }
 
+export function negotiationToPersistence(
+  negotiation: Negotiation,
+): AnalysisPersistence["negotiation"] {
+  return { ...negotiation, tone: negotiation.tone.value };
+}
+
 export function analysisToPersistence(analysis: Analysis): AnalysisPersistence {
   const listing = analysis.get("listing");
-  const negotiation = analysis.get("negotiation");
   const margin = analysis.margin().value;
 
   return {
@@ -228,7 +233,7 @@ export function analysisToPersistence(analysis: Analysis): AnalysisPersistence {
     },
     facts: factsDocumentOf(analysis.get("facts")),
     groundingSources: analysis.get("groundingSources"),
-    negotiation: { ...negotiation, tone: negotiation.tone.value },
+    negotiation: negotiationToPersistence(analysis.get("negotiation")),
     opportunityScore: analysis.opportunityScore().value,
     marginCents: margin.amountCents,
     marginPercent: margin.percent,

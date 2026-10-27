@@ -23,9 +23,7 @@ function given(stored: Analysis = buildAnalysis()) {
   const transaction = mockUnitOfWork();
 
   repository.findByVintedId.mockResolvedValue(Result.ok(Option.some(stored)));
-  repository.save.mockImplementation(async (analysis) =>
-    Result.ok(analysis.id),
-  );
+  repository.updateNegotiation.mockResolvedValue(Result.ok());
   negotiationWriter.write.mockImplementation(async ({ tone }) =>
     Result.ok(buildNegotiation({ script: URGENT_SCRIPT, tone: tone.value })),
   );
@@ -52,7 +50,11 @@ describe("regenerating the negotiation script", () => {
     expect(analysis.suggestedOfferCents().value).toBe(offer);
     expect(analysis.get("negotiation").script).toBe(URGENT_SCRIPT);
     expect(analysis.get("negotiation").tone.value).toBe("urgent");
-    expect(repository.save).toHaveBeenCalledWith(analysis);
+    expect(repository.updateNegotiation).toHaveBeenCalledWith(
+      analysis.id,
+      analysis.get("negotiation"),
+    );
+    expect(repository.save).not.toHaveBeenCalled();
     expect(transaction.outcome()).toBe("committed");
   });
 

@@ -16,6 +16,7 @@ import {
   analysisInput,
   buildAnalysis,
   buildListing,
+  buildNegotiation,
   propsOf,
 } from "../../testing/analysis.factory";
 import { clearAnalyses, overwriteFacts, rowsFor } from "../../testing/database";
@@ -272,6 +273,34 @@ describe("DrizzleAnalysisRepository", () => {
 
     expect(updated.getError()).toBe("ANALYSIS_STATUS_CONFLICT");
     expect((await find("5001")).get("status").value).toBe("BOUGHT");
+  });
+
+  it("rewrites only the negotiation, so a re-analysis saved meanwhile keeps its facts", async () => {
+    const stale = await store({ vintedId: "7001", hoursAgo: 2 });
+    const refreshed = analysisOf({ vintedId: "7001" });
+    await repository.save(refreshed);
+
+    const updated = await repository.updateNegotiation(
+      stale.id,
+      buildNegotiation({ script: "Je propose 17 €.", tone: "urgent" }),
+    );
+
+    const stored = await find("7001");
+    expect(updated.isSuccess).toBe(true);
+    expect(stored.get("negotiation").script).toBe("Je propose 17 €.");
+    expect(stored.get("negotiation").tone.value).toBe("urgent");
+    expect(stored.get("analyzedAt")).toEqual(ANALYZED_AT);
+  });
+
+  it("answers not found when the negotiation of a missing analysis is rewritten", async () => {
+    const missing = buildAnalysis();
+
+    const updated = await repository.updateNegotiation(
+      missing.id,
+      buildNegotiation(),
+    );
+
+    expect(updated.getError()).toBe("ANALYSIS_NOT_FOUND");
   });
 
   it("deletes a stored analysis, and answers not found for a missing one", async () => {

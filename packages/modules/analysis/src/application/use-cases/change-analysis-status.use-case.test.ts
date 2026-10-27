@@ -16,21 +16,32 @@ function given(current: AnalysisStatusValue) {
   );
   repository.updateStatus.mockResolvedValue(Result.ok());
 
+  const statusMoves = () =>
+    repository.updateStatus.mock.calls.map(([id, from, to]) => ({
+      id: id.value,
+      from: from.value,
+      to: to.value,
+    }));
+
   const change = (status: AnalysisStatusValue) =>
     new ChangeAnalysisStatusUseCase(repository, transaction.unitOfWork).execute(
       { vintedId: "4815162342", status },
     );
 
-  return { repository, transaction, change };
+  return { repository, transaction, change, statusMoves };
 }
 
 describe("changing the portfolio status of an analysis", () => {
   it("moves a watched listing to bought", async () => {
-    const { transaction, change } = given("WATCHING");
+    const { transaction, change, statusMoves } = given("WATCHING");
 
     const result = await change("BOUGHT");
 
-    expect(result.getValue().get("status").value).toBe("BOUGHT");
+    const analysis = result.getValue();
+    expect(analysis.get("status").value).toBe("BOUGHT");
+    expect(statusMoves()).toEqual([
+      { id: analysis.id.value, from: "WATCHING", to: "BOUGHT" },
+    ]);
     expect(transaction.outcome()).toBe("committed");
   });
 

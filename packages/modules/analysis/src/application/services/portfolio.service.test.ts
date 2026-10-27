@@ -12,7 +12,6 @@ import { PortfolioService } from "./portfolio.service";
 function given() {
   const repository = mockPort<IAnalysisRepository>();
   repository.findByVintedId.mockResolvedValue(Result.ok(Option.none()));
-  repository.delete.mockResolvedValue(Result.fail("ANALYSIS_NOT_FOUND"));
 
   return { repository, portfolio: new PortfolioService(repository) };
 }
@@ -23,10 +22,6 @@ describe("reading the portfolio", () => {
     {
       by: "export",
       read: (p: PortfolioService) => p.exportMarkdown({ vintedId: "42" }),
-    },
-    {
-      by: "delete",
-      read: (p: PortfolioService) => p.delete({ vintedId: "42" }),
     },
   ])("answers not found on $by for an unknown listing", async ({ read }) => {
     const { portfolio } = given();
@@ -70,5 +65,28 @@ describe("reading the portfolio", () => {
     expect(filename).toBe("levi-s_veste-en-jean-levi-s_2026-10-27.md");
     expect(markdown).toContain("Marge potentielle: -5 € (-14,3 %)");
     expect(markdown).toContain("- **Statut:** Surveillé");
+    expect(markdown).not.toMatch(/\p{Extended_Pictographic}/u);
+  });
+
+  it("names the file after the Paris day, the plain title and an unknown brand when it is empty", async () => {
+    const { repository, portfolio } = given();
+    const listing = {
+      ...buildListing({ brand: "" }),
+      title: "Très belle veste en jean bleu délavée",
+    };
+    const halfPastMidnightInParis = new Date("2026-10-26T23:30:00.000Z");
+    repository.findByVintedId.mockResolvedValue(
+      Result.ok(
+        Option.some(buildAnalysis({ listing, now: halfPastMidnightInParis })),
+      ),
+    );
+
+    const result = await portfolio.exportMarkdown({ vintedId: "4815162342" });
+
+    const { filename, markdown } = result.getValue();
+    expect(filename).toBe(
+      "unknown_tres-belle-veste-en-jean-bleu_2026-10-27.md",
+    );
+    expect(markdown).toContain("Analysé le 27 octobre 2026");
   });
 });

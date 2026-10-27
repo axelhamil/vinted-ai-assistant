@@ -28,7 +28,7 @@ import type {
   PortfolioQuery,
   PortfolioStats,
 } from "../../application/ports/analysis.repository.port";
-import type { Analysis } from "../../domain/analysis.aggregate";
+import type { Analysis, Negotiation } from "../../domain/analysis.aggregate";
 import { AnalysisId } from "../../domain/analysis-id";
 import type { AnalysisStatus } from "../../domain/value-objects/analysis-status.vo";
 import type { VintedId } from "../../domain/value-objects/vinted-id.vo";
@@ -36,6 +36,7 @@ import {
   type AnalysisRecord,
   analysisToDomain,
   analysisToPersistence,
+  negotiationToPersistence,
 } from "../mappers/analysis.mapper";
 
 const STORE_UNAVAILABLE: AnalysisStoreUnavailable =
@@ -245,6 +246,28 @@ export class DrizzleAnalysisRepository implements IAnalysisRepository {
           )
           .returning({ id: analyses.id });
         if (updated.length === 0) return Result.fail(STATUS_CONFLICT);
+
+        return Result.ok();
+      },
+    );
+  }
+
+  updateNegotiation(
+    id: AnalysisId,
+    negotiation: Negotiation,
+  ): Promise<Result<void, AnalysisNotFound | AnalysisStoreUnavailable>> {
+    return this.traced(
+      "updateNegotiation",
+      async (): Promise<Result<void, AnalysisNotFound>> => {
+        const updated = await resolveExecutor(this.database)
+          .update(analyses)
+          .set({
+            negotiation: negotiationToPersistence(negotiation),
+            updatedAt: sql`now()`,
+          })
+          .where(eq(analyses.id, String(id.value)))
+          .returning({ id: analyses.id });
+        if (updated.length === 0) return Result.fail(NOT_FOUND);
 
         return Result.ok();
       },

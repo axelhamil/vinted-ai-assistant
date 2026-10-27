@@ -1,7 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { type ILogger, Option, Result } from "@packages/ddd-kit";
+import { type ILogger, Option, Result, UUID } from "@packages/ddd-kit";
 import { mockPort } from "@packages/testing/port-mock";
 import { mockUnitOfWork } from "@packages/testing/unit-of-work-mock";
+import { AnalysisId } from "../../domain/analysis-id";
 import {
   ANALYZED_AT,
   buildAnalysis,
@@ -16,6 +17,7 @@ import { AnalyzeListingUseCase } from "./analyze-listing.use-case";
 
 const HOUR_MS = 3_600_000;
 const FRESH_NOW = new Date(ANALYZED_AT.getTime() + HOUR_MS / 2);
+const ONE_HOUR_LATER = new Date(ANALYZED_AT.getTime() + HOUR_MS);
 const STALE_NOW = new Date(ANALYZED_AT.getTime() + 2 * HOUR_MS);
 const NEW_SCRIPT = "Bonjour, je vous propose 17 € pour la veste.";
 
@@ -72,6 +74,7 @@ describe("analysing a listing", () => {
 
   it.each([
     { reason: "stale", now: STALE_NOW, forceRefresh: false },
+    { reason: "one hour old", now: ONE_HOUR_LATER, forceRefresh: false },
     { reason: "forced", now: FRESH_NOW, forceRefresh: true },
   ])(
     "re-reads a $reason analysis and keeps its portfolio status and id",
@@ -134,4 +137,39 @@ describe("analysing a listing", () => {
       expect(transaction.outcome()).toBe("not_started");
     },
   );
+
+  it("keeps the negotiation tone chosen for the stored analysis", async () => {
+    const { repository, negotiationWriter, analyze } = given(STALE_NOW);
+    const stored = buildAnalysis();
+    stored.replaceNegotiation(buildNegotiation({ tone: "urgent" }));
+    repository.findByVintedId.mockResolvedValue(Result.ok(Option.some(stored)));
+
+    await analyze();
+
+    const request = negotiationWriter.write.mock.calls[0]?.[0];
+    expect(request?.tone.value).toBe("urgent");
+  });
+
+  it("replaces an unreadable stored analysis with a new one", async () => {
+    const { repository, logger, transaction, analyze } = given(STALE_NOW);
+    repository.findByVintedId.mockResolvedValue(
+      Result.fail("ANALYSIS_RECORD_INTEGRITY_FAILED"),
+    );
+
+    const result = await analyze();
+
+    expect(result.getValue().get("status").value).toBe("ANALYZED");
+    expect(logger.warn).toHaveBeenCalled();
+    expect(transaction.outcome()).toBe("committed");
+  });
+
+  it("answers with the stored id when a parallel first analysis saved the row before", async () => {
+    const { repository, analyze } = given(STALE_NOW);
+    const winner = AnalysisId.create(new UUID<string>());
+    repository.save.mockResolvedValue(Result.ok(winner));
+
+    const result = await analyze();
+
+    expect(result.getValue().id.value).toBe(winner.value);
+  });
 });

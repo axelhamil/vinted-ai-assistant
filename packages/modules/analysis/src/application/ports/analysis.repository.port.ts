@@ -1,5 +1,5 @@
 import type { Option, Result } from "@packages/ddd-kit";
-import type { Analysis } from "../../domain/analysis.aggregate";
+import type { Analysis, Negotiation } from "../../domain/analysis.aggregate";
 import type { AnalysisId } from "../../domain/analysis-id";
 import type { AnalysisStatus } from "../../domain/value-objects/analysis-status.vo";
 import type { VintedId } from "../../domain/value-objects/vinted-id.vo";
@@ -51,6 +51,10 @@ export interface IAnalysisRepository {
     from: AnalysisStatus,
     to: AnalysisStatus,
   ): Promise<Result<void, AnalysisStatusConflict | AnalysisStoreUnavailable>>;
+  updateNegotiation(
+    id: AnalysisId,
+    negotiation: Negotiation,
+  ): Promise<Result<void, AnalysisNotFound | AnalysisStoreUnavailable>>;
   delete(
     vintedId: VintedId,
   ): Promise<Result<void, AnalysisNotFound | AnalysisStoreUnavailable>>;

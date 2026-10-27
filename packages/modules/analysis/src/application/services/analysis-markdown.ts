@@ -17,10 +17,10 @@ const STATUS_LABELS: Record<AnalysisStatusValue, string> = {
   ARCHIVED: "Archivé",
 };
 
-const SIGNAL_MARKS: Record<SignalType, string> = {
-  positive: "✅",
-  negative: "❌",
-  neutral: "ℹ️",
+const SIGNAL_LABELS: Record<SignalType, string> = {
+  positive: "positif",
+  negative: "négatif",
+  neutral: "neutre",
 };
 
 const TIP_LABELS: Record<ResaleTip, string> = {
@@ -51,17 +51,32 @@ function signedEuros(cents: number): string {
   return cents >= 0 ? `+${euros(cents)}` : `-${euros(-cents)}`;
 }
 
+const PARIS = "Europe/Paris";
+
+const parisDay = new Intl.DateTimeFormat("en-CA", {
+  timeZone: PARIS,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+function trimDashes(text: string): string {
+  return text.replace(/^-+|-+$/g, "");
+}
+
 function slug(text: string): string {
-  return text
+  const plain = text
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, SLUG_LENGTH);
+    .replace(/[^a-z0-9]+/g, "-");
+
+  return trimDashes(trimDashes(plain).slice(0, SLUG_LENGTH));
 }
 
 function analyzedOn(date: Date): string {
   return date.toLocaleString("fr-FR", {
-    timeZone: "Europe/Paris",
+    timeZone: PARIS,
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -72,8 +87,11 @@ function analyzedOn(date: Date): string {
 
 function filenameOf(analysis: Analysis): string {
   const listing = analysis.get("listing");
-  const brand = listing.brand.map(slug).unwrapOr("unknown");
-  const day = analysis.get("analyzedAt").toISOString().slice(0, 10);
+  const brand = listing.brand
+    .map(slug)
+    .filter((text) => text.length > 0)
+    .unwrapOr("unknown");
+  const day = parisDay.format(analysis.get("analyzedAt"));
 
   return `${brand}_${slug(listing.title)}_${day}.md`;
 }
@@ -97,7 +115,7 @@ function markdownOf(analysis: Analysis): string {
     `- **Marque:** ${listing.brand.unwrapOr(notSpecified)}`,
     `- **Taille:** ${listing.size.unwrapOr(notSpecified)}`,
     `- **État:** ${listing.condition}`,
-    `- **Vendeur:** ${listing.seller.username} (${rating}⭐, ${sales} ventes)`,
+    `- **Vendeur:** ${listing.seller.username} (note ${rating}/5, ${sales} ventes)`,
     `- **Statut:** ${STATUS_LABELS[analysis.get("status").value]}`,
     "",
     "## Analyse IA",
@@ -112,14 +130,14 @@ function markdownOf(analysis: Analysis): string {
     "### Signaux",
     ...facts.signals.map(
       (signal) =>
-        `- ${SIGNAL_MARKS[signal.type]} **${signal.label}**: ${signal.detail}`,
+        `- **${signal.label}** (${SIGNAL_LABELS[signal.type]}): ${signal.detail}`,
     ),
     "",
     "### Authenticité",
     `Score: ${facts.authenticity.score}/10`,
     ...(facts.authenticity.flags.length > 0
       ? [
-          "⚠️ Points d'attention:",
+          "Points d'attention:",
           ...facts.authenticity.flags.map((flag) => `- ${flag}`),
         ]
       : []),
