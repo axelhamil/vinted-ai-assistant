@@ -1,0 +1,205 @@
+import { zValidator } from "@hono/zod-validator";
+import { AppErrorException, type Result } from "@packages/ddd-kit";
+import { Hono, type ValidationTargets } from "hono";
+import { z } from "zod";
+import {
+  ANALYSIS_ERROR_MESSAGES,
+  type AnalysisErrorCode,
+} from "../../application/analysis-errors";
+import type { ListingDto } from "../../application/dto/analysis.dto";
+import {
+  toAnalysisDto,
+  toPortfolioDto,
+} from "../../application/dto/analysis.presenter";
+import type { PortfolioService } from "../../application/services/portfolio.service";
+import type { AnalyzeListingUseCase } from "../../application/use-cases/analyze-listing.use-case";
+import type { ChangeAnalysisStatusUseCase } from "../../application/use-cases/change-analysis-status.use-case";
+import type { RegenerateNegotiationUseCase } from "../../application/use-cases/regenerate-negotiation.use-case";
+
+export interface AnalysisRoutesDeps {
+  AnalyzeListingUseCase: AnalyzeListingUseCase;
+  ChangeAnalysisStatusUseCase: ChangeAnalysisStatusUseCase;
+  RegenerateNegotiationUseCase: RegenerateNegotiationUseCase;
+  PortfolioService: PortfolioService;
+}
+
+const DEFAULT_LANGUAGE = "fr";
+
+const euros = z.number().finite();
+
+const analyzeBodySchema = z.object({
+  vintedId: z.string().min(1),
+  url: z.url(),
+  title: z.string().min(1),
+  description: z.string(),
+  price: euros.positive(),
+  totalPrice: euros.positive().nullable(),
+  shippingCost: euros.nonnegative().nullable(),
+  brand: z.string().nullable(),
+  size: z.string().nullable(),
+  condition: z.string().min(1),
+  photos: z.array(z.url()).min(1),
+  listedAt: z.iso.datetime({ offset: true }).nullable(),
+  seller: z.object({
+    username: z.string().min(1),
+    rating: z.number().min(0).max(5).nullable(),
+    salesCount: z.number().int().nonnegative().nullable(),
+  }),
+  language: z.string().default(DEFAULT_LANGUAGE),
+  forceRefresh: z.boolean().default(false),
+});
+
+const statusBodySchema = z.object({ status: z.string() });
+
+const toneBodySchema = z.object({ tone: z.string() });
+
+const portfolioQuerySchema = z.object({
+  limit: z.coerce.number().optional(),
+  offset: z.coerce.number().optional(),
+  minScore: z.coerce.number().optional(),
+  status: z.string().optional(),
+});
+
+const statsQuerySchema = z.object({
+  minScore: z.coerce.number().optional(),
+});
+
+type AnalyzeBody = z.infer<typeof analyzeBodySchema>;
+
+function failure(code: AnalysisErrorCode): AppErrorException {
+  return new AppErrorException({
+    code,
+    message: ANALYSIS_ERROR_MESSAGES[code],
+  });
+}
+
+function succeeded<T>(result: Result<T, AnalysisErrorCode>): T {
+  if (result.isFailure) throw failure(result.getError());
+
+  return result.getValue();
+}
+
+function validated<T extends z.ZodType, Target extends keyof ValidationTargets>(
+  target: Target,
+  schema: T,
+) {
+  return zValidator(target, schema, (result) => {
+    if (!result.success) throw failure("ANALYSIS_INPUT_INVALID");
+  });
+}
+
+function cents(euroAmount: number): number {
+  return Math.round(euroAmount * 100);
+}
+
+function optionalCents(euroAmount: number | null): number | null {
+  return euroAmount === null ? null : cents(euroAmount);
+}
+
+function toListingDto(body: AnalyzeBody): ListingDto {
+  return {
+    vintedId: body.vintedId,
+    url: body.url,
+    title: body.title,
+    description: body.description,
+    brand: body.brand,
+    size: body.size,
+    condition: body.condition,
+    priceCents: cents(body.price),
+    totalPriceCents: optionalCents(body.totalPrice),
+    shippingCostCents: optionalCents(body.shippingCost),
+    listedAt: body.listedAt === null ? null : new Date(body.listedAt),
+    photos: body.photos,
+    seller: body.seller,
+    language: body.language,
+  };
+}
+
+export function createAnalysisRoutes(deps: AnalysisRoutesDeps) {
+  return new Hono()
+    .post("/analyses", validated("json", analyzeBodySchema), async (c) => {
+      const body = c.req.valid("json");
+      const analysis = succeeded(
+        await deps.AnalyzeListingUseCase.execute({
+          listing: toListingDto(body),
+          forceRefresh: body.forceRefresh,
+        }),
+      );
+
+      return c.json(toAnalysisDto(analysis), 201);
+    })
+    .get("/analyses/:vintedId", async (c) => {
+      const analysis = succeeded(
+        await deps.PortfolioService.get({ vintedId: c.req.param("vintedId") }),
+      );
+
+      return c.json(toAnalysisDto(analysis));
+    })
+    .patch(
+      "/analyses/:vintedId/status",
+      validated("json", statusBodySchema),
+      async (c) => {
+        const analysis = succeeded(
+          await deps.ChangeAnalysisStatusUseCase.execute({
+            vintedId: c.req.param("vintedId"),
+            status: c.req.valid("json").status,
+          }),
+        );
+
+        return c.json(toAnalysisDto(analysis));
+      },
+    )
+    .post(
+      "/analyses/:vintedId/negotiation",
+      validated("json", toneBodySchema),
+      async (c) => {
+        const analysis = succeeded(
+          await deps.RegenerateNegotiationUseCase.execute({
+            vintedId: c.req.param("vintedId"),
+            tone: c.req.valid("json").tone,
+          }),
+        );
+
+        return c.json(toAnalysisDto(analysis));
+      },
+    )
+    .get("/analyses/:vintedId/export", async (c) => {
+      const { filename, markdown } = succeeded(
+        await deps.PortfolioService.exportMarkdown({
+          vintedId: c.req.param("vintedId"),
+        }),
+      );
+
+      return c.body(markdown, 200, {
+        "Content-Type": "text/markdown; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      });
+    })
+    .get("/portfolio", validated("query", portfolioQuerySchema), async (c) => {
+      const listing = succeeded(
+        await deps.PortfolioService.list(c.req.valid("query")),
+      );
+
+      return c.json(toPortfolioDto(listing));
+    })
+    .get(
+      "/portfolio/stats",
+      validated("query", statsQuerySchema),
+      async (c) => {
+        const stats = succeeded(
+          await deps.PortfolioService.stats(c.req.valid("query")),
+        );
+
+        return c.json(stats);
+      },
+    )
+    .delete("/portfolio/:vintedId", async (c) => {
+      succeeded(
+        await deps.PortfolioService.delete({
+          vintedId: c.req.param("vintedId"),
+        }),
+      );
+
+      return c.body(null, 204);
+    });
+}

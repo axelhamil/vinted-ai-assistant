@@ -24,6 +24,7 @@ x-api-environment: &api-environment
   DATABASE_URL: *dev-database-url
   LOG_LEVEL: info
   SENTRY_DSN: ""
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
 
 x-prod-smoke-service: &prod-smoke-service
   image: vinted/api:prod-local
@@ -110,6 +111,8 @@ services:
         - action: rebuild
           path: ./apps/api/package.json
         - action: rebuild
+          path: ./packages/ai/package.json
+        - action: rebuild
           path: ./packages/ddd-kit/package.json
         - action: rebuild
           path: ./packages/drizzle/package.json
@@ -117,6 +120,8 @@ services:
           path: ./packages/testing/package.json
         - action: rebuild
           path: ./packages/typescript-config/package.json
+        - action: rebuild
+          path: ./packages/modules/analysis/package.json
         - action: rebuild
           path: ./.bun-version
         - action: rebuild

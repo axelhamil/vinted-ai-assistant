@@ -11,7 +11,7 @@ RUN --mount=type=cache,id=vinted-dev-npm,target=/root/.npm npm install --global 
 RUN apt-get update && apt-get install -y --no-install-recommends tini && rm -rf /var/lib/apt/lists/*
 
 USER node
-COPY --chown=node:node --parents package.json pnpm-lock.yaml pnpm-workspace.yaml apps/*/package.json packages/*/package.json ./
+COPY --chown=node:node --parents package.json pnpm-lock.yaml pnpm-workspace.yaml apps/*/package.json packages/*/package.json packages/modules/*/package.json ./
 RUN --mount=type=cache,id=vinted-dev-pnpm-meta,target=/home/node/.cache/pnpm,uid=1000,gid=1000 \
     pnpm install --frozen-lockfile --filter "api..."
 COPY --chown=node:node . .
@@ -36,7 +36,7 @@ COPY package.json ./
 RUN --mount=type=cache,id=vinted-dev-npm,target=/root/.npm npm install --global "pnpm@$(node -p 'require("./package.json").packageManager.split("@")[1]')"
 
 USER node
-COPY --chown=node:node --parents package.json pnpm-lock.yaml pnpm-workspace.yaml apps/*/package.json packages/*/package.json ./
+COPY --chown=node:node --parents package.json pnpm-lock.yaml pnpm-workspace.yaml apps/*/package.json packages/*/package.json packages/modules/*/package.json ./
 RUN --mount=type=cache,id=vinted-prod-pnpm-store,target=/home/node/.pnpm-store,uid=1000,gid=1000 \
     pnpm install --frozen-lockfile --prod --filter "api..." --store-dir=/home/node/.pnpm-store
 COPY --chown=node:node . .

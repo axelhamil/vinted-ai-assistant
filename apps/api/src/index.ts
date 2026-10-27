@@ -4,7 +4,7 @@ import { flushLogger } from "../common/logger";
 import { flushSentry, initSentry } from "../common/sentry";
 import { installProcessHandlers } from "./adapters/lifecycle/process-handlers";
 import { createShutdown } from "./adapters/lifecycle/shutdown";
-import { createApp } from "./composition/app";
+import { createApi } from "./composition/app";
 import { buildContainer } from "./composition/container";
 
 initSentry(env);
@@ -19,7 +19,7 @@ const SHUTDOWN_DEADLINE_MS = 15_000;
 
 const container = buildContainer(env);
 const { logger, report } = container;
-const app = createApp(container);
+const app = createApi(container);
 
 const server = serve({
   fetch: app.fetch,

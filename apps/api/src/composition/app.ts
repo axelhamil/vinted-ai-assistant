@@ -1,3 +1,7 @@
+import {
+  type AnalysisRoutesDeps,
+  createAnalysisRoutes,
+} from "@packages/analysis/infrastructure/http/analysis.routes";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { requestId } from "hono/request-id";
@@ -52,11 +56,20 @@ export function createApp(deps: AppDeps) {
       },
     }),
   );
-  app.use(cors({ origin: allowedOrigin(deps.env) }));
+  app.use(
+    cors({
+      origin: allowedOrigin(deps.env),
+      exposeHeaders: ["Content-Disposition"],
+    }),
+  );
   app.onError(createErrorHandler(deps.logger, deps.report));
   app.notFound(notFoundHandler);
 
   return app.route("/health", createHealthRoutes(deps));
 }
 
-export type AppType = ReturnType<typeof createApp>;
+export function createApi(deps: AppDeps & AnalysisRoutesDeps) {
+  return createApp(deps).route("/api", createAnalysisRoutes(deps));
+}
+
+export type AppType = ReturnType<typeof createApi>;

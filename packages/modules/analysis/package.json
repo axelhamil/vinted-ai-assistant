@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./analysis.module": "./src/analysis.module.ts",
     "./contract": "./src/contract.ts",
     "./schemas/*": "./schemas/*.ts",
     "./domain/*": "./src/domain/*.ts",
@@ -17,10 +18,13 @@
     "test:db": "bun ../../testing/src/global-setup.ts && bun --config=../../../bunfig.db.toml test --isolate --timeout=15000 .db.test.ts"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.9.1",
     "@packages/ai": "workspace:*",
     "@packages/ddd-kit": "workspace:*",
     "@packages/drizzle": "workspace:*",
     "drizzle-orm": "^0.45.4",
+    "hono": "^4.13.14",
+    "inwire": "^4.0.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {

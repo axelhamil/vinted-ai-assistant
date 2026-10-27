@@ -8,6 +8,7 @@ const ALLOWED_IN_DOMAIN = ["@packages/ddd-kit", "zod"];
 const MODULE_CONTRACT = "../contract";
 const REPOSITORIES = "infrastructure/repositories";
 const APPLICATION = "application";
+const MODULE_WIRING = "analysis.module.ts";
 
 describe("layering rules of the analysis module", () => {
   it("keeps the domain on ddd-kit, zod, the module contract and itself", () => {
@@ -59,13 +60,16 @@ describe("layering rules of the analysis module", () => {
     },
   );
 
-  it("reaches the AI provider from infrastructure only", () => {
+  it("reaches the AI provider from infrastructure and the module wiring only", () => {
     const providerImports = scan
       .importsOf(".")
       .filter(({ specifier }) => specifier.startsWith("@packages/ai/"));
 
     const outside = providerImports
-      .filter(({ file }) => !file.startsWith("infrastructure/"))
+      .filter(
+        ({ file }) =>
+          !file.startsWith("infrastructure/") && file !== MODULE_WIRING,
+      )
       .map(({ file, specifier }) => `${file} imports ${specifier}`);
 
     expect(providerImports.length).toBeGreaterThan(0);

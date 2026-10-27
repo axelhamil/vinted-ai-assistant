@@ -55,6 +55,12 @@ const envSchema = z.object({
       })
       .default("info"),
   ),
+  GEMINI_API_KEY: blankAsUnset(
+    z.string({
+      error:
+        "is required, the Gemini api key from https://aistudio.google.com/apikey",
+    }),
+  ),
   SENTRY_DSN: blankAsUnset(
     z
       .url({
