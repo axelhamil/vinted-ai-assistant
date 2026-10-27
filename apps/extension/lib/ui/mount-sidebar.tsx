@@ -16,7 +16,7 @@ import { createQueryClient } from "@/lib/ui/query";
 interface SidebarApp<P extends object> {
   id: string;
   matches: (url: URL) => boolean;
-  read: (url: URL) => P | null;
+  read: (url: URL, lastAttempt: boolean) => P | null;
   App: ComponentType<P>;
 }
 
@@ -86,7 +86,7 @@ export function mountSidebar<P extends object>(
   function place(url: URL, mountedFor: number, attemptsLeft: number): void {
     if (mountedFor !== generation) return;
 
-    const props = read(url);
+    const props = read(url, attemptsLeft === 0);
     if (props) {
       mount(props, mountedFor).catch((error: unknown) =>
         console.log("Vinted AI Assistant: the sidebar could not mount", error),

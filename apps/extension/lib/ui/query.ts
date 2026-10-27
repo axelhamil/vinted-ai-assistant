@@ -1,3 +1,4 @@
+import { ANALYSIS_FRESH_FOR_MS } from "@packages/analysis/contract";
 import {
   QueryClient,
   type QueryKey,
@@ -41,7 +42,7 @@ export function createQueryClient(): QueryClient {
     defaultOptions: {
       queries: {
         retry: false,
-        staleTime: Number.POSITIVE_INFINITY,
+        staleTime: ANALYSIS_FRESH_FOR_MS,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
       },

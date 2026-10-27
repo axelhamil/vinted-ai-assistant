@@ -131,7 +131,7 @@
   }
 
   .sticker {
-    @apply -rotate-2 rounded-md bg-sticker px-stack py-row text-ink tabular-nums animate-sticker-drop motion-reduce:animate-none;
+    @apply rounded-md bg-sticker px-stack py-row text-ink tabular-nums animate-sticker-drop motion-reduce:animate-none motion-reduce:-rotate-2;
   }
 
   .sticker-score {
@@ -163,7 +163,7 @@
   }
 
   .section-title {
-    @apply text-sm font-semibold;
+    @apply text-sm font-medium;
   }
 
   .tone-profit {
