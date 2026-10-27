@@ -1,15 +1,10 @@
 import { Result, ValueObject } from "@packages/ddd-kit";
 import { z } from "zod";
-
-export const ANALYSIS_STATUSES = [
-  "ANALYZED",
-  "WATCHING",
-  "BOUGHT",
-  "SOLD",
-  "ARCHIVED",
-] as const;
-
-export type AnalysisStatusValue = (typeof ANALYSIS_STATUSES)[number];
+import {
+  ANALYSIS_STATUSES,
+  type AnalysisStatusValue,
+  NEXT_STATUSES,
+} from "../../contract";
 
 export const ANALYSIS_STATUS = {
   ANALYZED: "ANALYZED",
@@ -19,18 +14,7 @@ export const ANALYSIS_STATUS = {
   ARCHIVED: "ARCHIVED",
 } as const satisfies { [Status in AnalysisStatusValue]: Status };
 
-export const EXCLUDED_FROM_OPPORTUNITIES = ANALYSIS_STATUS.ARCHIVED;
-
-const NEXT_STATUSES: Record<
-  AnalysisStatusValue,
-  readonly AnalysisStatusValue[]
-> = {
-  ANALYZED: ["WATCHING", "BOUGHT", "ARCHIVED"],
-  WATCHING: ["BOUGHT", "ARCHIVED"],
-  BOUGHT: ["SOLD", "ARCHIVED"],
-  SOLD: ["ARCHIVED"],
-  ARCHIVED: [],
-};
+export const OPPORTUNITY_STATUS = ANALYSIS_STATUS.ANALYZED;
 
 const analysisStatusSchema = z.enum(ANALYSIS_STATUSES);
 

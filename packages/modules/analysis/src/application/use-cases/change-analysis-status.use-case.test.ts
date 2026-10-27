@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { Option, Result } from "@packages/ddd-kit";
 import { mockPort } from "@packages/testing/port-mock";
 import { mockUnitOfWork } from "@packages/testing/unit-of-work-mock";
-import type { AnalysisStatusValue } from "../../domain/value-objects/analysis-status.vo";
+import type { AnalysisStatusValue } from "../../contract";
 import { buildAnalysis } from "../../testing/analysis.factory";
 import type { IAnalysisRepository } from "../ports/analysis.repository.port";
 import { ChangeAnalysisStatusUseCase } from "./change-analysis-status.use-case";

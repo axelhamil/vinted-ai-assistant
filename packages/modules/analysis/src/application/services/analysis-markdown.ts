@@ -1,6 +1,6 @@
+import type { AnalysisStatusValue } from "../../contract";
 import type { Analysis } from "../../domain/analysis.aggregate";
 import type { SignalType } from "../../domain/listing-facts";
-import type { AnalysisStatusValue } from "../../domain/value-objects/analysis-status.vo";
 import type {
   ResaleTip,
   ResaleValue,

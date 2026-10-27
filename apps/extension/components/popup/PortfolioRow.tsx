@@ -1,3 +1,4 @@
+import { NEXT_STATUSES } from "@packages/analysis/contract";
 import { useQueryClient } from "@tanstack/react-query";
 import { DownloadIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
@@ -10,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { NEXT_STATUSES, STATUS_LABELS } from "@/lib/analysis-status";
+import { STATUS_LABELS } from "@/lib/analysis-copy";
 import { euros, percent } from "@/lib/format";
 import {
   type AnalysisStatus,
@@ -27,10 +28,6 @@ export interface PortfolioRowProps {
 
 const showFailure = (error: BackgroundFailure) => toast.error(error.message);
 
-function isStatus(value: string): value is AnalysisStatus {
-  return value in STATUS_LABELS;
-}
-
 export function PortfolioRow({ item }: PortfolioRowProps) {
   const queryClient = useQueryClient();
   const refresh = () => {
@@ -44,10 +41,12 @@ export function PortfolioRow({ item }: PortfolioRowProps) {
       toast.success(`Article ${STATUS_LABELS[updated.status].toLowerCase()}`);
       refresh();
     },
+    showFailure,
   );
   const exportFile = useBackgroundMutation(
     (vintedId: string) => sendMessage("exportAnalysis", vintedId),
     download,
+    showFailure,
   );
   const remove = useBackgroundMutation(
     (vintedId: string) => sendMessage("deleteAnalysis", vintedId),
@@ -55,10 +54,9 @@ export function PortfolioRow({ item }: PortfolioRowProps) {
       toast.success("Supprimé");
       refresh();
     },
+    showFailure,
   );
-  const confirmDelete = useConfirmClick(() =>
-    remove.mutate(item.vintedId, { onError: showFailure }),
-  );
+  const confirmDelete = useConfirmClick(() => remove.mutate(item.vintedId));
   const nextStatuses = NEXT_STATUSES[item.status];
 
   return (
@@ -93,8 +91,8 @@ export function PortfolioRow({ item }: PortfolioRowProps) {
           value={item.status}
           disabled={nextStatuses.length === 0 || changeStatus.isPending}
           onValueChange={(value) => {
-            if (isStatus(value) && value !== item.status)
-              changeStatus.mutate(value, { onError: showFailure });
+            const next = nextStatuses.find((status) => status === value);
+            if (next) changeStatus.mutate(next);
           }}
         >
           <SelectTrigger size="sm" aria-label="Changer le statut">
@@ -116,9 +114,7 @@ export function PortfolioRow({ item }: PortfolioRowProps) {
           size="icon-sm"
           aria-label="Exporter l'analyse"
           disabled={exportFile.isPending}
-          onClick={() =>
-            exportFile.mutate(item.vintedId, { onError: showFailure })
-          }
+          onClick={() => exportFile.mutate(item.vintedId)}
         >
           <DownloadIcon />
         </Button>
@@ -128,7 +124,7 @@ export function PortfolioRow({ item }: PortfolioRowProps) {
           aria-label={
             confirmDelete.armed ? "Confirmer la suppression" : "Supprimer"
           }
-          disabled={remove.isPending}
+          disabled={remove.isPending || remove.isSuccess}
           onClick={confirmDelete.click}
         >
           {confirmDelete.armed ? "Confirmer" : <Trash2Icon />}

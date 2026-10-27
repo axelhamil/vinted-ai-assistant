@@ -62,3 +62,17 @@ export async function enabledSettings(): Promise<Settings | null> {
 
   return current.enabled ? current : null;
 }
+
+let lastUpdate: Promise<unknown> = Promise.resolve();
+
+export function updateSettings(change: Partial<Settings>): Promise<Settings> {
+  const update = lastUpdate.then(async () => {
+    const next = { ...(await settings.getValue()), ...change };
+    await settings.setValue(next);
+
+    return next;
+  });
+  lastUpdate = update.catch(() => undefined);
+
+  return update;
+}

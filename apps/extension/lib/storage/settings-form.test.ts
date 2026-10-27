@@ -26,4 +26,17 @@ describe("parseSettingsForm", () => {
       value: { backendUrl: "http://localhost:3010", autoOpenSidebar: false },
     });
   });
+
+  it("rejects an address typed without its scheme", () => {
+    const result = parseSettingsForm({
+      backendUrl: "localhost:3000/",
+      autoOpenSidebar: true,
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      message:
+        "Saisissez une adresse http ou https, par exemple http://localhost:3000.",
+    });
+  });
 });

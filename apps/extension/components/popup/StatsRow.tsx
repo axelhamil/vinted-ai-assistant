@@ -1,5 +1,6 @@
 import { OPPORTUNITY_MIN_SCORE } from "@packages/analysis/contract";
 import { useQuery } from "@tanstack/react-query";
+import { ErrorPanel } from "@/components/sidebar/ErrorPanel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { sendMessage } from "@/lib/messaging/protocol";
 import { dailyCount } from "@/lib/storage/daily-count";
@@ -16,7 +17,7 @@ function Stat({ label, value, pending }: StatProps) {
     <div className="flex flex-col">
       <dt className="fact-label">{label}</dt>
       <dd className="stat-value">
-        {pending ? <Skeleton className="h-6 w-6" /> : (value ?? "?")}
+        {pending ? <Skeleton className="h-6 w-6" /> : value}
       </dd>
     </div>
   );
@@ -31,6 +32,14 @@ export function StatsRow() {
     key: ["portfolio-stats"],
     request: () => sendMessage("portfolioStats", OPPORTUNITY_MIN_SCORE),
   });
+
+  if (stats.isError && !stats.isFetching)
+    return (
+      <ErrorPanel
+        message={stats.error.message}
+        onRetry={() => void stats.refetch()}
+      />
+    );
 
   return (
     <dl className="flex justify-between px-gutter pb-stack">

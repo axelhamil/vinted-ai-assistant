@@ -24,6 +24,20 @@ function page(from: number, count: number, hasMore: boolean): PortfolioDto {
   };
 }
 
+function renderPages(
+  send: (query: PortfolioQuery) => Promise<Reply<PortfolioDto>>,
+) {
+  return renderHook(
+    () =>
+      usePortfolioPages({
+        key: "watching",
+        query: { status: "WATCHING" },
+        send,
+      }),
+    { wrapper: queryWrapper() },
+  );
+}
+
 describe("usePortfolioPages", () => {
   it("asks for the next 50 items once the user reaches the end of the list", async () => {
     const queries: PortfolioQuery[] = [];
@@ -36,15 +50,7 @@ describe("usePortfolioPages", () => {
         data: query.offset === "0" ? page(0, 50, true) : page(50, 10, false),
       };
     };
-    const { result } = renderHook(
-      () =>
-        usePortfolioPages({
-          key: "watching",
-          query: { status: "WATCHING" },
-          send,
-        }),
-      { wrapper: queryWrapper() },
-    );
+    const { result } = renderPages(send);
     await waitFor(() => expect(result.current.items).toHaveLength(50));
 
     act(() => result.current.reached(10));
@@ -58,5 +64,29 @@ describe("usePortfolioPages", () => {
       { status: "WATCHING", limit: "50", offset: "0" },
       { status: "WATCHING", limit: "50", offset: "50" },
     ]);
+  });
+
+  it("keeps the loaded items and waits for a retry when the next page fails", async () => {
+    const offsets: (string | string[] | undefined)[] = [];
+    const send = async (
+      query: PortfolioQuery,
+    ): Promise<Reply<PortfolioDto>> => {
+      offsets.push(query.offset);
+      if (query.offset === "0") return { ok: true, data: page(0, 50, true) };
+
+      return {
+        ok: false,
+        failure: { kind: "network", message: "Le serveur est injoignable." },
+      };
+    };
+    const { result } = renderPages(send);
+    await waitFor(() => expect(result.current.items).toHaveLength(50));
+
+    act(() => result.current.reached(49));
+    await waitFor(() => expect(result.current.isFetchNextPageError).toBe(true));
+    act(() => result.current.reached(49));
+
+    expect(result.current.items).toHaveLength(50);
+    expect(offsets).toEqual(["0", "50"]);
   });
 });

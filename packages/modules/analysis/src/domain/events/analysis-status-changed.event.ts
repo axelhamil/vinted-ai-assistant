@@ -1,5 +1,5 @@
 import { BaseDomainEvent } from "@packages/ddd-kit";
-import type { AnalysisStatusValue } from "../value-objects/analysis-status.vo";
+import type { AnalysisStatusValue } from "../../contract";
 
 export interface AnalysisStatusChangedPayload {
   vintedId: string;

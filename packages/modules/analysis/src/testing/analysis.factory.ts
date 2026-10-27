@@ -1,5 +1,6 @@
 import { Option } from "@packages/ddd-kit";
 import type { ListingDto } from "../application/dto/analysis.dto";
+import type { AnalysisStatusValue } from "../contract";
 import {
   Analysis,
   type AnalysisInput,
@@ -8,10 +9,7 @@ import {
 } from "../domain/analysis.aggregate";
 import type { Listing } from "../domain/listing";
 import type { ListingFacts } from "../domain/listing-facts";
-import {
-  AnalysisStatus,
-  type AnalysisStatusValue,
-} from "../domain/value-objects/analysis-status.vo";
+import { AnalysisStatus } from "../domain/value-objects/analysis-status.vo";
 import { Language } from "../domain/value-objects/language.vo";
 import { NegotiationTone } from "../domain/value-objects/negotiation-tone.vo";
 import { Price } from "../domain/value-objects/price.vo";

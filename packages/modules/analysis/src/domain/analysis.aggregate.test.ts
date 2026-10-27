@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { ANALYSIS_STATUSES, type AnalysisStatusValue } from "../contract";
 import {
   ANALYZED_AT,
   analysisInput,
@@ -8,11 +9,7 @@ import {
   propsOf,
 } from "../testing/analysis.factory";
 import { Analysis } from "./analysis.aggregate";
-import {
-  ANALYSIS_STATUSES,
-  AnalysisStatus,
-  type AnalysisStatusValue,
-} from "./value-objects/analysis-status.vo";
+import { AnalysisStatus } from "./value-objects/analysis-status.vo";
 import { Score } from "./value-objects/score.vo";
 
 const MINUTE_MS = 60_000;

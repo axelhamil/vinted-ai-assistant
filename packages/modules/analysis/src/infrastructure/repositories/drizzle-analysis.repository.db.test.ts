@@ -3,11 +3,9 @@ import { type ILogger, Option } from "@packages/ddd-kit";
 import { db } from "@packages/testing/clone-database";
 import { mockInstrumentation } from "@packages/testing/instrumentation-mock";
 import { mockPort } from "@packages/testing/port-mock";
+import type { AnalysisStatusValue } from "../../contract";
 import { Analysis } from "../../domain/analysis.aggregate";
-import {
-  AnalysisStatus,
-  type AnalysisStatusValue,
-} from "../../domain/value-objects/analysis-status.vo";
+import { AnalysisStatus } from "../../domain/value-objects/analysis-status.vo";
 import { Margin } from "../../domain/value-objects/margin.vo";
 import { Score } from "../../domain/value-objects/score.vo";
 import { VintedId } from "../../domain/value-objects/vinted-id.vo";
@@ -245,13 +243,14 @@ describe("DrizzleAnalysisRepository", () => {
     expect(found.getError()).toBe("ANALYSIS_RECORD_INTEGRITY_FAILED");
   });
 
-  it("counts the portfolio per status and the opportunities that are not archived", async () => {
+  it("counts the portfolio per status and the opportunities still to act on", async () => {
     await store({ vintedId: "4001", score: 8, status: "WATCHING" });
     await store({ vintedId: "4002", score: 5, status: "BOUGHT" });
     await store({ vintedId: "4003", score: 9, status: "SOLD" });
     await store({ vintedId: "4004", score: 9.5, status: "ARCHIVED" });
     await store({ vintedId: "4005", score: 7 });
     await store({ vintedId: "4006", score: 6.9 });
+    await store({ vintedId: "4007", score: 9.2 });
 
     const stats = await repository.stats(7);
 
@@ -259,7 +258,7 @@ describe("DrizzleAnalysisRepository", () => {
       watching: 1,
       bought: 1,
       sold: 1,
-      opportunities: 3,
+      opportunities: 2,
     });
   });
 

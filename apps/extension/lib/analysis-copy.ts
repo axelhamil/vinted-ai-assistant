@@ -1,4 +1,8 @@
-import type { AnalysisDto, NegotiationTone } from "@/lib/messaging/protocol";
+import type {
+  AnalysisDto,
+  AnalysisStatus,
+  NegotiationTone,
+} from "@/lib/messaging/protocol";
 
 type Resale = AnalysisDto["resale"];
 type Tip = Resale["tips"][number];
@@ -41,3 +45,11 @@ export const TONES: readonly NegotiationTone[] = [
   "direct",
   "urgent",
 ];
+
+export const STATUS_LABELS: Record<AnalysisStatus, string> = {
+  ANALYZED: "Analysé",
+  WATCHING: "Surveillé",
+  BOUGHT: "Acheté",
+  SOLD: "Vendu",
+  ARCHIVED: "Archivé",
+};

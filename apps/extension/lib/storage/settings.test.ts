@@ -5,6 +5,7 @@ import {
   enabledSettings,
   normalizeBackendUrl,
   settings,
+  updateSettings,
 } from "./settings";
 
 describe("settings", () => {
@@ -63,6 +64,21 @@ describe("settings", () => {
     expect(await enabledSettings()).toEqual({
       ...DEFAULT_SETTINGS,
       autoOpenSidebar: false,
+    });
+  });
+
+  it("merges a change into the stored settings, not into a stale copy", async () => {
+    await settings.setValue({ ...DEFAULT_SETTINGS, autoOpenSidebar: false });
+
+    await Promise.all([
+      updateSettings({ enabled: false }),
+      updateSettings({ backendUrl: "http://localhost:3010" }),
+    ]);
+
+    expect(await settings.getValue()).toEqual({
+      backendUrl: "http://localhost:3010",
+      autoOpenSidebar: false,
+      enabled: false,
     });
   });
 });

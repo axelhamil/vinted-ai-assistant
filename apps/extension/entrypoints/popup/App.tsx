@@ -5,11 +5,14 @@ import { Header } from "@/components/popup/Header";
 import { PortfolioTabs } from "@/components/popup/PortfolioTabs";
 import { SettingsView } from "@/components/popup/SettingsView";
 import { StatsRow } from "@/components/popup/StatsRow";
+import { ErrorPanel } from "@/components/sidebar/ErrorPanel";
+import { Button } from "@/components/ui/button";
+import { LOCAL_FAILURE_MESSAGE } from "@/lib/api/failure";
 import { sendMessage } from "@/lib/messaging/protocol";
 import {
-  DEFAULT_SETTINGS,
   type Settings,
   settings,
+  updateSettings,
 } from "@/lib/storage/settings";
 import { useBackground } from "@/lib/ui/query";
 
@@ -21,17 +24,14 @@ export function App() {
   const queryClient = useQueryClient();
   const current = useQuery({
     queryKey: ["settings"],
-    queryFn: () => settings.getValue().catch(() => DEFAULT_SETTINGS),
+    queryFn: () => settings.getValue(),
   });
   const backend = useBackground({
     key: ["backend"],
     request: () => sendMessage("checkBackend", undefined),
   });
   const save = useMutation({
-    mutationFn: async (next: Settings) => {
-      await settings.setValue(next);
-      return next;
-    },
+    mutationFn: (change: Partial<Settings>) => updateSettings(change),
     onSuccess: (next) => {
       queryClient.setQueryData(["settings"], next);
       void queryClient.invalidateQueries({
@@ -41,44 +41,68 @@ export function App() {
     onError: () => toast.error(SAVE_FAILED),
   });
 
+  if (current.isError)
+    return (
+      <main className="flex h-140 w-90 flex-col">
+        <ErrorPanel
+          message={LOCAL_FAILURE_MESSAGE}
+          onRetry={() => void current.refetch()}
+        />
+      </main>
+    );
+
   const values = current.data;
   if (!values) return null;
+
+  const backendError = backend.isFetching ? null : backend.error;
+  const settingsOpen = view === "settings";
 
   return (
     <main className="flex h-140 w-90 flex-col">
       <Header
         enabled={values.enabled}
-        onEnabledChange={(enabled) => save.mutate({ ...values, enabled })}
-        settingsOpen={view === "settings"}
+        onEnabledChange={(enabled) => save.mutate({ enabled })}
+        settingsOpen={settingsOpen}
         onSettingsToggle={() =>
-          setView(view === "settings" ? "portfolio" : "settings")
+          setView(settingsOpen ? "portfolio" : "settings")
         }
-        backendError={
-          backend.isFetching ? null : (backend.error?.message ?? null)
-        }
-        onOpenSettings={() => setView("settings")}
+        backendDown={backendError !== null}
       />
-      {view === "settings" ? (
+      {backendError && (
+        <ErrorPanel
+          message={backendError.message}
+          onRetry={() => void backend.refetch()}
+          secondaryAction={
+            !settingsOpen && (
+              <Button variant="link" onClick={() => setView("settings")}>
+                Ouvrir les réglages
+              </Button>
+            )
+          }
+        />
+      )}
+      {settingsOpen ? (
         <SettingsView
           settings={values}
           saving={save.isPending}
           onSave={(form) =>
-            save.mutate(
-              { ...values, ...form },
-              { onSuccess: () => toast.success("Réglages enregistrés") },
-            )
+            save.mutate(form, {
+              onSuccess: () => toast.success("Réglages enregistrés"),
+            })
           }
         />
-      ) : values.enabled ? (
-        <>
-          <StatsRow />
-          <PortfolioTabs />
-        </>
-      ) : (
+      ) : !values.enabled ? (
         <p className="popup-note p-gutter">
           L'assistant est désactivé. Les annonces Vinted s'affichent sans
           analyse.
         </p>
+      ) : (
+        !backendError && (
+          <>
+            <StatsRow />
+            <PortfolioTabs />
+          </>
+        )
       )}
     </main>
   );

@@ -14,7 +14,6 @@ import {
   desc,
   eq,
   gte,
-  ne,
   type SQL,
   sql,
 } from "drizzle-orm";
@@ -35,7 +34,7 @@ import { AnalysisId } from "../../domain/analysis-id";
 import {
   ANALYSIS_STATUS,
   AnalysisStatus,
-  EXCLUDED_FROM_OPPORTUNITIES,
+  OPPORTUNITY_STATUS,
 } from "../../domain/value-objects/analysis-status.vo";
 import type { VintedId } from "../../domain/value-objects/vinted-id.vo";
 import {
@@ -252,7 +251,7 @@ export class DrizzleAnalysisRepository implements IAnalysisRepository {
           bought: countWhere(eq(analyses.status, ANALYSIS_STATUS.BOUGHT)),
           sold: countWhere(eq(analyses.status, ANALYSIS_STATUS.SOLD)),
           opportunities: countWhere(
-            sql`${gte(analyses.opportunityScore, minScore)} and ${ne(analyses.status, EXCLUDED_FROM_OPPORTUNITIES)}`,
+            sql`${gte(analyses.opportunityScore, minScore)} and ${eq(analyses.status, OPPORTUNITY_STATUS)}`,
           ),
         })
         .from(analyses);

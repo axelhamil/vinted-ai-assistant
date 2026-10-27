@@ -46,7 +46,7 @@ export function PortfolioList({ tab }: PortfolioListProps) {
       </div>
     );
 
-  if (portfolio.isError)
+  if (items.length === 0 && portfolio.isError)
     return (
       <ErrorPanel
         message={portfolio.error.message}
@@ -57,24 +57,39 @@ export function PortfolioList({ tab }: PortfolioListProps) {
   if (items.length === 0)
     return <p className="popup-note p-gutter">{tab.empty}</p>;
 
-  return (
-    <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
-      <ul className="relative" style={{ height: virtualizer.getTotalSize() }}>
-        {rows.map((row) => {
-          const item = items[row.index];
-          if (!item) return null;
+  const pageError =
+    portfolio.isError && !portfolio.isFetching ? portfolio.error : null;
 
-          return (
-            <li
-              key={item.vintedId}
-              className="absolute inset-x-0 top-0 h-20"
-              style={{ transform: `translateY(${row.start}px)` }}
-            >
-              <PortfolioRow item={item} />
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+  return (
+    <>
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
+        <ul className="relative" style={{ height: virtualizer.getTotalSize() }}>
+          {rows.map((row) => {
+            const item = items[row.index];
+            if (!item) return null;
+
+            return (
+              <li
+                key={item.vintedId}
+                className="absolute inset-x-0 top-0 h-20"
+                style={{ transform: `translateY(${row.start}px)` }}
+              >
+                <PortfolioRow item={item} />
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      {pageError && (
+        <ErrorPanel
+          message={pageError.message}
+          onRetry={() =>
+            void (portfolio.isFetchNextPageError
+              ? portfolio.fetchNextPage()
+              : portfolio.refetch())
+          }
+        />
+      )}
+    </>
   );
 }

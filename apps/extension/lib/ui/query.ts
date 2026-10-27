@@ -78,9 +78,11 @@ export function useBackground<T>({
 export function useBackgroundMutation<I, T>(
   request: (input: I) => Promise<Reply<T>>,
   onSuccess?: (data: T) => void,
+  onError?: (error: BackgroundFailure) => void,
 ): UseMutationResult<T, BackgroundFailure, I> {
   return useMutation<T, BackgroundFailure, I>({
     mutationFn: (input) => unwrap(() => request(input)),
     onSuccess,
+    onError,
   });
 }

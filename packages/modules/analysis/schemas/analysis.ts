@@ -10,7 +10,7 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-import { ANALYSIS_STATUSES } from "../src/domain/value-objects/analysis-status.vo";
+import { ANALYSIS_STATUSES } from "../src/contract";
 import { analysisSchema } from "./shared";
 
 const STATUS_LIST = sql.raw(
