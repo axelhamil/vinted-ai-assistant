@@ -7,7 +7,10 @@
     "./gemini-client": "./src/gemini-client.ts",
     "./failures": "./src/failures.ts",
     "./images": "./src/images.ts",
-    "./inline-image": "./src/inline-image.ts"
+    "./inline-image": "./src/inline-image.ts",
+    "./failure-codes": "./src/failure-codes.ts",
+    "./languages": "./src/languages.ts",
+    "./untrusted-data": "./src/untrusted-data.ts"
   },
   "scripts": {
     "type-check": "tsc7 -v && tsc7 --noEmit",

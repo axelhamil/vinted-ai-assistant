@@ -4,14 +4,15 @@ import { createSourceScan } from "@packages/testing/source-scan";
 
 const scan = createSourceScan(__dirname);
 
-const ALLOWED_IN_DOMAIN = ["@packages/ddd-kit", "zod"];
+const SHARED_LANGUAGES = "@packages/ai/languages";
+const ALLOWED_IN_DOMAIN = ["@packages/ddd-kit", "zod", SHARED_LANGUAGES];
 const MODULE_CONTRACT = "../contract";
 const REPOSITORIES = "infrastructure/repositories";
 const APPLICATION = "application";
 const MODULE_WIRING = "analysis.module.ts";
 
 describe("layering rules of the analysis module", () => {
-  it("keeps the domain on ddd-kit, zod, the module contract and itself", () => {
+  it("keeps the domain on ddd-kit, zod, the shared language list, the module contract and itself", () => {
     const imports = scan.importsOf("domain");
 
     const foreign = imports
@@ -63,7 +64,11 @@ describe("layering rules of the analysis module", () => {
   it("reaches the AI provider from infrastructure and the module wiring only", () => {
     const providerImports = scan
       .importsOf(".")
-      .filter(({ specifier }) => specifier.startsWith("@packages/ai/"));
+      .filter(
+        ({ specifier }) =>
+          specifier.startsWith("@packages/ai/") &&
+          specifier !== SHARED_LANGUAGES,
+      );
 
     const outside = providerImports
       .filter(

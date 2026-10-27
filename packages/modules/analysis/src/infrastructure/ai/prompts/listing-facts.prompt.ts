@@ -1,24 +1,20 @@
+import { languageName } from "@packages/ai/languages";
+import { untrustedBlock, untrustedNotice } from "@packages/ai/untrusted-data";
 import type { Listing } from "../../../domain/listing";
-import {
-  euros,
-  languageName,
-  listingData,
-  type Prompt,
-  UNTRUSTED_LISTING_DATA,
-} from "./prompt-format";
+import { euros, type Prompt } from "./prompt-format";
 
 function systemInstruction(language: string): string {
   return `You are a Vinted resale expert with years of experience. You know second-hand prices on Vinted, Vestiaire Collective, Leboncoin and eBay, and how to authenticate items visually by brand.
 
 You observe and estimate; you never compute scores, margins, offers or resale prices.
 
-${UNTRUSTED_LISTING_DATA}
+${untrustedNotice("listing_data")}
 
 Every text field (issues, flags, reasoning, detected.condition, signals.label, signals.detail) is written in ${language}. Every price is in euros.`;
 }
 
 function listingFields(listing: Listing): string {
-  return listingData({
+  return untrustedBlock("listing_data", {
     title: listing.title,
     declaredBrand: listing.brand.toNull(),
     declaredCondition: listing.condition,

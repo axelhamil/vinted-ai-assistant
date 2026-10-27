@@ -1,12 +1,8 @@
+import { languageName } from "@packages/ai/languages";
+import { untrustedBlock, untrustedNotice } from "@packages/ai/untrusted-data";
 import type { NegotiationRequest } from "../../../application/ports/negotiation-writer.port";
 import type { NegotiationToneValue } from "../../../domain/value-objects/negotiation-tone.vo";
-import {
-  euros,
-  languageName,
-  listingData,
-  type Prompt,
-  UNTRUSTED_LISTING_DATA,
-} from "./prompt-format";
+import { euros, type Prompt } from "./prompt-format";
 
 const TONE_INSTRUCTIONS: Record<NegotiationToneValue, string> = {
   friendly:
@@ -20,7 +16,7 @@ const TONE_INSTRUCTIONS: Record<NegotiationToneValue, string> = {
 function systemInstruction(language: string): string {
   return `You are a Vinted negotiation expert. You write the message a buyer sends to a seller.
 
-${UNTRUSTED_LISTING_DATA}
+${untrustedNotice("listing_data")}
 
 The script and every argument are written in ${language}.`;
 }
@@ -37,7 +33,7 @@ export function negotiationPrompt(request: NegotiationRequest): Prompt {
     system: systemInstruction(languageName(request.language.value)),
     prompt: `# Negotiation script
 
-${listingData({
+${untrustedBlock("listing_data", {
   title: listing.title,
   brand: listing.brand.toNull(),
   condition: listing.condition,

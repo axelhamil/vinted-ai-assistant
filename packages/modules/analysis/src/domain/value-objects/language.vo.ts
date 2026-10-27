@@ -1,24 +1,8 @@
+import { LANGUAGES, type LanguageCode } from "@packages/ai/languages";
 import { Result, ValueObject } from "@packages/ddd-kit";
 import { z } from "zod";
 
-export const LANGUAGES = [
-  "fr",
-  "en",
-  "de",
-  "es",
-  "it",
-  "nl",
-  "pt",
-  "pl",
-  "cs",
-  "sk",
-  "hu",
-  "ro",
-  "lt",
-  "hr",
-] as const;
-
-export type LanguageValue = (typeof LANGUAGES)[number];
+export type LanguageValue = LanguageCode;
 
 const languageSchema = z.enum(LANGUAGES);
 
