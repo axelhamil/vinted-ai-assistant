@@ -21,16 +21,23 @@ function countFor(stored: DailyCount): number {
   return stored.date === today() ? stored.count : 0;
 }
 
+let lastIncrement: Promise<unknown> = Promise.resolve();
+
 export const dailyCount = {
   async current(): Promise<number> {
     return countFor(await item.getValue());
   },
 
-  async increment(): Promise<number> {
-    const count = countFor(await item.getValue()) + 1;
-    await item.setValue({ date: today(), count });
+  increment(): Promise<number> {
+    const increment = lastIncrement.then(async () => {
+      const count = countFor(await item.getValue()) + 1;
+      await item.setValue({ date: today(), count });
 
-    return count;
+      return count;
+    });
+    lastIncrement = increment.catch(() => undefined);
+
+    return increment;
   },
 
   watch(onChange: (count: number) => void): () => void {

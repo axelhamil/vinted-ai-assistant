@@ -22,4 +22,12 @@ describe("daily count", () => {
     expect(await dailyCount.current()).toBe(0);
     expect(await dailyCount.increment()).toBe(1);
   });
+
+  it("counts every analysis that finishes at the same time", async () => {
+    vi.setSystemTime(new Date(2026, 9, 27, 12, 0));
+
+    await Promise.all([dailyCount.increment(), dailyCount.increment()]);
+
+    expect(await dailyCount.current()).toBe(2);
+  });
 });
