@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-query";
 import type { ApiFailure, Reply } from "@/lib/api/failure";
 
-const UNREACHABLE: ApiFailure = {
+export const UNREACHABLE_FAILURE: ApiFailure = {
   kind: "local",
   message: "L'extension ne répond plus. Rechargez la page puis réessayez.",
 };
@@ -31,6 +31,7 @@ interface BackgroundQuery<T> {
   key: QueryKey;
   request: () => Promise<Reply<T>>;
   enabled?: boolean;
+  staleTime?: number;
 }
 
 export function failureMessage(failure: ApiFailure): string {
@@ -53,7 +54,7 @@ export function createQueryClient(): QueryClient {
 
 async function unwrap<T>(request: () => Promise<Reply<T>>): Promise<T> {
   const reply = await request().catch(
-    (): Reply<T> => ({ ok: false, failure: UNREACHABLE }),
+    (): Reply<T> => ({ ok: false, failure: UNREACHABLE_FAILURE }),
   );
   if (!reply.ok) throw new BackgroundFailure(reply.failure);
 
@@ -64,17 +65,19 @@ export function useBackground<T>({
   key,
   request,
   enabled = true,
+  staleTime,
 }: BackgroundQuery<T>): UseQueryResult<T, BackgroundFailure> {
   return useQuery<T, BackgroundFailure>({
     queryKey: key,
     queryFn: () => unwrap(request),
     enabled,
+    ...(staleTime === undefined ? {} : { staleTime }),
   });
 }
 
 export function useBackgroundMutation<I, T>(
   request: (input: I) => Promise<Reply<T>>,
-  onSuccess: (data: T) => void,
+  onSuccess?: (data: T) => void,
 ): UseMutationResult<T, BackgroundFailure, I> {
   return useMutation<T, BackgroundFailure, I>({
     mutationFn: (input) => unwrap(() => request(input)),

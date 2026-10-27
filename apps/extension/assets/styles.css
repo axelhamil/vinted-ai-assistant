@@ -178,6 +178,14 @@
     @apply rounded-md bg-shelf p-stack whitespace-pre-line;
   }
 
+  .photo-thumb {
+    @apply rounded-md bg-shelf object-cover;
+  }
+
+  .suggestion-value {
+    @apply whitespace-pre-line;
+  }
+
   .error-message {
     @apply text-base text-ink;
   }

@@ -1,4 +1,4 @@
-type ListingField = "title" | "description" | "price";
+export type ListingField = "title" | "description" | "price";
 
 const FIELDS: Record<ListingField, readonly string[]> = {
   title: ['input[name="title"]', '[data-testid="title-input"]', "#title"],
