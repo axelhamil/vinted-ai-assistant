@@ -60,18 +60,22 @@ export const VINTED_HOSTS: readonly VintedHost[] = [
 
 const PROOF_HOST_PATTERN = "http://localhost/*";
 
+const WWW = "www.";
+
 export const hostPatterns = (mode: string): string[] => {
-  const patterns = VINTED_HOSTS.map(({ tld }) => `https://*.vinted.${tld}/*`);
+  const patterns = VINTED_HOSTS.map(
+    ({ tld }) => `https://${WWW}vinted.${tld}/*`,
+  );
 
   return mode === "proof" ? [...patterns, PROOF_HOST_PATTERN] : patterns;
 };
 
 export const languageForHost = (hostname: string): LanguageCode | null => {
-  const host = VINTED_HOSTS.find(({ tld }) => {
-    const domain = `vinted.${tld}`;
+  const domain = hostname.startsWith(WWW)
+    ? hostname.slice(WWW.length)
+    : hostname;
 
-    return hostname === domain || hostname.endsWith(`.${domain}`);
-  });
-
-  return host?.language ?? null;
+  return (
+    VINTED_HOSTS.find(({ tld }) => domain === `vinted.${tld}`)?.language ?? null
+  );
 };

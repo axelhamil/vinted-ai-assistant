@@ -18,8 +18,6 @@ const PROFILE_TIMEOUT_MS = 3000;
 
 const MAX_RATING = 5;
 
-const HOSTNAME = /^[a-z0-9.-]+$/i;
-
 const NO_STATS: SellerStats = { rating: null, salesCount: null };
 
 const SELLER_CARD = ".web_ui__Card__card";
@@ -88,9 +86,7 @@ export const fetchSellerProfile = async ({
   fetchImpl,
   timeoutMs = PROFILE_TIMEOUT_MS,
 }: ProfileRequest): Promise<SellerStats> => {
-  const isVintedHost = HOSTNAME.test(host) && languageForHost(host) !== null;
-
-  if (!isVintedHost || !username) return NO_STATS;
+  if (languageForHost(host) === null || !username) return NO_STATS;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);

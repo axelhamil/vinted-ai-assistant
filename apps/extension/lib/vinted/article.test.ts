@@ -70,6 +70,30 @@ describe("parseArticle", () => {
     );
   });
 
+  it("falls back to the structured price when the page shows zero", () => {
+    const doc = loadPage("item");
+    const price = doc.querySelector('[data-testid="item-price"]');
+    if (price) price.textContent = "0,00 €";
+
+    expect(parseArticle(doc, ITEM_URL)?.price).toBe(45);
+  });
+
+  it("dates a listing from the page when the structured date is invalid", () => {
+    vi.useFakeTimers({ now: new Date("2026-10-27T12:00:00.000Z") });
+    const doc = loadPage("item");
+    const jsonLd = doc.querySelector('script[type="application/ld+json"]');
+    if (jsonLd) {
+      jsonLd.textContent = (jsonLd.textContent ?? "").replace(
+        "2026-10-20T09:15:00+02:00",
+        "not a date",
+      );
+    }
+
+    expect(parseArticle(doc, ITEM_URL)?.listedAt).toBe(
+      "2026-10-20T12:00:00.000Z",
+    );
+  });
+
   it("uses the page host language", () => {
     const article = parseArticle(
       loadPage("minimal"),

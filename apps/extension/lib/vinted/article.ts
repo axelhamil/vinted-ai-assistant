@@ -104,6 +104,9 @@ const RELATIVE_AGES: { pattern: RegExp; unit: RelativeUnit }[] = [
 const inRange = (amount: number | null, min: number): number | null =>
   amount !== null && amount >= min && amount <= MAX_PRICE ? amount : null;
 
+const positive = (amount: number | null): number | null =>
+  amount !== null && amount > 0 ? amount : null;
+
 const detailsText = (doc: Document): string =>
   DETAILS.map((selector) => doc.querySelector(selector)?.textContent).find(
     Boolean,
@@ -119,8 +122,10 @@ const readPrice = (
   product: JsonLdProduct | null,
 ): number | null =>
   firstMatch(doc, PRICES, (element) =>
-    parsePrice(element.getAttribute("content") ?? textOf(element) ?? ""),
-  ) ?? parsePrice(product?.price ?? "");
+    positive(
+      parsePrice(element.getAttribute("content") ?? textOf(element) ?? ""),
+    ),
+  ) ?? positive(parsePrice(product?.price ?? ""));
 
 const readTotalPrice = (doc: Document): number | null => {
   const label = doc
@@ -206,16 +211,18 @@ const readListedAt = (
   product: JsonLdProduct | null,
 ): string | null => {
   const posted = product?.datePosted;
+  const postedAt = posted ? toIso(new Date(posted)) : null;
 
-  if (posted) return toIso(new Date(posted));
+  return (
+    postedAt ??
+    firstMatch(doc, DATES, (element) => {
+      const datetime = element.getAttribute("datetime");
 
-  return firstMatch(doc, DATES, (element) => {
-    const datetime = element.getAttribute("datetime");
-
-    return toIso(
-      datetime ? new Date(datetime) : parseRelativeAge(textOf(element) ?? ""),
-    );
-  });
+      return toIso(
+        datetime ? new Date(datetime) : parseRelativeAge(textOf(element) ?? ""),
+      );
+    })
+  );
 };
 
 export const parseArticle = (doc: Document, url: URL): ArticleInput | null => {

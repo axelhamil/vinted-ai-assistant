@@ -1,7 +1,7 @@
 import { readJsonLdProduct } from "./json-ld";
 
 const SCRIPT_PHOTO =
-  /"(?:full_size_url|url|image_url|photo_url)"\s*:\s*"(https:\/\/[^"]*vinted\.net\/[^"]+)"/g;
+  /"(?:full_size_url|url|image_url|photo_url|high_resolution\.url)"\s*:\s*"(https:\/\/[^"]*vinted\.net\/[^"]+)"/g;
 
 const ESCAPED_AMPERSAND = /\\+u0026/g;
 
@@ -12,6 +12,10 @@ const ESCAPED_QUOTE = /\\+"/g;
 const BACKGROUND_URL = /url\(["']?([^"')]+)["']?\)/;
 
 const NOT_PHOTOS = ["avatar", "icon", "logo"];
+
+const PHOTO_HOSTS = ["vinted.net", "vinted.com", "cloudfront", "cdn"];
+
+const IMAGE_EXTENSION = /\.(jpg|jpeg|png|webp)/i;
 
 const SIZE_PARAMS = ["w", "h"];
 
@@ -38,7 +42,11 @@ const toPhoto = (raw: string): string | null => {
   if (!URL.canParse(raw)) return null;
 
   const url = new URL(raw);
-  const isPhoto = !NOT_PHOTOS.some((word) => url.pathname.includes(word));
+  const isPhotoSource =
+    PHOTO_HOSTS.some((host) => url.hostname.includes(host)) ||
+    IMAGE_EXTENSION.test(url.pathname);
+  const isPhoto =
+    isPhotoSource && !NOT_PHOTOS.some((word) => url.pathname.includes(word));
 
   if (url.protocol !== "https:" || !isPhoto) return null;
 

@@ -63,18 +63,21 @@ describe("fetchSellerProfile", () => {
     ).resolves.toEqual(NOTHING);
   });
 
-  it("refuses a host outside Vinted", async () => {
-    const fetchImpl = respond(PROFILE);
+  it.each(["evil.example.com", "evil.com/.vinted.fr"])(
+    "refuses the host %s",
+    async (host) => {
+      const fetchImpl = respond(PROFILE);
 
-    await expect(
-      fetchSellerProfile({
-        host: "evil.example.com",
-        username: "fixture_seller",
-        fetchImpl,
-      }),
-    ).resolves.toEqual(NOTHING);
-    expect(fetchImpl).not.toHaveBeenCalled();
-  });
+      await expect(
+        fetchSellerProfile({
+          host,
+          username: "fixture_seller",
+          fetchImpl,
+        }),
+      ).resolves.toEqual(NOTHING);
+      expect(fetchImpl).not.toHaveBeenCalled();
+    },
+  );
 
   it("drops a rating outside the api range", async () => {
     await expect(
