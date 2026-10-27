@@ -62,7 +62,7 @@ Pins (`.bun-version`, `.nvmrc`, `packageManager`), pnpm workspace settings, `pac
 
 `packages/ai`: one Gemini client on the official `@google/genai` SDK (no Vercel AI SDK): text with structured output validated by Zod and the Google Search tool, image editing, retry with backoff on 429/503 read from the SDK error status (not from message substrings), WebP re-encode and metadata strip with sharp. Model ids in one config, checked against the current GA list before pinning. Used by both modules through their own ports.
 
-### 4. Module analysis
+### 4. Module analysis (delivered 27/10/2026)
 
 Aggregate `Analysis` with value objects (`VintedId`, `Score`, `Price`, `PriceRange`, `Margin`, `AnalysisStatus`, `Language`, `NegotiationTone`), status transitions, events. Use cases: analyze listing (with 1 h cache), get analysis, list portfolio, portfolio stats, change status, delete, regenerate negotiation (persisted), export markdown. Drizzle repository in `pgSchema("analysis")` with indexes on status, opportunity score and analyzed date. Reliability: the model returns facts only, the domain computes opportunity score, margin and suggested offer with tested rules; an out-of-range or malformed model answer is a typed failure, never a thrown error, and never breaks reading a stored analysis. Fixes from the inventory: stats count in SQL, atomic upsert and status update, negotiation rules in one place, score and margin thresholds exposed once.
 
@@ -73,6 +73,8 @@ Aggregate `StudioPreset` (system presets cannot be deleted), photo editing (sing
 ### 6. Outbox
 
 `packages/outbox`, one outbox table per module, flush in the outermost UoW run, relay with LISTEN + poll, dead letter after 10 attempts. Events: `analysis.completed`, `analysis.status-changed`, `analysis.deleted`.
+
+Carried from step 4: an ambient request context (AsyncLocalStorage set by a Hono middleware) so repository and instrumentation logs carry the requestId; an optimistic `analyzed_at` guard on `updateNegotiation` if regenerate during a forced re-analysis shows up in logs.
 
 ### 7. Extension on WXT
 
