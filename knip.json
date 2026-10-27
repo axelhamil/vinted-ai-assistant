@@ -16,8 +16,9 @@
       "project": ["schemas/**/*.ts", "src/**/*.ts"]
     },
     "apps/api": {
-      "entry": ["src/**/*.test.ts"],
-      "project": ["src/**/*.ts"]
+      "entry": ["src/index.ts", "common/**/*.test.ts", "src/**/*.test.ts"],
+      "project": ["common/**/*.ts", "src/**/*.ts"],
+      "ignoreDependencies": ["pino-pretty"]
     }
   },
   "ignoreWorkspaces": [
