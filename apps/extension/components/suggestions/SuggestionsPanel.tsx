@@ -1,11 +1,15 @@
 import { toast } from "sonner";
 import { ErrorPanel } from "@/components/sidebar/ErrorPanel";
+import { SuggestedDetails } from "@/components/suggestions/SuggestedDetails";
 import { SuggestionRow } from "@/components/suggestions/SuggestionRow";
 import { Button } from "@/components/ui/button";
 import { CONFIDENCE_LABELS } from "@/lib/analysis-copy";
 import type { Reply } from "@/lib/api/failure";
 import { euros } from "@/lib/format";
-import type { SuggestedListing } from "@/lib/photos/suggest-listing";
+import {
+  applySuggestion,
+  type SuggestedListing,
+} from "@/lib/photos/suggest-listing";
 import {
   droppedPhotosNotice,
   unreadablePhotosNotice,
@@ -25,6 +29,12 @@ const APPLIED: Record<ListingField, string> = {
   price: "Prix appliqué",
 };
 
+const FIELD_NAMES: Record<ListingField, string> = {
+  title: "titre",
+  description: "description",
+  price: "prix",
+};
+
 export function SuggestionsPanel({
   sources,
   onSuggest,
@@ -41,6 +51,17 @@ export function SuggestionsPanel({
       "Champ introuvable dans le formulaire Vinted. Copiez la suggestion à la main.",
     );
   };
+  const applyAll = (suggestion: SuggestedListing["suggestion"]) => {
+    const missing = applySuggestion(suggestion, onFill);
+    if (missing.length === 0) {
+      toast.success("Titre, description et prix appliqués");
+      return;
+    }
+
+    toast.error(
+      `Champs introuvables : ${missing.map((field) => FIELD_NAMES[field]).join(", ")}. Copiez-les à la main.`,
+    );
+  };
   const result = request.data;
 
   if (request.error)
@@ -54,6 +75,7 @@ export function SuggestionsPanel({
   return (
     <div className="flex flex-col gap-section">
       <Button
+        variant={result ? "outline" : "default"}
         disabled={sources.length === 0 || request.isPending}
         onClick={() => request.mutate(sources)}
       >
@@ -75,35 +97,42 @@ export function SuggestionsPanel({
         </p>
       )}
       {result && (
-        <ul className="flex flex-col gap-section">
-          <SuggestionRow
-            label="Titre"
-            value={result.suggestion.title}
-            onUse={() => use("title", result.suggestion.title)}
-          />
-          <SuggestionRow
-            label="Description"
-            value={result.suggestion.description}
-            onUse={() => use("description", result.suggestion.description)}
-          />
-          <SuggestionRow
-            label="Prix"
-            value={euros(result.suggestion.price)}
-            onUse={() => use("price", result.suggestion.price)}
-          >
-            <dl className="grid grid-cols-[1fr_auto] gap-x-stack gap-y-row">
-              <dt className="fact-label">Fourchette</dt>
-              <dd className="fact-value">
-                {euros(result.suggestion.priceRange.low)} à{" "}
-                {euros(result.suggestion.priceRange.high)}
-              </dd>
-            </dl>
-            <p className="fact-note">
-              Estimation {CONFIDENCE_LABELS[result.suggestion.priceConfidence]}{" "}
-              : {result.suggestion.priceReasoning}
-            </p>
-          </SuggestionRow>
-        </ul>
+        <>
+          <Button onClick={() => applyAll(result.suggestion)}>
+            Tout appliquer
+          </Button>
+          <ul className="flex flex-col gap-section">
+            <SuggestionRow
+              label="Titre"
+              value={result.suggestion.title}
+              onUse={() => use("title", result.suggestion.title)}
+            />
+            <SuggestionRow
+              label="Description"
+              value={result.suggestion.description}
+              onUse={() => use("description", result.suggestion.description)}
+            />
+            <SuggestionRow
+              label="Prix"
+              value={euros(result.suggestion.price)}
+              onUse={() => use("price", result.suggestion.price)}
+            >
+              <dl className="grid grid-cols-[1fr_auto] gap-x-stack gap-y-row">
+                <dt className="fact-label">Fourchette</dt>
+                <dd className="fact-value">
+                  {euros(result.suggestion.priceRange.low)} à{" "}
+                  {euros(result.suggestion.priceRange.high)}
+                </dd>
+              </dl>
+              <p className="fact-note">
+                Estimation{" "}
+                {CONFIDENCE_LABELS[result.suggestion.priceConfidence]} :{" "}
+                {result.suggestion.priceReasoning}
+              </p>
+            </SuggestionRow>
+          </ul>
+          <SuggestedDetails suggestion={result.suggestion} />
+        </>
       )}
     </div>
   );

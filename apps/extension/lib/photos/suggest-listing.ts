@@ -3,6 +3,7 @@ import type {
   ListingSuggestionDto,
   SuggestInput,
 } from "@/lib/messaging/protocol";
+import type { ListingField } from "@/lib/vinted/listing-form";
 import { UNREADABLE_PHOTO_MESSAGE } from "./edit-queue";
 import { buildSuggestionInput } from "./suggestion-input";
 
@@ -43,4 +44,19 @@ export async function suggestListing(
       unreadableCount: built.unreadableCount,
     },
   };
+}
+
+export function applySuggestion(
+  suggestion: ListingSuggestionDto,
+  fill: (field: ListingField, value: string | number) => boolean,
+): ListingField[] {
+  const values: [ListingField, string | number][] = [
+    ["title", suggestion.title],
+    ["description", suggestion.description],
+    ["price", suggestion.price],
+  ];
+
+  return values.flatMap(([field, value]) =>
+    fill(field, value) ? [] : [field],
+  );
 }

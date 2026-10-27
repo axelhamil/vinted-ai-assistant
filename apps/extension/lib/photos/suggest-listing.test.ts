@@ -5,7 +5,11 @@ import type {
   SuggestInput,
 } from "@/lib/messaging/protocol";
 import { UNREADABLE_PHOTO_MESSAGE } from "./edit-queue";
-import { type SuggestDeps, suggestListing } from "./suggest-listing";
+import {
+  applySuggestion,
+  type SuggestDeps,
+  suggestListing,
+} from "./suggest-listing";
 
 const SUGGESTION: ListingSuggestionDto = {
   title: "Veste en jean Levi's",
@@ -93,5 +97,32 @@ describe("suggestListing", () => {
       ok: false,
       failure: { kind: "local", message: UNREADABLE_PHOTO_MESSAGE },
     });
+  });
+});
+
+describe("applySuggestion", () => {
+  it("fills title, description and price in one go", () => {
+    const filled = new Map<string, string | number>();
+
+    const missing = applySuggestion(SUGGESTION, (field, value) => {
+      filled.set(field, value);
+      return true;
+    });
+
+    expect(missing).toEqual([]);
+    expect(Object.fromEntries(filled)).toEqual({
+      title: SUGGESTION.title,
+      description: SUGGESTION.description,
+      price: SUGGESTION.price,
+    });
+  });
+
+  it("names the fields the vinted form does not have", () => {
+    const missing = applySuggestion(
+      SUGGESTION,
+      (field) => field === "description",
+    );
+
+    expect(missing).toEqual(["title", "price"]);
   });
 });
