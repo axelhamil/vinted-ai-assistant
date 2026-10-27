@@ -123,6 +123,8 @@ services:
         - action: rebuild
           path: ./packages/modules/analysis/package.json
         - action: rebuild
+          path: ./packages/modules/studio/package.json
+        - action: rebuild
           path: ./.bun-version
         - action: rebuild
           path: ./apps/api/Dockerfile
