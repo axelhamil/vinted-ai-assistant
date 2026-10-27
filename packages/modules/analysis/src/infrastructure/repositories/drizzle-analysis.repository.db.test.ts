@@ -312,10 +312,10 @@ describe("DrizzleAnalysisRepository", () => {
   });
 
   it("deletes a stored analysis, and answers not found for a missing one", async () => {
-    await store({ vintedId: "6001" });
+    const stored = await store({ vintedId: "6001" });
 
-    const deleted = await repository.delete(vintedId("6001"));
-    const missing = await repository.delete(vintedId("6001"));
+    const deleted = await repository.delete(stored.id);
+    const missing = await repository.delete(stored.id);
 
     expect(deleted.isSuccess).toBe(true);
     expect(await rowsFor("6001")).toBe(0);

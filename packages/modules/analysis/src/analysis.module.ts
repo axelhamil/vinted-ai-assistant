@@ -99,7 +99,11 @@ export const analysisModule = defineModule<AnalysisPrerequisites>()((b) =>
     .add(
       "DeleteAnalysisUseCase",
       (c) =>
-        new DeleteAnalysisUseCase(c.IAnalysisRepository, c.AnalysisUnitOfWork),
+        new DeleteAnalysisUseCase(
+          c.IAnalysisRepository,
+          c.AnalysisUnitOfWork,
+          c.logger,
+        ),
     )
     .add(
       "PortfolioService",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { Option, Result } from "@packages/ddd-kit";
+import { type ILogger, Option, Result } from "@packages/ddd-kit";
 import { mockPort } from "@packages/testing/port-mock";
 import { mockUnitOfWork } from "@packages/testing/unit-of-work-mock";
 import { buildAnalysis, buildListing } from "../../testing/analysis.factory";
@@ -19,20 +19,23 @@ function given() {
   repository.delete.mockResolvedValue(Result.ok());
 
   const remove = () =>
-    new DeleteAnalysisUseCase(repository, transaction.unitOfWork).execute({
-      vintedId: VINTED_ID,
-    });
+    new DeleteAnalysisUseCase(
+      repository,
+      transaction.unitOfWork,
+      mockPort<ILogger>(),
+    ).execute({ vintedId: VINTED_ID });
 
   return { repository, transaction, stored, remove };
 }
 
 describe("deleting an analysis", () => {
   it("deletes the stored analysis and writes analysis.deleted in the same transaction", async () => {
-    const { transaction, stored, remove } = given();
+    const { repository, transaction, stored, remove } = given();
 
     const result = await remove();
 
     expect(result.isSuccess).toBe(true);
+    expect(repository.delete).toHaveBeenCalledWith(stored.id);
     expect(transaction.outcome()).toBe("committed");
     expect(
       transaction

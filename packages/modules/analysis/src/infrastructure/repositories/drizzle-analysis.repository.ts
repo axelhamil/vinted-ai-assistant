@@ -317,19 +317,30 @@ export class DrizzleAnalysisRepository implements IAnalysisRepository {
   }
 
   delete(
+    id: AnalysisId,
+  ): Promise<Result<void, AnalysisNotFound | AnalysisStoreUnavailable>> {
+    return this.traced("delete", () =>
+      this.deleteWhere(eq(analyses.id, String(id.value))),
+    );
+  }
+
+  deleteByVintedId(
     vintedId: VintedId,
   ): Promise<Result<void, AnalysisNotFound | AnalysisStoreUnavailable>> {
-    return this.traced(
-      "delete",
-      async (): Promise<Result<void, AnalysisNotFound>> => {
-        const deleted = await resolveExecutor(this.database)
-          .delete(analyses)
-          .where(eq(analyses.vintedId, vintedId.value))
-          .returning({ id: analyses.id });
-        if (deleted.length === 0) return Result.fail(NOT_FOUND);
-
-        return Result.ok();
-      },
+    return this.traced("deleteByVintedId", () =>
+      this.deleteWhere(eq(analyses.vintedId, vintedId.value)),
     );
+  }
+
+  private async deleteWhere(
+    condition: SQL,
+  ): Promise<Result<void, AnalysisNotFound>> {
+    const deleted = await resolveExecutor(this.database)
+      .delete(analyses)
+      .where(condition)
+      .returning({ id: analyses.id });
+    if (deleted.length === 0) return Result.fail(NOT_FOUND);
+
+    return Result.ok();
   }
 }

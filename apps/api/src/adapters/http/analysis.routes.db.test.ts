@@ -5,7 +5,10 @@ import {
   buildFacts,
   buildNegotiation,
 } from "@packages/analysis/testing/analysis.factory";
-import { clearAnalyses } from "@packages/analysis/testing/database";
+import {
+  clearAnalyses,
+  overwriteFacts,
+} from "@packages/analysis/testing/database";
 import { Result } from "@packages/ddd-kit";
 import { db } from "@packages/testing/clone-database";
 import { mockPort } from "@packages/testing/port-mock";
@@ -192,5 +195,16 @@ describe("the analysis routes on the real database", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ total: 1, hasMore: false });
+  });
+
+  it("answers 204 when deleting an analysis whose stored row no longer reads", async () => {
+    await send("POST", "/api/analyses", listingBody);
+    await overwriteFacts(VINTED_ID, { photoQuality: "unreadable" });
+
+    const deleted = await send("DELETE", `/api/portfolio/${VINTED_ID}`);
+    const read = await send("GET", `/api/analyses/${VINTED_ID}`);
+
+    expect(deleted.status).toBe(204);
+    expect(read.status).toBe(404);
   });
 });

@@ -68,6 +68,9 @@ export interface IAnalysisRepository {
     negotiation: Negotiation,
   ): Promise<Result<void, AnalysisStatusConflict | AnalysisStoreUnavailable>>;
   delete(
+    id: AnalysisId,
+  ): Promise<Result<void, AnalysisNotFound | AnalysisStoreUnavailable>>;
+  deleteByVintedId(
     vintedId: VintedId,
   ): Promise<Result<void, AnalysisNotFound | AnalysisStoreUnavailable>>;
 }
