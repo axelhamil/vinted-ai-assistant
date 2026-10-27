@@ -5,29 +5,17 @@ import { Button } from "@/components/ui/button";
 import { CONFIDENCE_LABELS } from "@/lib/analysis-copy";
 import type { Reply } from "@/lib/api/failure";
 import { euros } from "@/lib/format";
+import type { SuggestedListing } from "@/lib/photos/suggest-listing";
 import {
-  type ListingSuggestionDto,
-  sendMessage,
-} from "@/lib/messaging/protocol";
-import { downscale } from "@/lib/photos/downscale";
-import { UNREADABLE_PHOTO_MESSAGE } from "@/lib/photos/edit-queue";
-import {
-  buildSuggestionInput,
   droppedPhotosNotice,
   unreadablePhotosNotice,
 } from "@/lib/photos/suggestion-input";
 import { useBackgroundMutation } from "@/lib/ui/query";
-import { detectLanguage } from "@/lib/vinted/language";
 import { fillField, type ListingField } from "@/lib/vinted/listing-form";
 
 export interface SuggestionsPanelProps {
   sources: File[];
-}
-
-interface Suggested {
-  suggestion: ListingSuggestionDto;
-  droppedCount: number;
-  unreadableCount: number;
+  onSuggest: (sources: File[]) => Promise<Reply<SuggestedListing>>;
 }
 
 const APPLIED: Record<ListingField, string> = {
@@ -35,34 +23,6 @@ const APPLIED: Record<ListingField, string> = {
   description: "Description appliquée",
   price: "Prix appliqué",
 };
-
-async function suggest(sources: File[]): Promise<Reply<Suggested>> {
-  const built = await buildSuggestionInput(sources, {
-    language: detectLanguage({
-      hostname: window.location.hostname,
-      htmlLang: document.documentElement.lang,
-      browserLang: navigator.language,
-    }),
-    downscale,
-  });
-  if (!built.input)
-    return {
-      ok: false,
-      failure: { kind: "local", message: UNREADABLE_PHOTO_MESSAGE },
-    };
-
-  const reply = await sendMessage("suggestListing", built.input);
-  if (!reply.ok) return reply;
-
-  return {
-    ok: true,
-    data: {
-      suggestion: reply.data,
-      droppedCount: built.droppedCount,
-      unreadableCount: built.unreadableCount,
-    },
-  };
-}
 
 function use(field: ListingField, value: string | number): void {
   if (fillField(document, field, value)) {
@@ -75,8 +35,11 @@ function use(field: ListingField, value: string | number): void {
   );
 }
 
-export function SuggestionsPanel({ sources }: SuggestionsPanelProps) {
-  const request = useBackgroundMutation(suggest);
+export function SuggestionsPanel({
+  sources,
+  onSuggest,
+}: SuggestionsPanelProps) {
+  const request = useBackgroundMutation(onSuggest);
   const result = request.data;
 
   if (request.error)

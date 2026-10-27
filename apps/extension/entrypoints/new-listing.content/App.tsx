@@ -5,9 +5,15 @@ import { PhotoStudio } from "@/components/studio/PhotoStudio";
 import { SuggestionsPanel } from "@/components/suggestions/SuggestionsPanel";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { type EditInput, sendMessage } from "@/lib/messaging/protocol";
+import {
+  type EditInput,
+  type SuggestInput,
+  sendMessage,
+} from "@/lib/messaging/protocol";
 import { downscale } from "@/lib/photos/downscale";
+import { type SuggestDeps, suggestListing } from "@/lib/photos/suggest-listing";
 import { usePhotoEdits } from "@/lib/photos/use-photo-edits";
+import { detectLanguage } from "@/lib/vinted/language";
 
 export interface ListingFormProps {
   autoOpen: boolean;
@@ -17,6 +23,19 @@ const EDIT_DEPS = {
   downscale,
   send: (input: EditInput) => sendMessage("editPhoto", input),
 };
+
+const SUGGEST_DEPS: SuggestDeps = {
+  language: () =>
+    detectLanguage({
+      hostname: window.location.hostname,
+      htmlLang: document.documentElement.lang,
+      browserLang: navigator.language,
+    }),
+  downscale,
+  send: (input: SuggestInput) => sendMessage("suggestListing", input),
+};
+
+const suggest = (sources: File[]) => suggestListing(sources, SUGGEST_DEPS);
 
 export function App({ autoOpen }: ListingFormProps) {
   const [open, setOpen] = useState(autoOpen);
@@ -64,7 +83,10 @@ export function App({ autoOpen }: ListingFormProps) {
           forceMount
           className="p-gutter data-[state=inactive]:hidden"
         >
-          <SuggestionsPanel sources={photos.jobs.map((job) => job.source)} />
+          <SuggestionsPanel
+            sources={photos.jobs.map((job) => job.source)}
+            onSuggest={suggest}
+          />
         </TabsContent>
       </Tabs>
     </SidebarShell>
