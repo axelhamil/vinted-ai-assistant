@@ -12,7 +12,8 @@
     "./per-file-setup": "./src/per-file-setup.ts",
     "./global-setup": "./src/global-setup.ts",
     "./unit-of-work-mock": "./src/unit-of-work-mock.ts",
-    "./db-helpers": "./src/db-helpers.ts"
+    "./db-helpers": "./src/db-helpers.ts",
+    "./source-scan": "./src/source-scan.ts"
   },
   "scripts": {
     "type-check": "tsc7 -v && tsc7 --noEmit",

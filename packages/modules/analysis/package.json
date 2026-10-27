@@ -1,0 +1,25 @@
+{
+  "name": "@packages/analysis",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts",
+    "./domain/*": "./src/domain/*.ts",
+    "./testing/*": "./src/testing/*.ts"
+  },
+  "scripts": {
+    "type-check": "tsc7 -v && tsc7 --noEmit",
+    "test": "bun --config=../../../bunfig.toml test"
+  },
+  "dependencies": {
+    "@packages/ddd-kit": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@packages/testing": "workspace:*",
+    "@packages/typescript-config": "workspace:*",
+    "@types/bun": "^1.4.4",
+    "typescript": "~6.0.3"
+  }
+}
