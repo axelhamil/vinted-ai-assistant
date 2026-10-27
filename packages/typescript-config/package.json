@@ -10,7 +10,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
+  "devDependencies": {
     "typescript-7": "npm:typescript@7.0.2"
   }
 }

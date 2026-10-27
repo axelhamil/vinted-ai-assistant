@@ -238,9 +238,6 @@ importers:
       pino:
         specifier: ^10.4.0
         version: 10.4.0
-      pino-pretty:
-        specifier: ^13.2.0
-        version: 13.2.0
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -257,6 +254,9 @@ importers:
       '@types/node':
         specifier: ^24.19.2
         version: 24.19.2
+      pino-pretty:
+        specifier: ^13.2.0
+        version: 13.2.0
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -412,9 +412,6 @@ importers:
       '@packages/ddd-kit':
         specifier: workspace:*
         version: link:../ddd-kit
-      dotenv:
-        specifier: ^18.0.8
-        version: 18.0.9
       drizzle-orm:
         specifier: ^0.45.4
         version: 0.45.4(@opentelemetry/api@1.10.0)(@types/pg@8.23.1)(bun-types@1.4.4)(pg@8.23.1)
@@ -434,6 +431,9 @@ importers:
       '@types/pg':
         specifier: ^8.23.1
         version: 8.23.1
+      dotenv:
+        specifier: ^18.0.8
+        version: 18.0.9
       drizzle-kit:
         specifier: ^0.31.11
         version: 0.31.11
@@ -584,7 +584,7 @@ importers:
         version: 6.0.3
 
   packages/typescript-config:
-    dependencies:
+    devDependencies:
       typescript-7:
         specifier: npm:typescript@7.0.2
         version: typescript@7.0.2

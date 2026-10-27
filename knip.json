@@ -26,8 +26,7 @@
         "scripts/**/*.test.ts",
         "src/**/*.test.ts"
       ],
-      "project": ["common/**/*.ts", "scripts/**/*.ts", "src/**/*.ts"],
-      "ignoreDependencies": ["pino-pretty"]
+      "project": ["common/**/*.ts", "scripts/**/*.ts", "src/**/*.ts"]
     },
     "apps/extension": {
       "entry": [
