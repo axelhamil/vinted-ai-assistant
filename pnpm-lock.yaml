@@ -205,12 +205,24 @@ importers:
       '@packages/ddd-kit':
         specifier: workspace:*
         version: link:../../packages/ddd-kit
+      '@packages/drizzle':
+        specifier: workspace:*
+        version: link:../../packages/drizzle
       '@sentry/bun':
         specifier: ^11.8.0
         version: 11.9.0(rollup@4.55.1)
       dotenv:
         specifier: ^18.0.8
         version: 18.0.9
+      hono:
+        specifier: ^4.13.14
+        version: 4.13.14
+      hono-pino:
+        specifier: ^0.10.3
+        version: 0.10.3(hono@4.13.14)(pino@10.4.0)
+      inwire:
+        specifier: ^4.0.1
+        version: 4.0.1
       pino:
         specifier: ^10.4.0
         version: 10.4.0
@@ -221,6 +233,9 @@ importers:
         specifier: ^4.6.7
         version: 4.6.7
     devDependencies:
+      '@packages/testing':
+        specifier: workspace:*
+        version: link:../../packages/testing
       '@packages/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -2463,6 +2478,9 @@ packages:
     resolution: {integrity: sha512-LOHxIOaPYdHlJRtCQfDIVZtfw/ufM8+rVj649RIHzcm/vGwQRXFt6OPqIFWsm2XEMrNIEtWR64sY1LEKD2vAOA==}
     engines: {node: '>=4.0.0'}
 
+  defu@6.1.7:
+    resolution: {integrity: sha512-7z22QmUWiQ/2d0KkdYmANbRUVABpZ9SNYyH5vx6PZ+nE5bcC0l7uFvEfHlyld/HcGBFTL536ClDt3DEcSlEJAQ==}
+
   dependency-cruiser@18.7.0:
     resolution: {integrity: sha512-WexT4OswA6Gy86ms2J7SJ4FJscN43dyS+i5skpbtXlPTFQW4yWbontjFip1TOBAVnc+U+9zdH0a56YTRZX/IGw==}
     engines: {node: ^22||^24||>=26}
@@ -2943,8 +2961,19 @@ packages:
   help-me@5.0.0:
     resolution: {integrity: sha512-7xgomUX6ADmcYzFik0HzAxh/73YlKR9bmFzf51CZwR+b6YtzU2m0u49hQCqV6SvlqIqsaxovfwdvbnsw3b/zpg==}
 
+  hono-pino@0.10.3:
+    resolution: {integrity: sha512-n0RNPIFOoq25Fg8b4D5gus4sVqI0z+8I17ibl96+p43d07UnZ0EMM/It0qSgfc7UtaC+XP5FkFmRHwBp6owsNA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      hono: '>=4.0.0'
+      pino: '>=7.1.0'
+
   hono@4.11.4:
     resolution: {integrity: sha512-U7tt8JsyrxSRKspfhtLET79pU8K+tInj5QZXs1jSugO1Vq5dFj3kmZsRldo29mTBfcjDRVRXrEZ6LS63Cog9ZA==}
+    engines: {node: '>=16.9.0'}
+
+  hono@4.13.14:
+    resolution: {integrity: sha512-yhRLQ21U6qa9Hsu2N7Qcbh8tE+WKEcoErjIo56LeSGiGXGp9sA7UpE86Ui9uexb61KakiGwuHMn2QdV7w6i6kQ==}
     engines: {node: '>=16.9.0'}
 
   htmlparser2@10.0.0:
@@ -2994,6 +3023,10 @@ packages:
 
   inversify@7.11.0:
     resolution: {integrity: sha512-yZDprSSr8TyVeMGI/AOV4ws6gwjX22hj9Z8/oHAVpJORY6WRFTcUzhnZtibBUHEw2U8ArvHcR+i863DplQ3Cwg==}
+
+  inwire@4.0.1:
+    resolution: {integrity: sha512-q8DQ4WvSzDAdbSfuA7qr/CZpS/JD1cF/Hk8HIXeYv4S7BXrmvdL9MUwHb+jJSLi9Bpb6rmq1LTcoRaCUGGImuA==}
+    engines: {node: '>=20.4'}
 
   is-arrayish@0.2.1:
     resolution: {integrity: sha512-zz06S8t0ozoDXMG+ube26zeCTNXcKIPJZJi8hBrF4idCLms4CG9QtK7qBl1boi5ODzFpjswb5JPmHCbMpjaYzg==}
@@ -5560,6 +5593,8 @@ snapshots:
   deep-extend@0.6.0:
     optional: true
 
+  defu@6.1.7: {}
+
   dependency-cruiser@18.7.0:
     dependencies:
       acorn: 8.19.0
@@ -5962,7 +5997,15 @@ snapshots:
 
   help-me@5.0.0: {}
 
+  hono-pino@0.10.3(hono@4.13.14)(pino@10.4.0):
+    dependencies:
+      defu: 6.1.7
+      hono: 4.13.14
+      pino: 10.4.0
+
   hono@4.11.4: {}
+
+  hono@4.13.14: {}
 
   htmlparser2@10.0.0:
     dependencies:
@@ -6013,6 +6056,8 @@ snapshots:
       '@inversifyjs/core': 9.2.0(reflect-metadata@0.2.2)
     transitivePeerDependencies:
       - reflect-metadata
+
+  inwire@4.0.1: {}
 
   is-arrayish@0.2.1: {}
 
