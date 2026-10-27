@@ -5,12 +5,14 @@ import {
   type IUnitOfWork,
   Result,
 } from "@packages/ddd-kit";
+import { EventsWithoutOutbox } from "@packages/drizzle/unit-of-work";
 import { mockPort, type PortMock } from "./port-mock";
 
 export type UnitOfWorkOutcome = "not_started" | "committed" | "rolled_back";
 
 export interface UnitOfWorkOptions {
   commit?: "succeeds" | "fails";
+  outbox?: "present" | "absent";
 }
 
 export interface UnitOfWorkMock {
@@ -84,6 +86,8 @@ export function mockUnitOfWork(
 
         return outermost.failure as typeof result;
       }
+      if (options.outbox === "absent" && outermost.pending.length > 0)
+        throw new EventsWithoutOutbox(outermost.pending);
       if (options.commit === "fails") throw new Error(COMMIT_FAILURE);
 
       outcome = "committed";
