@@ -2,14 +2,13 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import type { ComponentType } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import {
-  browser,
   type ContentScriptContext,
   createShadowRootUi,
   type ShadowRootContentScriptUi,
 } from "#imports";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { FONT_FILES } from "@/lib/ui/font-files";
+import { injectFont } from "@/lib/ui/inject-font";
 import { PortalContainerProvider } from "@/lib/ui/portal-container";
 import { createQueryClient } from "@/lib/ui/query";
 
@@ -20,30 +19,9 @@ interface SidebarApp<P extends object> {
   App: ComponentType<P>;
 }
 
-const FONT_STYLE_ID = "vinted-ai-assistant-font";
-
 const READ_ATTEMPTS = 10;
 
 const READ_INTERVAL_MS = 500;
-
-function fontFace(
-  { file, range }: (typeof FONT_FILES)[number],
-  base: string,
-): string {
-  const src = new URL(`assets/${file}`, base).href;
-
-  return `@font-face{font-family:"Instrument Sans Variable";font-style:normal;font-display:swap;font-weight:400 700;src:url("${src}") format("woff2-variations");unicode-range:${range};}`;
-}
-
-function injectFont(): void {
-  if (document.getElementById(FONT_STYLE_ID)) return;
-
-  const base = browser.runtime.getURL("/");
-  const style = document.createElement("style");
-  style.id = FONT_STYLE_ID;
-  style.textContent = FONT_FILES.map((face) => fontFace(face, base)).join("\n");
-  document.head.append(style);
-}
 
 export function mountSidebar<P extends object>(
   ctx: ContentScriptContext,
