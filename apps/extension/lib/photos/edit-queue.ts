@@ -1,6 +1,10 @@
-import type { ApiFailure, Reply } from "@/lib/api/failure";
+import {
+  type ApiFailure,
+  failureMessage,
+  type Reply,
+  UNREACHABLE_FAILURE,
+} from "@/lib/api/failure";
 import type { EditedPhotoDto, EditInput } from "@/lib/messaging/protocol";
-import { failureMessage, UNREACHABLE_FAILURE } from "@/lib/ui/query";
 
 export type PhotoFailure = ApiFailure | { kind: "unreadable" };
 

@@ -7,15 +7,12 @@ import {
   useMutation,
   useQuery,
 } from "@tanstack/react-query";
-import type { ApiFailure, Reply } from "@/lib/api/failure";
-
-export const UNREACHABLE_FAILURE: ApiFailure = {
-  kind: "local",
-  message: "L'extension ne répond plus. Rechargez la page puis réessayez.",
-};
-
-const DISABLED_MESSAGE =
-  "L'assistant est désactivé. Activez-le depuis le popup de l'extension.";
+import {
+  type ApiFailure,
+  failureMessage,
+  type Reply,
+  UNREACHABLE_FAILURE,
+} from "@/lib/api/failure";
 
 export class BackgroundFailure extends Error {
   readonly failure: ApiFailure;
@@ -32,10 +29,6 @@ interface BackgroundQuery<T> {
   request: () => Promise<Reply<T>>;
   enabled?: boolean;
   staleTime?: number;
-}
-
-export function failureMessage(failure: ApiFailure): string {
-  return failure.kind === "disabled" ? DISABLED_MESSAGE : failure.message;
 }
 
 export function createQueryClient(): QueryClient {
