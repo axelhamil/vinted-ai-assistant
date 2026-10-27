@@ -1,0 +1,26 @@
+{
+  "name": "@packages/ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./gemini-client": "./src/gemini-client.ts",
+    "./models": "./src/models.ts",
+    "./failures": "./src/failures.ts"
+  },
+  "scripts": {
+    "type-check": "tsc7 -v && tsc7 --noEmit",
+    "test": "bun --config=../../bunfig.toml test"
+  },
+  "dependencies": {
+    "@google/genai": "^2.31.0",
+    "@packages/ddd-kit": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@packages/typescript-config": "workspace:*",
+    "@types/bun": "^1.4.4",
+    "@types/node": "^24.19.2",
+    "typescript": "~6.0.3"
+  }
+}

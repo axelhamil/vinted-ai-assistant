@@ -77,6 +77,14 @@ module.exports = {
       },
     },
     {
+      name: "ai-sdks-stay-in-the-ai-library",
+      comment:
+        "Only packages/ai talks to Gemini and sharp: everyone else calls @packages/ai.",
+      severity: "error",
+      from: { pathNot: "^packages/ai/" },
+      to: { path: "node_modules/(@google/genai|sharp)(/|$)" },
+    },
+    {
       name: "no-circular",
       severity: "error",
       from: { path: [`${MODULES}/`, LIBS] },
