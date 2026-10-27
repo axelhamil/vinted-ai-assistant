@@ -1,8 +1,8 @@
-import type { Db } from "@packages/drizzle/config";
+import { createDb, type Db } from "@packages/drizzle/config";
 import { assertCloneUrl } from "./test-database";
 
-assertCloneUrl();
+const url = process.env.DATABASE_URL ?? "";
 
-const connection = await import("@packages/drizzle/config");
+assertCloneUrl(url);
 
-export const db: Db = connection.db;
+export const db: Db = createDb(url);

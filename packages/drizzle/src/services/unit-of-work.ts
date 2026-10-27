@@ -5,7 +5,8 @@ import {
   Result,
   UnitOfWorkContext,
 } from "@packages/ddd-kit";
-import { type Db, db, type Transaction } from "../config";
+import { sql } from "drizzle-orm";
+import type { Db, Transaction } from "../config";
 
 export type FlushHandler = (
   events: IDomainEvent[],
@@ -18,7 +19,7 @@ class FailedResultRollback extends Error {
   }
 }
 
-class EventsWithoutOutbox extends Error {
+export class EventsWithoutOutbox extends Error {
   constructor(events: IDomainEvent[]) {
     super(
       `unit of work rolled back: ${events.map((e) => e.eventType).join(", ")} raised in a run that has no outbox would be lost`,
@@ -36,16 +37,35 @@ interface OutermostRun {
 
 const outermostRuns = new WeakMap<Transaction, OutermostRun>();
 
-export function resolveExecutor(): Db | Transaction {
-  return UnitOfWorkContext.transaction<Transaction>() ?? db;
+export function resolveExecutor(database: Db): Db | Transaction {
+  return UnitOfWorkContext.transaction<Transaction>() ?? database;
 }
 
 function isFailedResult(value: unknown): boolean {
   return value instanceof Result && value.isFailure;
 }
 
+function markRollbackOnly(
+  outermost: OutermostRun | undefined,
+  failure: unknown,
+): void {
+  if (!outermost || outermost.rollbackOnly) return;
+
+  outermost.rollbackOnly = true;
+  outermost.failure = failure;
+}
+
+function rollbackOf(failure: unknown): unknown {
+  if (isFailedResult(failure)) return new FailedResultRollback(failure);
+
+  return failure;
+}
+
 export class DrizzleUnitOfWork implements IUnitOfWork {
-  constructor(private readonly flushHandler?: FlushHandler) {}
+  constructor(
+    private readonly database: Db,
+    private readonly flushHandler?: FlushHandler,
+  ) {}
 
   async run<T>(work: () => Promise<T>): Promise<T> {
     const ambient = UnitOfWorkContext.transaction<Transaction>();
@@ -55,7 +75,7 @@ export class DrizzleUnitOfWork implements IUnitOfWork {
       );
 
     try {
-      return await db.transaction((tx) =>
+      return await this.database.transaction((tx) =>
         UnitOfWorkContext.run(tx, () => this.runOutermost(tx, work)),
       );
     } catch (error) {
@@ -69,8 +89,14 @@ export class DrizzleUnitOfWork implements IUnitOfWork {
     tx: Transaction,
     work: () => Promise<T>,
   ): Promise<T> {
-    const result = await work();
     const outermost = outermostRuns.get(tx);
+    let result: T;
+    try {
+      result = await work();
+    } catch (error) {
+      markRollbackOnly(outermost, error);
+      throw error;
+    }
 
     if (!isFailedResult(result)) {
       if (outermost) this.collect(outermost.pending);
@@ -78,11 +104,7 @@ export class DrizzleUnitOfWork implements IUnitOfWork {
       return result;
     }
 
-    if (outermost && !outermost.rollbackOnly) {
-      outermost.rollbackOnly = true;
-      outermost.failure = result;
-    }
-
+    markRollbackOnly(outermost, result);
     throw new FailedResultRollback(result);
   }
 
@@ -95,9 +117,9 @@ export class DrizzleUnitOfWork implements IUnitOfWork {
 
     const result = await work();
     if (isFailedResult(result)) throw new FailedResultRollback(result);
-    if (outermost.rollbackOnly)
-      throw new FailedResultRollback(outermost.failure);
+    if (outermost.rollbackOnly) throw rollbackOf(outermost.failure);
 
+    await tx.execute(sql`select 1`);
     this.collect(outermost.pending);
     await flush(outermost.pending, tx);
 

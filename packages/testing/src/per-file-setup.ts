@@ -22,12 +22,12 @@ try {
 
 const testDatabase = await createTestDatabase();
 
-refuseConnectionsOutside(new URL(testDatabase.url).pathname.slice(1));
+refuseConnectionsOutside(testDatabase.name);
 
 process.env.DATABASE_URL = testDatabase.url;
 
 afterAll(async () => {
-  const { db } = await import("@packages/drizzle/config");
+  const { db } = await import("./clone-database");
   await db.$client.end();
   await testDatabase.drop();
 }, HOOK_TIMEOUT_MS);

@@ -3,7 +3,8 @@ import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "bun";
-import { MIGRATIONS_FOLDER, poolConfigOf } from "./migrate";
+import { poolConfigOf } from "./migrate";
+import { MIGRATIONS_FOLDER } from "./migrations-folder";
 
 const SCRIPT = join(import.meta.dir, "migrate.ts");
 

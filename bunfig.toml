@@ -1,3 +1,5 @@
+env = false
+
 [test]
 preload = ["@packages/testing/install-fetch-guard"]
 randomize = true

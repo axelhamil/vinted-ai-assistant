@@ -1,5 +1,4 @@
 import { randomBytes } from "node:crypto";
-import { createDb, type Db } from "@packages/drizzle/config";
 import { Client } from "pg";
 
 export const TEST_DATABASE_PREFIX = "vinted_test_";
@@ -245,7 +244,7 @@ export async function withTemplateLock<T>(
 }
 
 export interface TestDatabase {
-  db: Db;
+  name: string;
   url: string;
   drop(): Promise<void>;
 }
@@ -262,15 +261,10 @@ export async function createTestDatabase(): Promise<TestDatabase> {
     await admin.end();
   }
 
-  const url = urlForDatabase(name);
-  const db = createDb(url);
-
   return {
-    db,
-    url,
+    name,
+    url: urlForDatabase(name),
     async drop() {
-      await db.$client.end();
-
       const cleanup = await connectAdmin();
 
       try {

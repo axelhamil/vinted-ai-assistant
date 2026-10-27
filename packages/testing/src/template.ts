@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { MIGRATIONS_FOLDER } from "@packages/drizzle/migrations-folder";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { type Client, Pool } from "pg";
@@ -11,10 +11,6 @@ import {
   TEMPLATE_DATABASE,
   urlForDatabase,
 } from "./test-database";
-
-const MIGRATIONS_FOLDER = fileURLToPath(
-  new URL("../../drizzle/migrations", import.meta.url),
-);
 
 async function migrationsFingerprint(): Promise<string> {
   const entries = await readdir(MIGRATIONS_FOLDER, { recursive: true });

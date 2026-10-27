@@ -1,13 +1,21 @@
-import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "bun:test";
 import { Result } from "@packages/ddd-kit";
 import { sql } from "drizzle-orm";
-import { db } from "../config";
+import { createDb } from "../config";
 import { DrizzleUnitOfWork, resolveExecutor } from "./unit-of-work";
 
-const unitOfWork = new DrizzleUnitOfWork();
+const db = createDb(process.env.DATABASE_URL ?? "");
+const unitOfWork = new DrizzleUnitOfWork(db);
 
 async function insertRow(): Promise<void> {
-  await resolveExecutor().execute(
+  await resolveExecutor(db).execute(
     sql`insert into uow_probe (id) values (gen_random_uuid())`,
   );
 }
@@ -22,6 +30,10 @@ async function rowCount(): Promise<number> {
 
 beforeAll(async () => {
   await db.execute(sql`create table uow_probe (id uuid primary key)`);
+});
+
+afterAll(async () => {
+  await db.$client.end();
 });
 
 beforeEach(async () => {
@@ -62,6 +74,37 @@ describe("the drizzle unit of work", () => {
       return Result.fail("outer failed");
     });
 
+    expect(await rowCount()).toBe(0);
+  });
+
+  it("fails and keeps nothing when a swallowed SQL error aborted the transaction", async () => {
+    const run = unitOfWork.run(async () => {
+      await insertRow();
+      try {
+        await resolveExecutor(db).execute(sql`select * from uow_missing`);
+      } catch {}
+
+      return Result.ok();
+    });
+
+    await expect(run).rejects.toThrow();
+    expect(await rowCount()).toBe(0);
+  });
+
+  it("rolls back the outer run when a nested run throws and the outer work catches it", async () => {
+    const run = unitOfWork.run(async () => {
+      await insertRow();
+      try {
+        await unitOfWork.run(async () => {
+          await insertRow();
+          throw new Error("nested work crashed");
+        });
+      } catch {}
+
+      return Result.ok();
+    });
+
+    await expect(run).rejects.toThrow("nested work crashed");
     expect(await rowCount()).toBe(0);
   });
 });

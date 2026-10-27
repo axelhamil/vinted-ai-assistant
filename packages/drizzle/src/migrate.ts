@@ -1,12 +1,8 @@
-import { fileURLToPath } from "node:url";
 import { Result } from "@packages/ddd-kit";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool, type PoolConfig } from "pg";
-
-export const MIGRATIONS_FOLDER = fileURLToPath(
-  new URL("../migrations", import.meta.url),
-);
+import { MIGRATIONS_FOLDER } from "./migrations-folder";
 
 export function poolConfigOf(
   env: Record<string, string | undefined>,
