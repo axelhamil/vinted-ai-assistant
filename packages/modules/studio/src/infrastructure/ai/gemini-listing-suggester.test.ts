@@ -71,6 +71,33 @@ describe("GeminiListingSuggester", () => {
     });
   });
 
+  it("fails with the code of the only unreadable photo without calling the model", async () => {
+    const { gemini, readImage, suggester } = given();
+    const photos = ["1", "2", "3"].map(
+      (index) => `https://images1.vinted.net/t/${index}.jpeg`,
+    );
+    readImage.mockImplementation(async (photo) =>
+      photo === photos[1]
+        ? Result.fail(aiFailure("IMAGE_FETCH_FAILED", "detail"))
+        : Result.ok(PHOTO),
+    );
+
+    const result = await suggester.suggest(request({ photos }));
+
+    expect(result.getError()).toBe("STUDIO_PHOTO_PROVIDER_FAILURE");
+    expect(gemini.generateStructured).not.toHaveBeenCalled();
+  });
+
+  it("asks for the answer in the requested language", async () => {
+    const { gemini, suggester } = given();
+
+    await suggester.suggest(request({ language: "de" }));
+
+    expect(gemini.generateStructured.mock.calls[0]?.[0].system).toContain(
+      "German",
+    );
+  });
+
   it("parses only the first 10 of 12 photos", async () => {
     const { readImage, suggester } = given();
     const photos = Array.from(
