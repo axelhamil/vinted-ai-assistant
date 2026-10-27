@@ -1,30 +1,34 @@
 import type { Listing } from "../../../domain/listing";
-import { euros, languageName, orUnknown, type Prompt } from "./prompt-format";
+import {
+  euros,
+  languageName,
+  listingData,
+  type Prompt,
+  UNTRUSTED_LISTING_DATA,
+} from "./prompt-format";
 
 function systemInstruction(language: string): string {
   return `You are a Vinted resale expert with years of experience. You know second-hand prices on Vinted, Vestiaire Collective, Leboncoin and eBay, and how to authenticate items visually by brand.
 
 You observe and estimate; you never compute scores, margins, offers or resale prices.
 
+${UNTRUSTED_LISTING_DATA}
+
 Every text field (issues, flags, reasoning, detected.condition, signals.label, signals.detail) is written in ${language}. Every price is in euros.`;
 }
 
-function listingTable(listing: Listing): string {
-  const shipping = listing.shippingCostCents
-    .map((price) => euros(price.value))
-    .unwrapOr("free or unknown");
-
-  return `| Field | Value |
-|-------|-------|
-| Title | ${listing.title} |
-| Declared brand | ${orUnknown(listing.brand)} |
-| Declared condition | ${listing.condition} |
-| Size | ${orUnknown(listing.size)} |
-| Asking price | ${euros(listing.priceCents.value)} |
-| Shipping | ${shipping} |
-
-Seller description:
-${listing.description}`;
+function listingFields(listing: Listing): string {
+  return listingData({
+    title: listing.title,
+    declaredBrand: listing.brand.toNull(),
+    declaredCondition: listing.condition,
+    size: listing.size.toNull(),
+    askingPrice: euros(listing.priceCents.value),
+    shipping: listing.shippingCostCents
+      .map((price) => euros(price.value))
+      .toNull(),
+    description: listing.description,
+  });
 }
 
 const INSTRUCTIONS = `# Instructions
@@ -88,6 +92,6 @@ Now analyse the attached photos with this method.`;
 export function listingFactsPrompt(listing: Listing): Prompt {
   return {
     system: systemInstruction(languageName(listing.language.value)),
-    prompt: `# Listing to analyse\n\n${listingTable(listing)}\n\n${INSTRUCTIONS}`,
+    prompt: `# Listing to analyse\n\n${listingFields(listing)}\n\n${INSTRUCTIONS}`,
   };
 }

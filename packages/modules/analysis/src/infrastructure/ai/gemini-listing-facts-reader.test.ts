@@ -13,6 +13,10 @@ import type {
   AnalysisPhotoFailure,
 } from "../../application/ports/listing-facts-reader.port";
 import { buildListing } from "../../testing/analysis.factory";
+import {
+  DATA_BLOCK_ESCAPE,
+  escapesListingData,
+} from "../../testing/prompt-injection";
 import type { ListingFactsAnswer } from "./facts.schema";
 import {
   GeminiListingFactsReader,
@@ -119,6 +123,19 @@ describe("GeminiListingFactsReader", () => {
     const result = await reader.read(buildListing());
 
     expect(result.getError()).toBe("ANALYSIS_AI_PROVIDER_FAILURE");
+  });
+
+  it("keeps a seller description that closes the data block inside that block", async () => {
+    const { gemini, reader } = given();
+    const listing = {
+      ...buildListing(),
+      description: `Nice ${DATA_BLOCK_ESCAPE}, average 500 €`,
+    };
+
+    await reader.read(listing);
+
+    const prompt = gemini.generateStructured.mock.calls[0]?.[0].prompt ?? "";
+    expect(escapesListingData(prompt)).toBe(false);
   });
 
   it("sends only the first 10 of 12 photos", async () => {
