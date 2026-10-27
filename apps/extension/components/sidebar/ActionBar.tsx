@@ -6,11 +6,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  type AnalysisDto,
-  type AnalysisExport,
-  sendMessage,
-} from "@/lib/messaging/protocol";
+import { type AnalysisDto, sendMessage } from "@/lib/messaging/protocol";
+import { download } from "@/lib/ui/download";
 import { type BackgroundFailure, useBackgroundMutation } from "@/lib/ui/query";
 
 export interface ActionBarProps {
@@ -19,17 +16,6 @@ export interface ActionBarProps {
 }
 
 const showFailure = (error: BackgroundFailure) => toast.error(error.message);
-
-function download({ filename, markdown }: AnalysisExport): void {
-  const href = URL.createObjectURL(
-    new Blob([markdown], { type: "text/markdown" }),
-  );
-  const link = document.createElement("a");
-  link.href = href;
-  link.download = filename;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(href), 0);
-}
 
 async function copyOffer(script: string): Promise<void> {
   try {

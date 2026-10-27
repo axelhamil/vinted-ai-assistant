@@ -189,4 +189,36 @@
   .error-message {
     @apply text-base text-ink;
   }
+
+  .popup-header {
+    @apply border-b border-border;
+  }
+
+  .popup-title {
+    @apply text-base font-semibold;
+  }
+
+  .popup-tabs {
+    @apply justify-start border-b border-border;
+  }
+
+  .popup-note {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .status-dot {
+    @apply size-2 rounded-full bg-profit data-[state=down]:bg-loss;
+  }
+
+  .stat-value {
+    @apply text-lg font-semibold tabular-nums;
+  }
+
+  .portfolio-row {
+    @apply border-b border-border;
+  }
+
+  .portfolio-row .sticker {
+    @apply animate-none -rotate-2;
+  }
 }

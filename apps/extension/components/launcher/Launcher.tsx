@@ -1,5 +1,6 @@
 import { ScoreSticker } from "@/components/sidebar/ScoreSticker";
 import { Button } from "@/components/ui/button";
+import { signedEuros } from "@/lib/format";
 import type { AnalysisDto } from "@/lib/messaging/protocol";
 
 export interface LauncherProps {
@@ -18,7 +19,7 @@ export function Launcher({ label, analysis, onOpen }: LauncherProps) {
       {analysis && (
         <ScoreSticker
           score={analysis.opportunity.score}
-          margin={analysis.opportunity.margin}
+          margin={signedEuros(analysis.opportunity.margin)}
           size="mini"
         />
       )}

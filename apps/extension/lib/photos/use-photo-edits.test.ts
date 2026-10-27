@@ -1,18 +1,12 @@
-import { QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { createElement, type ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import type { Reply } from "@/lib/api/failure";
 import type { EditedPhotoDto, EditInput } from "@/lib/messaging/protocol";
-import { createQueryClient } from "@/lib/ui/query";
+import { queryWrapper } from "@/lib/ui/query-wrapper";
 import { usePhotoEdits } from "./use-photo-edits";
 
 function renderEdits(deps: ReturnType<typeof controlledApi>["deps"]) {
-  const client = createQueryClient();
-  const wrapper = ({ children }: { children: ReactNode }) =>
-    createElement(QueryClientProvider, { client }, children);
-
-  return renderHook(() => usePhotoEdits(deps), { wrapper });
+  return renderHook(() => usePhotoEdits(deps), { wrapper: queryWrapper() });
 }
 
 const EDITED: EditedPhotoDto = {

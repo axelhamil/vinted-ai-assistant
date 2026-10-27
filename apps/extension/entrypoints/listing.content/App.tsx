@@ -12,6 +12,7 @@ import { SidebarShell } from "@/components/sidebar/SidebarShell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Reply } from "@/lib/api/failure";
+import { signedEuros } from "@/lib/format";
 import {
   type AnalysisDto,
   type AnalyzeInput,
@@ -99,7 +100,7 @@ export function App({
           <div className="flex flex-col gap-stack">
             <ScoreSticker
               score={data.opportunity.score}
-              margin={data.opportunity.margin}
+              margin={signedEuros(data.opportunity.margin)}
               size="full"
             />
             <p className="verdict">{verdict(data)}</p>

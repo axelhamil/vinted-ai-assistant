@@ -52,7 +52,7 @@ export function createQueryClient(): QueryClient {
   });
 }
 
-async function unwrap<T>(request: () => Promise<Reply<T>>): Promise<T> {
+export async function unwrap<T>(request: () => Promise<Reply<T>>): Promise<T> {
   const reply = await request().catch(
     (): Reply<T> => ({ ok: false, failure: UNREACHABLE_FAILURE }),
   );

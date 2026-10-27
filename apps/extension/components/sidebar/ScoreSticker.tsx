@@ -1,8 +1,6 @@
-import { signedEuros } from "@/lib/format";
-
 export interface ScoreStickerProps {
   score: number;
-  margin: number;
+  margin: string;
   size: "full" | "mini";
 }
 
@@ -12,7 +10,7 @@ const SCORE = new Intl.NumberFormat("fr-FR", {
 });
 
 export function ScoreSticker({ score, margin, size }: ScoreStickerProps) {
-  const label = `Score ${SCORE.format(score)} sur 10, marge ${signedEuros(margin)}`;
+  const label = `Score ${SCORE.format(score)} sur 10, marge ${margin}`;
 
   if (size === "mini")
     return (
@@ -24,7 +22,7 @@ export function ScoreSticker({ score, margin, size }: ScoreStickerProps) {
   return (
     <p className="sticker flex flex-col" role="img" aria-label={label}>
       <span className="sticker-score">{SCORE.format(score)}</span>
-      <span className="sticker-margin">{signedEuros(margin)} de marge</span>
+      <span className="sticker-margin">{margin} de marge</span>
     </p>
   );
 }
