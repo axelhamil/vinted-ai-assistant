@@ -5,10 +5,12 @@ import {
   type Candidate,
   FinishReason,
   GenerateContentResponse,
+  Modality,
 } from "@google/genai";
 import { z } from "zod";
 import type { AiFailureCode } from "../failures";
 import { createGeminiClient, type GenAiModels } from "../gemini-client";
+import { IMAGE_MODEL } from "../models";
 
 const listingSchema = z.object({
   brand: z.string(),
@@ -240,5 +242,104 @@ describe("generateStructured", () => {
 
     expect(result.getError().code).toBe("AI_UNAVAILABLE");
     expect(result.getError().status.isNone()).toBe(true);
+  });
+});
+
+describe("editImage", () => {
+  const sourceBytes = Uint8Array.from([
+    137, 80, 78, 71, 13, 10, 26, 10, 0, 255,
+  ]);
+  const editRequest = {
+    source: {
+      mimeType: "image/webp",
+      base64: Buffer.from(sourceBytes).toString("base64"),
+    },
+    instruction: "Put the jacket on a plain white background.",
+  };
+  const editedBytes = Uint8Array.from([255, 216, 255, 224, 0, 16, 74, 70]);
+
+  function answeringImage(): Candidate {
+    return {
+      content: {
+        role: "model",
+        parts: [
+          { text: "Here is the edited photo." },
+          {
+            inlineData: {
+              mimeType: "image/jpeg",
+              data: Buffer.from(editedBytes).toString("base64"),
+            },
+          },
+          { inlineData: { mimeType: "image/png", data: "AAAA" } },
+        ],
+      },
+    };
+  }
+
+  it("asks the image model for an image, sending the source before the instruction", async () => {
+    const { client, generateContent } = clientAnswering(
+      responseWith(answeringImage()),
+    );
+
+    await client.editImage(editRequest);
+
+    const sent = generateContent.mock.calls[0]?.[0];
+
+    expect(sent?.model).toBe(IMAGE_MODEL);
+    expect(sent?.config?.responseModalities).toEqual([Modality.IMAGE]);
+    expect(sent?.contents).toEqual([
+      {
+        role: "user",
+        parts: [
+          {
+            inlineData: {
+              mimeType: "image/webp",
+              data: editRequest.source.base64,
+            },
+          },
+          { text: editRequest.instruction },
+        ],
+      },
+    ]);
+  });
+
+  it("returns the first image part with the exact bytes of its base64 and its MIME type", async () => {
+    const { client } = clientAnswering(responseWith(answeringImage()));
+
+    const result = await client.editImage(editRequest);
+
+    expect(result.getValue()).toEqual({
+      mimeType: "image/jpeg",
+      bytes: editedBytes,
+    });
+  });
+
+  it("fails with AI_NO_IMAGE, the text and the finish reason when the model answers only text", async () => {
+    const { client } = clientAnswering(
+      responseWith(
+        answering("I cannot edit photos of people.", {
+          finishReason: FinishReason.STOP,
+        }),
+      ),
+    );
+
+    const result = await client.editImage(editRequest);
+
+    expect(result.getError().code).toBe("AI_NO_IMAGE");
+    expect(result.getError().detail).toContain(
+      "I cannot edit photos of people.",
+    );
+    expect(result.getError().detail).toContain("STOP");
+  });
+
+  it("maps an API error 503 to AI_UNAVAILABLE with its status", async () => {
+    const client = clientFailingWith(
+      new ApiError({ message: "overloaded", status: 503 }),
+    );
+
+    const result = await client.editImage(editRequest);
+
+    expect(result.getError().code).toBe("AI_UNAVAILABLE");
+    expect(result.getError().status.unwrap()).toBe(503);
   });
 });

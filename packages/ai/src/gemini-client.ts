@@ -3,11 +3,12 @@ import {
   type GenerateContentResponse,
   GoogleGenAI,
   type HttpRetryOptions,
+  Modality,
 } from "@google/genai";
 import { Result } from "@packages/ddd-kit";
 import { z } from "zod";
 import { type AiFailure, aiFailure, toAiFailure } from "./failures";
-import { TEXT_MODEL } from "./models";
+import { IMAGE_MODEL, TEXT_MODEL } from "./models";
 
 export type GenAiModels = Pick<GoogleGenAI["models"], "generateContent">;
 
@@ -34,10 +35,23 @@ export interface StructuredAnswer<T> {
   sources: GroundingSource[];
 }
 
+export interface ImageEditRequest {
+  source: InlineImage;
+  instruction: string;
+}
+
+export interface GeneratedImage {
+  mimeType: string;
+  bytes: Uint8Array;
+}
+
 export interface GeminiClient {
   generateStructured<S extends z.ZodType>(
     request: StructuredRequest<S>,
   ): Promise<Result<StructuredAnswer<z.infer<S>>, AiFailure>>;
+  editImage(
+    request: ImageEditRequest,
+  ): Promise<Result<GeneratedImage, AiFailure>>;
 }
 
 type GeminiClientOptions = { apiKey: string } | { models: GenAiModels };
@@ -52,6 +66,8 @@ const RETRY_OPTIONS = {
 } satisfies HttpRetryOptions;
 
 const TEXT_TIMEOUT_MS = 90_000;
+
+const IMAGE_TIMEOUT_MS = 120_000;
 
 function responseJsonSchema(schema: z.ZodType): Result<unknown, AiFailure> {
   try {
@@ -176,6 +192,61 @@ function readStructured<S extends z.ZodType>(
   });
 }
 
+function imageEditParameters(
+  request: ImageEditRequest,
+): GenerateContentParameters {
+  return {
+    model: IMAGE_MODEL,
+    contents: [
+      {
+        role: "user",
+        parts: [
+          {
+            inlineData: {
+              mimeType: request.source.mimeType,
+              data: request.source.base64,
+            },
+          },
+          { text: request.instruction },
+        ],
+      },
+    ],
+    config: {
+      responseModalities: [Modality.IMAGE],
+      httpOptions: { timeout: IMAGE_TIMEOUT_MS },
+    },
+  };
+}
+
+function readImage(
+  response: GenerateContentResponse,
+): Result<GeneratedImage, AiFailure> {
+  const candidate = response.candidates?.[0];
+  const parts = candidate?.content?.parts ?? [];
+
+  for (const { inlineData } of parts) {
+    if (!inlineData?.data || !inlineData.mimeType) continue;
+
+    return Result.ok({
+      mimeType: inlineData.mimeType,
+      bytes: Uint8Array.from(Buffer.from(inlineData.data, "base64")),
+    });
+  }
+
+  const text = response.text?.trim() || "(none)";
+  const reason =
+    candidate?.finishReason ??
+    response.promptFeedback?.blockReason ??
+    "UNKNOWN";
+
+  return Result.fail(
+    aiFailure(
+      "AI_NO_IMAGE",
+      `The model returned no image (finish reason: ${reason}, text: ${text}).`,
+    ),
+  );
+}
+
 export function createGeminiClient(options: GeminiClientOptions): GeminiClient {
   const models =
     "models" in options
@@ -201,6 +272,12 @@ export function createGeminiClient(options: GeminiClientOptions): GeminiClient {
       return response.flatMap((answer) =>
         readStructured(answer, request.schema),
       );
+    },
+
+    async editImage(request) {
+      const response = await callModel(models, imageEditParameters(request));
+
+      return response.flatMap(readImage);
     },
   };
 }

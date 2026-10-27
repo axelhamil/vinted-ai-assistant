@@ -392,6 +392,9 @@ importers:
       '@types/node':
         specifier: ^24.19.2
         version: 24.19.2
+      dotenv:
+        specifier: ^18.0.9
+        version: 18.0.9
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
