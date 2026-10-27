@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { parseEnv } from "./env";
+import { parseDatabaseEnv, parseEnv } from "./env";
 
 const DATABASE_URL = "postgres://x";
 const GEMINI_API_KEY = "a-gemini-key";
@@ -62,4 +62,19 @@ describe("the api environment", () => {
       expect(result.getError()).toContain("OUTBOX_POLL_INTERVAL_MS");
     },
   );
+});
+
+describe("the database environment", () => {
+  it("needs only the database url", () => {
+    const result = parseDatabaseEnv({ DATABASE_URL });
+
+    expect(result.getValue()).toEqual({ DATABASE_URL });
+  });
+
+  it("refuses a missing database url and names it", () => {
+    const result = parseDatabaseEnv({ GEMINI_API_KEY });
+
+    expect(result.isFailure).toBe(true);
+    expect(result.getError()).toContain("DATABASE_URL");
+  });
 });

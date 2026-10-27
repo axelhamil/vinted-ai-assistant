@@ -50,7 +50,7 @@ pnpm import:sqlite path/to/legacy.db --dry-run   # report only
 pnpm import:sqlite path/to/legacy.db
 ```
 
-Items already in Postgres are skipped, never overwritten. Rows that fail validation are listed and the command exits 1.
+The command needs only `DATABASE_URL`. Items already in Postgres are skipped, never overwritten. Rows that fail validation are listed and the command exits 1.
 
 ## Architecture
 

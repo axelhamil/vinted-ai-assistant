@@ -45,7 +45,7 @@ docker compose --profile prod run --rm -v "$PWD/legacy.db:/import/legacy.db:ro" 
 docker compose --profile prod run --rm -v "$PWD/legacy.db:/import/legacy.db:ro" migrate-live bun scripts/import-sqlite.ts /import/legacy.db
 ```
 
-It prints one JSON report. Rows already in Postgres are skipped, so a second run imports nothing.
+It reads only `DATABASE_URL`, no Gemini key, and prints one JSON report. Rows already in Postgres are skipped, so a second run imports nothing.
 
 ## Image size budget
 

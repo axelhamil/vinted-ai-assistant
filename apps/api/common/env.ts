@@ -80,12 +80,19 @@ const envSchema = z.object({
   ).transform((dsn) => Option.fromNullable(dsn)),
 });
 
+const databaseEnvSchema = envSchema.pick({ DATABASE_URL: true });
+
 export type Env = z.output<typeof envSchema>;
 
-export function parseEnv(
-  source: Record<string, string | undefined>,
-): Result<Env, string> {
-  const parsed = envSchema.safeParse(source);
+export type DatabaseEnv = z.output<typeof databaseEnvSchema>;
+
+type EnvSource = Record<string, string | undefined>;
+
+function parseWith<T extends z.ZodType>(
+  schema: T,
+  source: EnvSource,
+): Result<z.output<T>, string> {
+  const parsed = schema.safeParse(source);
   if (parsed.success) return Result.ok(parsed.data);
 
   const problems = parsed.error.issues.map(
@@ -93,4 +100,14 @@ export function parseEnv(
   );
 
   return Result.fail(problems.join("\n"));
+}
+
+export function parseEnv(source: EnvSource): Result<Env, string> {
+  return parseWith(envSchema, source);
+}
+
+export function parseDatabaseEnv(
+  source: EnvSource,
+): Result<DatabaseEnv, string> {
+  return parseWith(databaseEnvSchema, source);
 }

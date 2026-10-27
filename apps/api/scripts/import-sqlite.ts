@@ -1,6 +1,11 @@
 import { Database } from "bun:sqlite";
 import type { IAnalysisRepository } from "@packages/analysis/application/ports/analysis.repository.port";
 import type { Analysis } from "@packages/analysis/domain/analysis.aggregate";
+import { DrizzleAnalysisRepository } from "@packages/analysis/infrastructure/repositories/drizzle-analysis.repository";
+import { createDb } from "@packages/drizzle/config";
+import { parseDatabaseEnv } from "../common/env";
+import { createJsonLogger } from "../common/logger";
+import { createSentryInstrumentation } from "../src/adapters/instrumentation/sentry-instrumentation";
 import { analysisFromLegacyRow, legacyVintedIdOf } from "./legacy-row";
 
 export interface ImportFailure {
@@ -20,6 +25,8 @@ export interface ImportOptions {
   repository: Pick<IAnalysisRepository, "findByVintedId" | "save">;
   dryRun: boolean;
 }
+
+const IMPORT_LOG_LEVEL = "warn";
 
 type RowOutcome = "imported" | "skippedExisting" | ImportFailure;
 
@@ -75,15 +82,21 @@ async function main(args: string[]): Promise<number> {
     return 1;
   }
 
-  const { env } = await import("../common/load-env");
-  const { buildContainer } = await import("../src/composition/container");
-  const container = buildContainer(env);
+  const { readEnv } = await import("../common/read-env");
+  const { DATABASE_URL } = readEnv(parseDatabaseEnv);
+  const db = createDb(DATABASE_URL);
+  const logger = createJsonLogger(IMPORT_LOG_LEVEL, process.stderr);
+  const repository = new DrizzleAnalysisRepository(
+    db,
+    logger,
+    createSentryInstrumentation(logger),
+  );
 
   try {
     const source = new Database(path, { readonly: true });
     const report = await importLegacy({
       source,
-      repository: container.IAnalysisRepository,
+      repository,
       dryRun: args.includes("--dry-run"),
     });
     source.close();
@@ -95,7 +108,7 @@ async function main(args: string[]): Promise<number> {
 
     return 1;
   } finally {
-    await container.dispose();
+    await db.$client.end();
   }
 }
 
