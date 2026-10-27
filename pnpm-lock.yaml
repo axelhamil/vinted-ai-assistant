@@ -214,6 +214,9 @@ importers:
       '@packages/drizzle':
         specifier: workspace:*
         version: link:../../packages/drizzle
+      '@packages/outbox':
+        specifier: workspace:*
+        version: link:../../packages/outbox
       '@packages/studio':
         specifier: workspace:*
         version: link:../../packages/modules/studio

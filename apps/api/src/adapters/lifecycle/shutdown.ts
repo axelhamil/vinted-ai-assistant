@@ -8,7 +8,20 @@ export interface ShutdownStep {
   run(): Promise<void>;
 }
 
+export interface ApiStoppers {
+  http(): Promise<void>;
+  outbox(): Promise<void>;
+  database(): Promise<void>;
+  sentry(): Promise<void>;
+  logger(): Promise<void>;
+}
+
 const DEADLINE_FLUSH_TIMEOUT_MS = 1_000;
+const HTTP_DRAIN_TIMEOUT_MS = 5_000;
+const OUTBOX_STOP_TIMEOUT_MS = 3_000;
+const DATABASE_CLOSE_TIMEOUT_MS = 5_500;
+const SENTRY_FLUSH_STEP_TIMEOUT_MS = 2_500;
+const LOGGER_FLUSH_TIMEOUT_MS = 1_000;
 
 type StepOutcome =
   | { kind: "done" }
@@ -84,4 +97,26 @@ export function createShutdown(
 
     return stopping;
   };
+}
+
+export function apiShutdownSteps(stoppers: ApiStoppers): ShutdownStep[] {
+  return [
+    { name: "http", timeoutMs: HTTP_DRAIN_TIMEOUT_MS, run: stoppers.http },
+    { name: "outbox", timeoutMs: OUTBOX_STOP_TIMEOUT_MS, run: stoppers.outbox },
+    {
+      name: "database",
+      timeoutMs: DATABASE_CLOSE_TIMEOUT_MS,
+      run: stoppers.database,
+    },
+    {
+      name: "sentry",
+      timeoutMs: SENTRY_FLUSH_STEP_TIMEOUT_MS,
+      run: stoppers.sentry,
+    },
+    {
+      name: "logger",
+      timeoutMs: LOGGER_FLUSH_TIMEOUT_MS,
+      run: stoppers.logger,
+    },
+  ];
 }

@@ -15,6 +15,7 @@
     "@packages/analysis": "workspace:*",
     "@packages/ddd-kit": "workspace:*",
     "@packages/drizzle": "workspace:*",
+    "@packages/outbox": "workspace:*",
     "@packages/studio": "workspace:*",
     "@sentry/bun": "^11.8.0",
     "dotenv": "^18.0.8",

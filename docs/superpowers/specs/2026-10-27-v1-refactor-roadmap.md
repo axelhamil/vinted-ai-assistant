@@ -70,11 +70,17 @@ Aggregate `Analysis` with value objects (`VintedId`, `Score`, `Price`, `PriceRan
 
 Stateless module served under `/api/studio`: the 5 system presets are a typed constant (no aggregate nor table, the UI never creates a custom preset), photo edits by preset or by a free instruction return the model bytes untouched (no re-encode, no template variables), and listing suggestions take the model facts and one price while the domain computes the ±20 % range, fits the title to 50 characters and refuses a price out of bounds. No server batch route: a 10 photo batch exceeds Bun's 255 s idle timeout, so the extension runs single edits 3 at a time. Bodies are capped at 15 MB per edit and 40 MB per suggestion (typed 413), and the language list and AI failure mapping are shared with analysis through `@packages/ai`.
 
-### 6. Outbox
+### 6. Outbox (delivered 27/10/2026)
 
-`packages/outbox`, one outbox table per module, flush in the outermost UoW run, relay with LISTEN + poll, dead letter after 10 attempts. Events: `analysis.completed`, `analysis.status-changed`, `analysis.deleted`.
+`packages/outbox` ported from OpenUp: events written in the outermost UoW run with a `pg_notify`, relay woken by LISTEN with a 30 s fallback poll (`OUTBOX_POLL_INTERVAL_MS`), 4 lanes, lease, backoff, dead after 10 attempts then retried every 6 h, failures logged and reported to Sentry. Events: `analysis.completed`, `analysis.status_changed`, `analysis.deleted`.
 
-Carried from step 4: an ambient request context (AsyncLocalStorage set by a Hono middleware) so repository and instrumentation logs carry the requestId; an optimistic `analyzed_at` guard on `updateNegotiation` if regenerate during a forced re-analysis shows up in logs.
+- D1. Ported now with no subscriber: the commercial v1 meters usage from `analysis.completed`. Until then the three types are routed `ignored` (marked delivered, no handler), and a test fails on any analysis event left unrouted.
+- D2. One `outbox_event` table per module schema: `analysis.outbox_event`; studio records no event and has no table.
+- D3. Delete is the `DeleteAnalysis` use case, which loads the aggregate to record `analysis.deleted`.
+- D4. Ambient `RequestContext` (AsyncLocalStorage, Hono middleware, pino mixin, Sentry tag) puts the requestId in every log line and in the outbox row metadata.
+- D5. The relay runs inside the api process, starts after the server listens, and stops (in-flight drain awaited, listener closed) before the database pool.
+
+Carried from step 4 and delivered: `updateNegotiation` writes only when `analyzed_at` is the one read; a concurrent re-analysis or delete answers `ANALYSIS_STATUS_CONFLICT`.
 
 ### 7. Extension on WXT
 

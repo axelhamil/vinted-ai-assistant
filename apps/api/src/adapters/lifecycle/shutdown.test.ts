@@ -1,6 +1,11 @@
 import { describe, expect, it } from "bun:test";
 import pino from "pino";
-import { createShutdown, type ShutdownStep } from "./shutdown";
+import {
+  type ApiStoppers,
+  apiShutdownSteps,
+  createShutdown,
+  type ShutdownStep,
+} from "./shutdown";
 
 interface LogLine {
   msg: string;
@@ -100,5 +105,33 @@ describe("stopping the API", () => {
     await stop();
 
     expect(ran).toEqual(["http", "database"]);
+  });
+
+  it("stops the outbox relay, its drain included, before closing the database pool", async () => {
+    const { logger } = given();
+    const ran: string[] = [];
+    const stopper = (name: string) => async () => {
+      ran.push(name);
+    };
+    const stoppers: ApiStoppers = {
+      http: stopper("http"),
+      outbox: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        ran.push("outbox drained");
+      },
+      database: stopper("database"),
+      sentry: stopper("sentry"),
+      logger: stopper("logger"),
+    };
+
+    await createShutdown(apiShutdownSteps(stoppers), logger, 1_000)();
+
+    expect(ran).toEqual([
+      "http",
+      "outbox drained",
+      "database",
+      "sentry",
+      "logger",
+    ]);
   });
 });

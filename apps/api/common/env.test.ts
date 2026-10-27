@@ -42,4 +42,24 @@ describe("the api environment", () => {
       expect(result.getError()).toContain("GEMINI_API_KEY");
     },
   );
+
+  it("polls the outbox every 30 s by default", () => {
+    const env = parseEnv({ DATABASE_URL, GEMINI_API_KEY }).getValue();
+
+    expect(env.OUTBOX_POLL_INTERVAL_MS).toBe(30_000);
+  });
+
+  it.each(["999", "1500.5", "soon"])(
+    "refuses an outbox poll interval of %p and names it",
+    (interval) => {
+      const result = parseEnv({
+        DATABASE_URL,
+        GEMINI_API_KEY,
+        OUTBOX_POLL_INTERVAL_MS: interval,
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.getError()).toContain("OUTBOX_POLL_INTERVAL_MS");
+    },
+  );
 });

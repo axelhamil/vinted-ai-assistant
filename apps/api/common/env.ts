@@ -61,6 +61,13 @@ const envSchema = z.object({
         "is required, the Gemini api key from https://aistudio.google.com/apikey",
     }),
   ),
+  OUTBOX_POLL_INTERVAL_MS: blankAsUnset(
+    z.coerce
+      .number({ error: "must be a number of milliseconds" })
+      .int({ error: "must be a whole number of milliseconds" })
+      .min(1000, { error: "must be at least 1000 milliseconds" })
+      .default(30_000),
+  ),
   SENTRY_DSN: blankAsUnset(
     z
       .url({
