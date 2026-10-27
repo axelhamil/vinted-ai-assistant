@@ -1,24 +1,18 @@
 {
-	"compilerOptions": {
-		"target": "ES2022",
-		"lib": ["ES2022"],
-		"module": "ESNext",
-		"moduleResolution": "bundler",
-		"esModuleInterop": true,
-		"strict": true,
-		"strictNullChecks": true,
-		"noUncheckedIndexedAccess": true,
-		"noImplicitAny": true,
-		"noImplicitReturns": true,
-		"noFallthroughCasesInSwitch": true,
-		"forceConsistentCasingInFileNames": true,
-		"skipLibCheck": true,
-		"declaration": true,
-		"declarationMap": true,
-		"sourceMap": true,
-		"resolveJsonModule": true,
-		"isolatedModules": true,
-		"verbatimModuleSyntax": true
-	},
-	"exclude": ["node_modules", "dist", ".cache"]
+  "extends": "./packages/typescript-config/base.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": false,
+    "incremental": false,
+    "allowJs": false,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "sourceMap": true,
+    "verbatimModuleSyntax": true
+  },
+  "exclude": ["node_modules", "dist", ".cache"]
 }

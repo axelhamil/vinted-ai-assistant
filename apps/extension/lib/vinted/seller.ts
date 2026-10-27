@@ -1,0 +1,208 @@
+import { ANALYSIS_FRESH_FOR_MS } from "@packages/analysis/contract";
+import type { Reply } from "@/lib/api/failure";
+import type { AnalysisDto, AnalyzeInput } from "@/lib/messaging/protocol";
+import { firstMatch, firstText, textOf } from "./dom";
+import { languageForHost } from "./hosts";
+import { parsePrice } from "./price";
+
+interface SellerStats {
+  rating: number | null;
+  salesCount: number | null;
+}
+
+interface ProfileRequest {
+  host: string;
+  profilePath: string;
+  fetchImpl: typeof fetch;
+  timeoutMs?: number;
+}
+
+type Seller = AnalyzeInput["seller"];
+
+interface SellerCompletion {
+  listing: AnalyzeInput;
+  profilePath: string | null;
+  fetchImpl: typeof fetch;
+}
+
+interface AnalysisSender {
+  getAnalysis: (vintedId: string) => Promise<Reply<AnalysisDto>>;
+  analyze: (input: AnalyzeInput) => Promise<Reply<AnalysisDto>>;
+}
+
+interface AnalysisLoad {
+  listing: AnalyzeInput;
+  seller: () => Promise<Seller>;
+  send: AnalysisSender;
+  now?: number;
+}
+
+const PROFILE_TIMEOUT_MS = 3000;
+
+const TRUSTED_RATING = 4;
+
+const TRUSTED_SALES = 5;
+
+const MAX_RATING = 5;
+
+const NO_STATS: SellerStats = { rating: null, salesCount: null };
+
+const SELLER_CARD = ".web_ui__Card__card";
+
+const SELLER_LINK = 'a[href*="/member/"]';
+
+const USERNAMES = [
+  `${SELLER_CARD} ${SELLER_LINK} [data-testid="profile-username"]`,
+  '[data-testid="seller-username"]',
+  '[data-testid="profile-username"]',
+  ".user-info__name a",
+];
+
+const RATING_VALUES = [
+  '[data-testid="user-rating"]',
+  '[itemprop="ratingValue"]',
+  ".user-rating",
+  `${SELLER_LINK} .web_ui__Rating__rating .web_ui__Rating__label span`,
+];
+
+const RATING_LABELS = [`${SELLER_LINK} .web_ui__Rating__rating`];
+
+const SALES = [
+  '[data-testid="seller-sales-count"]',
+  ".user-sales-count",
+  ".sales-count",
+  SELLER_CARD,
+];
+
+const PROFILE_PATH = /^\/member\/[^/?#]+$/;
+
+const RATED_OUT_OF = /(\d+(?:[.,]\d+)?)\s*sur\s*\d+/i;
+
+const SALES_COUNT = /(\d+)\s*vente/i;
+
+const toRating = (text: string | null | undefined): number | null => {
+  const rating = text ? parsePrice(text) : null;
+
+  return rating !== null && rating <= MAX_RATING ? rating : null;
+};
+
+const readRating = (root: ParentNode): number | null =>
+  firstMatch(root, RATING_VALUES, (element) =>
+    toRating(element.getAttribute("content") ?? textOf(element)),
+  ) ??
+  firstMatch(root, RATING_LABELS, (element) =>
+    toRating(element.getAttribute("aria-label")?.match(RATED_OUT_OF)?.[1]),
+  );
+
+const readSalesCount = (root: ParentNode): number | null =>
+  firstMatch(root, SALES, (element) => {
+    const count = textOf(element)?.match(SALES_COUNT)?.[1];
+
+    return count ? Number.parseInt(count, 10) : null;
+  });
+
+export const readSellerStats = (root: ParentNode): SellerStats => ({
+  rating: readRating(root),
+  salesCount: readSalesCount(root),
+});
+
+export const readSellerUsername = (doc: Document): string | null =>
+  firstText(doc, USERNAMES);
+
+const profilePathOf = (link: Element | null): string | null => {
+  const href = link?.getAttribute("href");
+  if (!href) return null;
+
+  const { pathname } = new URL(href, "https://www.vinted.fr");
+
+  return PROFILE_PATH.test(pathname) ? pathname : null;
+};
+
+export const readSellerProfilePath = (doc: Document): string | null =>
+  profilePathOf(doc.querySelector(`${SELLER_CARD} ${SELLER_LINK}`)) ??
+  profilePathOf(doc.querySelector(SELLER_LINK));
+
+export const memberProfilePath = (username: string): string =>
+  `/member/${encodeURIComponent(username)}`;
+
+export const fetchSellerProfile = async ({
+  host,
+  profilePath,
+  fetchImpl,
+  timeoutMs = PROFILE_TIMEOUT_MS,
+}: ProfileRequest): Promise<SellerStats> => {
+  if (languageForHost(host) === null || !PROFILE_PATH.test(profilePath))
+    return NO_STATS;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetchImpl(`https://${host}${profilePath}`, {
+      credentials: "include",
+      signal: controller.signal,
+    });
+
+    if (!response.ok) return NO_STATS;
+
+    const html = await response.text();
+
+    return readSellerStats(new DOMParser().parseFromString(html, "text/html"));
+  } catch {
+    return NO_STATS;
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+export const completeSeller = async ({
+  listing,
+  profilePath,
+  fetchImpl,
+}: SellerCompletion): Promise<Seller> => {
+  const { seller } = listing;
+  const complete = seller.rating !== null && seller.salesCount !== null;
+  if (complete || !profilePath) return seller;
+
+  const profile = await fetchSellerProfile({
+    host: new URL(listing.url).host,
+    profilePath,
+    fetchImpl,
+  });
+
+  return {
+    username: seller.username,
+    rating: seller.rating ?? profile.rating,
+    salesCount: seller.salesCount ?? profile.salesCount,
+  };
+};
+
+export const needsSellerCheck = ({ rating, salesCount }: Seller): boolean =>
+  rating === null ||
+  salesCount === null ||
+  rating < TRUSTED_RATING ||
+  salesCount < TRUSTED_SALES;
+
+const isFresh = (reply: Reply<AnalysisDto>, now: number): boolean =>
+  reply.ok && Date.parse(reply.data.analyzedAt) + ANALYSIS_FRESH_FOR_MS > now;
+
+const isMissing = (reply: Reply<AnalysisDto>): boolean =>
+  !reply.ok &&
+  reply.failure.kind === "api" &&
+  reply.failure.code === "ANALYSIS_NOT_FOUND";
+
+export const loadAnalysis = async ({
+  listing,
+  seller,
+  send,
+  now = Date.now(),
+}: AnalysisLoad): Promise<Reply<AnalysisDto>> => {
+  if (!listing.forceRefresh) {
+    const stored = await send.getAnalysis(listing.vintedId);
+    if (isFresh(stored, now)) return stored;
+
+    if (!stored.ok && !isMissing(stored)) return stored;
+  }
+
+  return send.analyze({ ...listing, seller: await seller() });
+};

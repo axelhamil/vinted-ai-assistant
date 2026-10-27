@@ -1,0 +1,11 @@
+#!/bin/sh
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+  echo "Uncommitted changes detected. Commit before pushing."
+  exit 1
+fi
+
+pnpm check:all

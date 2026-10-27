@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Vendre un article | Vinted</title>
+  </head>
+  <body>
+    <main class="item-upload">
+      <form>
+        <div data-testid="photo-upload" class="photo-upload__dropzone">
+          <input type="file" accept="image/jpeg,image/png" multiple hidden />
+          <span>Ajoute des photos</span>
+        </div>
+
+        <label for="title">Titre</label>
+        <input id="title" name="title" data-testid="title-input" type="text" />
+
+        <label for="description">Décris ton article</label>
+        <textarea
+          id="description"
+          name="description"
+          data-testid="description-input"
+        ></textarea>
+
+        <label for="price">Prix</label>
+        <input id="price" name="price" data-testid="price-input" type="text" />
+      </form>
+    </main>
+  </body>
+</html>

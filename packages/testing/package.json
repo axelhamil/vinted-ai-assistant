@@ -1,0 +1,38 @@
+{
+  "name": "@packages/testing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./port-mock": "./src/port-mock.ts",
+    "./instrumentation-mock": "./src/instrumentation-mock.ts",
+    "./install-fetch-guard": "./src/install-fetch-guard.ts",
+    "./isolation-guard": "./src/isolation-guard.ts",
+    "./test-database": "./src/test-database.ts",
+    "./clone-database": "./src/clone-database.ts",
+    "./per-file-setup": "./src/per-file-setup.ts",
+    "./global-setup": "./src/global-setup.ts",
+    "./unit-of-work-mock": "./src/unit-of-work-mock.ts",
+    "./db-helpers": "./src/db-helpers.ts",
+    "./source-scan": "./src/source-scan.ts",
+    "./layering": "./src/layering.ts",
+    "./prompt-injection": "./src/prompt-injection.ts"
+  },
+  "scripts": {
+    "type-check": "tsc7 -v && tsc7 --noEmit",
+    "test": "bun --config=../../bunfig.toml test"
+  },
+  "dependencies": {
+    "@packages/ddd-kit": "workspace:*",
+    "@packages/drizzle": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@packages/typescript-config": "workspace:*",
+    "@types/bun": "^1.4.4",
+    "@types/node": "^24.19.2",
+    "@types/pg": "^8.23.1",
+    "typescript": "~6.0.3"
+  }
+}

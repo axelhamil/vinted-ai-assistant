@@ -1,0 +1,38 @@
+{
+  "name": "@packages/drizzle",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./config": "./src/config.ts",
+    "./migrate": "./src/migrate.ts",
+    "./migration-journal": "./src/migration-journal.ts",
+    "./migrations-folder": "./src/migrations-folder.ts",
+    "./unique-violation": "./src/unique-violation.ts",
+    "./unit-of-work": "./src/services/unit-of-work.ts"
+  },
+  "scripts": {
+    "db:generate": "if ls ../modules/*/schemas/*.ts >/dev/null 2>&1; then drizzle-kit generate; else echo 'db:generate: no module schema under packages/modules/*/schemas yet, nothing to generate'; fi",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:migrate": "bun --env-file=../../.env src/migrate.ts",
+    "db:drift": "node scripts/check-drift.mjs",
+    "type-check": "tsc7 -v && tsc7 --noEmit",
+    "test": "bun --config=../../bunfig.toml test",
+    "test:db": "bun ../testing/src/global-setup.ts && bun --config=../../bunfig.db.toml test --isolate --timeout=15000 .db.test.ts"
+  },
+  "dependencies": {
+    "@packages/ddd-kit": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@packages/typescript-config": "workspace:*",
+    "@types/bun": "^1.4.4",
+    "@types/node": "^24.19.2",
+    "@types/pg": "^8.23.1",
+    "dotenv": "^18.0.8",
+    "drizzle-kit": "^0.31.11",
+    "typescript": "~6.0.3"
+  }
+}

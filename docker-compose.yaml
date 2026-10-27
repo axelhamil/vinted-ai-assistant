@@ -1,0 +1,217 @@
+name: vinted
+
+x-dev-build: &dev-build
+  context: .
+  dockerfile: apps/api/Dockerfile
+  target: dev
+
+x-dev-database-url: &dev-database-url postgres://postgres:postgres@db:5432/vinted
+
+x-api-healthcheck: &api-healthcheck
+  test:
+    - CMD
+    - bun
+    - -e
+    - fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
+  interval: 5s
+  timeout: 5s
+  retries: 20
+  start_period: 20s
+
+x-api-environment: &api-environment
+  NODE_ENV: development
+  PORT: "3000"
+  DATABASE_URL: *dev-database-url
+  LOG_LEVEL: info
+  SENTRY_DSN: ""
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+
+x-prod-smoke-service: &prod-smoke-service
+  image: vinted/api:prod-local
+  build:
+    context: .
+    dockerfile: apps/api/Dockerfile
+    target: production
+  profiles: [prod-smoke]
+
+x-live-database-url: &live-database-url postgres://postgres:${POSTGRES_PASSWORD:-}@db-prod:5432/vinted
+
+x-live-service: &live-service
+  image: vinted/api:live
+  build:
+    context: .
+    dockerfile: apps/api/Dockerfile
+    target: production
+  profiles: [prod]
+
+services:
+  db:
+    image: postgres:18.6-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5442:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: vinted
+    volumes:
+      - vinted_dev_pg:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vinted"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  postgres-test:
+    image: postgres:18.6-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5445:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    image: vinted/dev:local
+    build: *dev-build
+    profiles: [dev]
+    working_dir: /app
+    command: ["bun", "/app/packages/drizzle/src/migrate.ts"]
+    environment:
+      DATABASE_URL: *dev-database-url
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    image: vinted/dev:local
+    build: *dev-build
+    profiles: [dev]
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment: *api-environment
+    healthcheck: *api-healthcheck
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/api/src
+          target: /app/apps/api/src
+        - action: sync
+          path: ./apps/api/common
+          target: /app/apps/api/common
+        - action: sync
+          path: ./packages
+          target: /app/packages
+          ignore: [node_modules/, dist/, coverage/]
+        - action: rebuild
+          path: ./pnpm-lock.yaml
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./apps/api/package.json
+        - action: rebuild
+          path: ./packages/ai/package.json
+        - action: rebuild
+          path: ./packages/ddd-kit/package.json
+        - action: rebuild
+          path: ./packages/drizzle/package.json
+        - action: rebuild
+          path: ./packages/outbox/package.json
+        - action: rebuild
+          path: ./packages/testing/package.json
+        - action: rebuild
+          path: ./packages/typescript-config/package.json
+        - action: rebuild
+          path: ./packages/modules/analysis/package.json
+        - action: rebuild
+          path: ./packages/modules/studio/package.json
+        - action: rebuild
+          path: ./.bun-version
+        - action: rebuild
+          path: ./apps/api/Dockerfile
+
+  migrate-prod:
+    <<: *prod-smoke-service
+    command: ["bun", "/app/packages/drizzle/src/migrate.ts"]
+    environment:
+      DATABASE_URL: *dev-database-url
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api-prod:
+    <<: *prod-smoke-service
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      <<: *api-environment
+      NODE_ENV: production
+    depends_on:
+      migrate-prod:
+        condition: service_completed_successfully
+
+  db-prod:
+    image: postgres:18.6-alpine
+    profiles: [prod]
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_DB: vinted
+    volumes:
+      - vinted_prod_pg:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vinted"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrate-live:
+    <<: *live-service
+    command: ["bun", "/app/packages/drizzle/src/migrate.ts"]
+    environment:
+      DATABASE_URL: *live-database-url
+    depends_on:
+      db-prod:
+        condition: service_healthy
+
+  api-live:
+    <<: *live-service
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${API_PORT:-3000}:3000"
+    environment:
+      <<: *api-environment
+      NODE_ENV: production
+      DATABASE_URL: *live-database-url
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    healthcheck:
+      <<: *api-healthcheck
+      test:
+        - CMD
+        - bun
+        - -e
+        - fetch('http://127.0.0.1:3000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
+      interval: 10s
+      retries: 6
+    depends_on:
+      migrate-live:
+        condition: service_completed_successfully
+      db-prod:
+        condition: service_healthy
+
+volumes:
+  vinted_dev_pg:
+  vinted_prod_pg:

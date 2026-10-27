@@ -1,27 +1,59 @@
 {
-	"name": "vinted-ai-assistant",
-	"version": "1.1.0",
-	"private": true,
-	"type": "module",
-	"workspaces": ["apps/*", "packages/*"],
-	"scripts": {
-		"dev": "turbo dev",
-		"build": "turbo build",
-		"lint": "turbo lint",
-		"lint:fix": "biome check --write .",
-		"typecheck": "turbo typecheck",
-		"db:push": "pnpm --filter backend db:push",
-		"db:generate": "pnpm --filter backend db:generate",
-		"db:migrate": "pnpm --filter backend db:migrate",
-		"db:studio": "pnpm --filter backend db:studio"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^1.9.4",
-		"turbo": "^2.7.5",
-		"typescript": "^5.7.2"
-	},
-	"packageManager": "pnpm@9.15.4",
-	"engines": {
-		"node": ">=20.0.0"
-	}
+  "name": "vinted-ai-assistant",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "docker compose --profile dev up --build --watch api",
+    "dev:up": "docker compose --profile dev up -d --build --wait api",
+    "dev:down": "docker compose --profile dev --profile prod-smoke down",
+    "dev:smoke": "docker compose --profile prod-smoke up -d --build --wait api-prod migrate-prod && curl -fsS http://127.0.0.1:3001/health/ready",
+    "dev:ext": "pnpm --filter extension dev",
+    "import:sqlite": "pnpm --filter api import:sqlite",
+    "dev:psql": "docker compose exec db psql -U postgres -d vinted",
+    "build": "turbo build",
+    "lint:fix": "biome check --write .",
+    "db:generate": "turbo db:generate",
+    "db:migrate": "turbo db:migrate",
+    "db:drift": "pnpm --filter @packages/drizzle db:drift",
+    "db": "docker compose up -d --wait db postgres-test",
+    "db:down": "docker compose down",
+    "check": "biome check .",
+    "fix": "biome check --write .",
+    "ci:check": "biome ci .",
+    "type-check": "turbo type-check",
+    "test": "turbo test",
+    "test:db": "turbo test:db --concurrency=1",
+    "check:duplication": "jscpd ./packages ./apps",
+    "check:unused": "knip",
+    "check:boundaries": "depcruise packages apps --config .dependency-cruiser.cjs",
+    "check:image": "docker build --file apps/api/Dockerfile --target production --tag vinted/api:budget . && bash scripts/check-image-size.sh vinted/api:budget 510",
+    "check:all": "pnpm type-check && pnpm db:drift && pnpm check && pnpm check:duplication && pnpm check:unused && pnpm check:boundaries && pnpm test && pnpm test:db",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.3",
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@types/bun": "^1.4.4",
+    "dependency-cruiser": "^18.7.0",
+    "husky": "^9.1.7",
+    "jscpd": "^5.4.2",
+    "knip": "^6.43.0",
+    "lint-staged": "^17.6.0",
+    "turbo": "^2.11.9",
+    "typescript": "~6.0.3"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,cjs,mjs}": [
+      "biome check --write --no-errors-on-unmatched"
+    ],
+    "*.{json,md,css,scss,html,yml,yaml}": [
+      "biome format --write --no-errors-on-unmatched"
+    ]
+  },
+  "packageManager": "pnpm@12.14.0",
+  "engines": {
+    "node": ">=24.22.1"
+  }
 }

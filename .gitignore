@@ -18,8 +18,8 @@ build/
 
 # Environment
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
 # IDE
 .idea/
@@ -31,16 +31,21 @@ build/
 .DS_Store
 Thumbs.db
 
+# Coverage
+coverage/
+
+# Worktrees
+.worktrees/
+.superpowers/
+
 # Logs
 *.log
 npm-debug.log*
 pnpm-debug.log*
 
-# Drizzle
-drizzle/
-
 # Extension build
-apps/extension/dist/
+.output/
+.wxt/
 
 # pnpm store
 .pnpm-store/

@@ -1,0 +1,31 @@
+{
+  "name": "@packages/studio",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./studio.module": "./src/studio.module.ts",
+    "./errors": "./src/errors.ts",
+    "./domain/*": "./src/domain/*.ts",
+    "./application/*": "./src/application/*.ts",
+    "./infrastructure/*": "./src/infrastructure/*.ts"
+  },
+  "scripts": {
+    "type-check": "tsc7 -v && tsc7 --noEmit",
+    "test": "bun --config=../../../bunfig.toml test"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.9.1",
+    "@packages/ai": "workspace:*",
+    "@packages/ddd-kit": "workspace:*",
+    "hono": "^4.13.14",
+    "inwire": "^4.0.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@packages/testing": "workspace:*",
+    "@packages/typescript-config": "workspace:*",
+    "@types/bun": "^1.4.4",
+    "typescript": "~6.0.3"
+  }
+}

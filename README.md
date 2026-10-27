@@ -1,171 +1,86 @@
 # Vinted AI Assistant
 
-> Smart Chrome extension that uses AI to analyze Vinted listings in real-time.
+A Chrome extension and a self-hosted API that analyze Vinted listings with Gemini and tell you whether an item is worth buying to resell.
 
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
-![React](https://img.shields.io/badge/React-19-61dafb)
-![Bun](https://img.shields.io/badge/Bun-runtime-f9f1e1)
 
-## Features
+## What it does
 
-- **Opportunity Score (1-10)** — Instant evaluation based on price, market value, and key signals
-- **Market Price Estimation** — Real-time Google search comparing 8-10 sources
-- **Negotiation Scripts** — Customizable AI-generated messages (friendly, direct, urgent)
-- **Resale Tips** — Recommended price and suggested platforms
-- **Authenticity Check** — Visual analysis for branded items
-- **Photo Analysis** — Quality assessment and defect detection
+- **Opportunity score (1 to 10)**, margin and suggested offer, computed by the domain from the facts the model returns (observed market prices, condition, photo findings).
+- **Negotiation message** in three tones (friendly, direct, urgent), regenerated on demand.
+- **Resale advice and market sources** found with Google Search grounding.
+- **Portfolio** of analyzed items with statuses (analyzed, watching, bought, sold, archived), stats and Markdown export.
+- **Photo studio** on the new listing page: edit photos with 5 presets or a free instruction, and get a suggested title, description, condition and price.
 
-## Quick Start (Non Developers)
+The extension runs on every Vinted domain it supports (fr, de, be, at and others listed in `apps/extension/lib/vinted/hosts.ts`). Analyses are stored in your own Postgres.
 
-> **One-click installation** — No coding required!
+## Requirements
 
-1. **Download** the latest release: [Releases](https://github.com/your-username/vinted-ai-assistant/releases/latest)
-2. **Extract** the ZIP file
-3. **Double-click** the installer for your system:
-   - **Windows**: `installer/install-windows.bat`
-   - **macOS**: `installer/install-macos.command`
-   - **Linux**: `installer/install-linux.sh`
-4. **Follow** the on-screen instructions (you'll need a free API key from [Google AI Studio](https://aistudio.google.com/apikey))
+- Docker with Compose
+- Node 24.22.1 or later and pnpm 12
+- Bun 1.4.4 for tests outside Docker
+- A Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
 
-The installer will:
-- Install all required tools (pnpm, Bun)
-- Configure your API key
-- Build the extension
-- Start the server
-- Guide you to install the Chrome extension
+## Quick start (development)
 
-**Subsequent launches**: Just double-click the same file — it will detect the existing installation and start the server directly.
+```bash
+pnpm install
+cp .env.example .env        # set GEMINI_API_KEY
+pnpm dev                    # Postgres, migrations and the api on http://localhost:3000, watch mode
+pnpm dev:ext                # in a second terminal: Chrome with the extension loaded
+```
+
+Open a Vinted item page: the sidebar shows the analysis. To load a build in your own Chrome instead, see [apps/extension/README.md](apps/extension/README.md).
+
+## Production
+
+```bash
+cp .env.example .env        # set POSTGRES_PASSWORD and GEMINI_API_KEY, optionally API_PORT
+docker compose --profile prod up -d --build --wait api-live
+```
+
+The api listens on `127.0.0.1:${API_PORT:-3000}` and Postgres is not published. Updates, backups and the full setup are in [docs/deploy.md](docs/deploy.md).
+
+### Import a legacy SQLite portfolio
+
+In development, `pnpm import:sqlite` writes into the database of `DATABASE_URL` in `.env`, the dev Postgres. Pass an absolute path, the command runs from `apps/api`:
+
+```bash
+pnpm import:sqlite /absolute/path/to/legacy.db --dry-run   # report only
+pnpm import:sqlite /absolute/path/to/legacy.db
+```
+
+The production import runs in the image, see [docs/deploy.md](docs/deploy.md#import-a-legacy-sqlite-portfolio). Items already in Postgres are skipped, never overwritten. Rows that fail validation are listed and the command exits 1.
 
 ## Architecture
 
 ```
-vinted-ai-assistant/
-├── apps/
-│   ├── backend/          # Hono + Bun API
-│   │   ├── src/
-│   │   │   ├── adapters/       # Controllers
-│   │   │   ├── application/    # Use cases, DTOs
-│   │   │   ├── domain/         # Entities, Value Objects
-│   │   │   └── infrastructure/ # DB, AI Providers
-│   │   └── data/               # SQLite database
-│   │
-│   └── extension/        # Chrome Extension (React + Vite)
-│       └── src/
-│           ├── background/     # Service Worker
-│           ├── content/        # Content Script (UI)
-│           ├── popup/          # Extension Popup
-│           └── stores/         # Zustand State
-│
-└── packages/
-    └── shared/           # Shared types
+apps/
+  api/                Hono host on Bun, composition root (inwire), Dockerfile
+  extension/          WXT extension: background, content scripts, popup
+packages/
+  modules/analysis/   listing analysis and portfolio (aggregate, use cases, Drizzle repository, routes)
+  modules/studio/     photo edits and listing suggestions (stateless)
+  ai/                 Gemini client on @google/genai
+  ddd-kit/            Result, Option, aggregates, value objects, events, unit of work
+  drizzle/            Postgres pool, migrations, migrator
+  outbox/             transactional outbox and relay
+  testing/            port mocks, template database clones, fetch guard
 ```
 
-## Tech Stack
+The extension never calls the api from a page: the background service worker owns the typed Hono client and the content scripts and popup talk to it through messages. Module boundaries are enforced by `pnpm check:boundaries`. Contributor details are in [CLAUDE.md](CLAUDE.md).
 
-| Component | Technologies |
-|-----------|-------------|
-| **Backend** | Bun, Hono, Drizzle ORM, SQLite |
-| **Extension** | React 19, Vite, Tailwind CSS, Zustand |
-| **AI** | Google Gemini (with Google Search grounding), OpenAI |
-| **Monorepo** | pnpm workspaces, Turborepo |
-
-## Installation (Developers)
-
-### Prerequisites
-
-- [Bun](https://bun.sh/) >= 1.0
-- [pnpm](https://pnpm.io/) >= 8.0
-- Gemini or OpenAI API key
-
-### Setup
+## Checks
 
 ```bash
-# Clone the repo
-git clone https://github.com/your-username/vinted-ai-assistant.git
-cd vinted-ai-assistant
-
-# Install dependencies
-pnpm install
-
-# Configure environment
-cp apps/backend/.env.example apps/backend/.env
-# Edit .env with your API key
-
-# Start the backend
-pnpm --filter backend dev
-
-# Build the extension
-pnpm --filter extension build
+pnpm db           # Postgres for dev and tests
+pnpm check:all    # type-check, schema drift, Biome, duplication, unused code, boundaries, tests, database tests
 ```
 
-### Load extension in Chrome
+## Releases
 
-1. Open `chrome://extensions/`
-2. Enable "Developer mode"
-3. Click "Load unpacked"
-4. Select the `apps/extension/dist/` folder
-
-## Configuration
-
-### Environment Variables (Backend)
-
-```env
-# AI Provider (choose one)
-GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_api_key
-OPENAI_API_KEY=your_openai_api_key
-
-# Server
-PORT=3000
-```
-
-### Extension Settings
-
-Accessible via the extension popup:
-- **Backend URL** — Default `http://localhost:3000`
-- **Score Threshold** — Minimum score for notification (default: 7)
-- **Auto-open Sidebar** — Automatically open the sidebar
-
-## Usage
-
-1. Navigate to a Vinted item page (e.g., `vinted.fr/items/123456`)
-2. The extension automatically analyzes the item
-3. A badge appears on the photo with the score
-4. Click to open the sidebar with the full analysis
-5. Navigate between tabs: Insight, Negotiate, Resell, Sources
-
-## Screenshots
-
-*Coming soon*
-
-## Development
-
-```bash
-# Run everything in dev mode
-pnpm dev
-
-# Production build
-pnpm build
-
-# Type check
-pnpm typecheck
-
-# Linter
-pnpm lint
-```
-
-## Roadmap
-
-- [ ] Multi-country support (DE, IT, ES, etc.)
-- [ ] Price history
-- [ ] Price alerts
-- [ ] CSV/Excel export
-- [ ] Dark mode
+Versions are cut by release-please from Conventional Commits; each GitHub release carries the extension zip. See [docs/releasing.md](docs/releasing.md).
 
 ## License
 
-This project is licensed under [AGPL-3.0](./LICENSE). Any use of the code (including SaaS) requires sharing modifications under the same license.
-
----
-
-**Disclaimer**: This project is not affiliated with Vinted. Use responsibly and respect Vinted's terms of service.
+[AGPL-3.0](LICENSE). Not affiliated with Vinted; respect its terms of service.

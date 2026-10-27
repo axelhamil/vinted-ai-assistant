@@ -1,0 +1,33 @@
+{
+  "name": "@packages/outbox",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./outbox-table": "./src/outbox-table.ts",
+    "./outbox-flush-handler": "./src/outbox-flush-handler.ts",
+    "./drizzle-outbox.repository": "./src/drizzle-outbox.repository.ts",
+    "./outbox-relay": "./src/outbox-relay.ts",
+    "./relay-loop": "./src/relay-loop.ts",
+    "./outbox-listener": "./src/outbox-listener.ts"
+  },
+  "scripts": {
+    "type-check": "tsc7 -v && tsc7 --noEmit",
+    "test": "bun --config=../../bunfig.toml test",
+    "test:db": "bun ../testing/src/global-setup.ts && bun --config=../../bunfig.db.toml test --isolate --timeout=15000 .db.test.ts"
+  },
+  "dependencies": {
+    "@packages/ddd-kit": "workspace:*",
+    "@packages/drizzle": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@packages/testing": "workspace:*",
+    "@packages/typescript-config": "workspace:*",
+    "@types/bun": "^1.4.4",
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "^0.31.11",
+    "typescript": "~6.0.3"
+  }
+}
