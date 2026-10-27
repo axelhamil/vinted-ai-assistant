@@ -15,9 +15,9 @@ import type {
   StudioPresetNotFound,
 } from "../../errors";
 import type {
-  GroundingSource,
   IListingSuggester,
   ListingSuggestionRequest,
+  SuggestedListing,
 } from "../ports/listing-suggester.port";
 import type { EditedPhoto, IPhotoEditor } from "../ports/photo-editor.port";
 
@@ -49,11 +49,6 @@ export interface SuggestListingInput {
   existingTitle?: string;
 }
 
-export interface SuggestedListing {
-  suggestion: ListingSuggestion;
-  groundingSources: GroundingSource[];
-}
-
 function toSuggestionRequest(
   input: SuggestListingInput,
 ): Result<ListingSuggestionRequest, StudioInputInvalid> {
@@ -77,7 +72,7 @@ export class StudioService {
   ) {}
 
   listPresets(): SystemPreset[] {
-    return [...SYSTEM_PRESETS].sort((a, b) => a.sortOrder - b.sortOrder);
+    return [...SYSTEM_PRESETS];
   }
 
   async editWithPreset({

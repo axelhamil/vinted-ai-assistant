@@ -162,6 +162,29 @@ describe("the analysis routes on the real database", () => {
     },
   );
 
+  it("answers 413 REQUEST_TOO_LARGE for a body over 1 MB before calling the model", async () => {
+    const { api, factsReader } = givenApi();
+
+    const response = await api.request("/api/analyses", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        ...listingBody,
+        description: "a".repeat(1024 * 1024),
+      }),
+    });
+
+    expect(response.status).toBe(413);
+    expect(await response.json()).toMatchObject({
+      error: {
+        code: "REQUEST_TOO_LARGE",
+        message:
+          "The request body exceeds 1 MB. Send a smaller request body and retry.",
+      },
+    });
+    expect(factsReader.read).not.toHaveBeenCalled();
+  });
+
   it("treats a blank portfolio limit as unset", async () => {
     await send("POST", "/api/analyses", listingBody);
 

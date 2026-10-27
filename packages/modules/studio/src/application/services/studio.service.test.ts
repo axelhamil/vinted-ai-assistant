@@ -43,16 +43,6 @@ function given(facts: ListingSuggestionFacts = buildFacts()) {
   return { studio, photoEditor, listingSuggester, logger };
 }
 
-describe("studio presets", () => {
-  it("lists the system presets by sort order", () => {
-    const { studio } = given();
-
-    const orders = studio.listPresets().map(({ sortOrder }) => sortOrder);
-
-    expect(orders).toEqual([1, 2, 3, 4, 5]);
-  });
-});
-
 describe("editing a photo", () => {
   it("answers preset not found for an unknown preset, without calling the editor", async () => {
     const { studio, photoEditor } = given();
@@ -215,6 +205,18 @@ describe("suggesting a listing", () => {
 
     expect(result.getError()).toBe("STUDIO_AI_PROVIDER_FAILURE");
     expect(logger.warn).toHaveBeenCalled();
+  });
+
+  it("refuses 11 photos before calling the model", async () => {
+    const { studio, listingSuggester } = given();
+
+    const result = await studio.suggestListing({
+      photos: Array.from({ length: 11 }, () => PHOTO),
+      language: "fr",
+    });
+
+    expect(result.getError()).toBe("STUDIO_INPUT_INVALID");
+    expect(listingSuggester.suggest).not.toHaveBeenCalled();
   });
 
   it("refuses an unsupported language before calling the model", async () => {

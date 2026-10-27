@@ -13,7 +13,6 @@ export interface SystemPreset {
   name: string;
   description: string;
   background: string;
-  sortOrder: number;
 }
 
 const DEFINITIONS: Readonly<Record<PresetIdValue, Omit<SystemPreset, "id">>> = {
@@ -23,7 +22,6 @@ const DEFINITIONS: Readonly<Record<PresetIdValue, Omit<SystemPreset, "id">>> = {
       "Clean white table with subtle texture and soft lighting. Perfect for e-commerce.",
     background:
       "A white table with a subtle matte texture, like painted wood or laminate, lit by soft diffused light from above that casts gentle shadows under the item.",
-    sortOrder: 1,
   },
   "preset-marble-surface": {
     name: "Marble Surface",
@@ -31,7 +29,6 @@ const DEFINITIONS: Readonly<Record<PresetIdValue, Omit<SystemPreset, "id">>> = {
       "Elegant marble surface with subtle reflections. Ideal for luxury items.",
     background:
       "An elegant white or light grey marble surface with subtle veining, lit by soft natural light with gentle shadows.",
-    sortOrder: 2,
   },
   "preset-lifestyle": {
     name: "Lifestyle Setting",
@@ -39,7 +36,6 @@ const DEFINITIONS: Readonly<Record<PresetIdValue, Omit<SystemPreset, "id">>> = {
       "Cozy lifestyle environment with natural light. Great for casual items.",
     background:
       "A cozy room with a wooden floor and neutral furniture, lit by warm natural daylight.",
-    sortOrder: 3,
   },
   "preset-fashion-editorial": {
     name: "Fashion Editorial",
@@ -47,14 +43,12 @@ const DEFINITIONS: Readonly<Record<PresetIdValue, Omit<SystemPreset, "id">>> = {
       "Dramatic editorial style with bold lighting. Perfect for statement pieces.",
     background:
       "A solid charcoal grey or muted backdrop, lit by dramatic studio lighting with defined shadows.",
-    sortOrder: 4,
   },
   "preset-minimalist": {
     name: "Minimalist",
     description: "Neutral grey background with clean, balanced lighting.",
     background:
       "A seamless neutral grey (#E5E5E5) backdrop, lit by balanced, even studio lighting.",
-    sortOrder: 5,
   },
 };
 

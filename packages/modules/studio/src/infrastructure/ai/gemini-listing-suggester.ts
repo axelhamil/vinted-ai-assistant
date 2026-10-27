@@ -1,4 +1,3 @@
-import { moduleFailureCode } from "@packages/ai/failure-codes";
 import type { AiFailure } from "@packages/ai/failures";
 import type { GeminiClient } from "@packages/ai/gemini-client";
 import { type ILogger, Option, Result } from "@packages/ddd-kit";
@@ -9,6 +8,7 @@ import type {
 } from "../../application/ports/listing-suggester.port";
 import type { ListingSuggestionFacts } from "../../domain/listing-suggestion";
 import type { StudioAiCode } from "../../errors";
+import { toStudioFailure } from "./ai-failure.mapping";
 import type { ImageReader } from "./image-reader";
 import { listingSuggestionPrompt } from "./prompts/listing-suggestion.prompt";
 import {
@@ -16,7 +16,9 @@ import {
   listingSuggestionSchema,
 } from "./suggestion.schema";
 
-const SUGGESTED_PHOTOS = 10;
+function filled(value: string | null): Option<string> {
+  return Option.fromNullable(value?.trim() || null);
+}
 
 function toFacts({
   suggestedPriceEuros,
@@ -24,10 +26,11 @@ function toFacts({
 }: ListingSuggestionAnswer): ListingSuggestionFacts {
   return {
     ...answer,
-    brand: Option.fromNullable(answer.brand),
-    category: Option.fromNullable(answer.category),
-    size: Option.fromNullable(answer.size),
-    material: Option.fromNullable(answer.material),
+    brand: filled(answer.brand),
+    colors: answer.colors.filter((color) => color.trim() !== ""),
+    category: filled(answer.category),
+    size: filled(answer.size),
+    material: filled(answer.material),
     priceCents: Math.round(suggestedPriceEuros * 100),
   };
 }
@@ -45,15 +48,14 @@ export class GeminiListingSuggester implements IListingSuggester {
       "[Studio] listing could not be suggested",
     );
 
-    return Result.fail(moduleFailureCode("STUDIO", failure));
+    return Result.fail(toStudioFailure(failure));
   }
 
   async suggest(
     request: ListingSuggestionRequest,
   ): Promise<Result<SuggesterReading, StudioAiCode>> {
-    const photos = request.photos.slice(0, SUGGESTED_PHOTOS);
     const images = Result.all(
-      await Promise.all(photos.map((photo) => this.readImage(photo))),
+      await Promise.all(request.photos.map((photo) => this.readImage(photo))),
     );
     if (images.isFailure) return this.failed(images.getError());
 

@@ -98,18 +98,29 @@ describe("GeminiListingSuggester", () => {
     );
   });
 
-  it("parses only the first 10 of 12 photos", async () => {
-    const { readImage, suggester } = given();
-    const photos = Array.from(
-      { length: 12 },
-      (_, index) => `https://images1.vinted.net/t/${index}.jpeg`,
+  it("reads a blank brand, category, size, material or colour as absent", async () => {
+    const { gemini, suggester } = given();
+    gemini.generateStructured.mockResolvedValue(
+      Result.ok({
+        data: {
+          ...ANSWER,
+          brand: "",
+          category: "  ",
+          size: " ",
+          material: "",
+          colors: ["Blue", " "],
+        },
+        sources: [],
+      }),
     );
 
-    await suggester.suggest(request({ photos }));
+    const { facts } = (await suggester.suggest(request())).getValue();
 
-    expect(readImage.mock.calls.map(([photo]) => photo)).toEqual(
-      photos.slice(0, 10),
-    );
+    expect(facts.brand.isNone()).toBe(true);
+    expect(facts.category.isNone()).toBe(true);
+    expect(facts.size.isNone()).toBe(true);
+    expect(facts.material.isNone()).toBe(true);
+    expect(facts.colors).toEqual(["Blue"]);
   });
 
   it("keeps an existing title that closes the data block inside that block", async () => {

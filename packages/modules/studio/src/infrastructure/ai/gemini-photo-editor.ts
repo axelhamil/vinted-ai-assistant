@@ -1,4 +1,3 @@
-import { moduleFailureCode } from "@packages/ai/failure-codes";
 import type { AiFailure } from "@packages/ai/failures";
 import type { GeminiClient } from "@packages/ai/gemini-client";
 import { type ILogger, Result } from "@packages/ddd-kit";
@@ -8,6 +7,7 @@ import type {
   PhotoEditRequest,
 } from "../../application/ports/photo-editor.port";
 import type { StudioAiCode } from "../../errors";
+import { toStudioFailure } from "./ai-failure.mapping";
 import type { ImageReader } from "./image-reader";
 import {
   instructionEditPrompt,
@@ -33,7 +33,7 @@ export class GeminiPhotoEditor implements IPhotoEditor {
       "[Studio] photo could not be edited",
     );
 
-    return Result.fail(moduleFailureCode("STUDIO", failure));
+    return Result.fail(toStudioFailure(failure));
   }
 
   async edit(

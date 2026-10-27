@@ -4,9 +4,11 @@ import type {
   PriceConfidence,
 } from "../../domain/listing-suggestion";
 import type { SystemPreset } from "../../domain/presets";
-import type { GroundingSource } from "../ports/listing-suggester.port";
+import type {
+  GroundingSource,
+  SuggestedListing,
+} from "../ports/listing-suggester.port";
 import type { EditedPhoto } from "../ports/photo-editor.port";
-import type { SuggestedListing } from "../services/studio.service";
 
 export interface PresetDto {
   id: string;

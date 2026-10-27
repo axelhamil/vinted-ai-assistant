@@ -1,6 +1,8 @@
 import { zValidator } from "@hono/zod-validator";
 import { AppErrorException, type Result } from "@packages/ddd-kit";
 import { Hono, type ValidationTargets } from "hono";
+import { bodyLimit } from "hono/body-limit";
+import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import {
   ANALYSIS_ERROR_MESSAGES,
@@ -24,6 +26,8 @@ export interface AnalysisRoutesDeps {
 }
 
 const DEFAULT_LANGUAGE = "fr";
+
+const ANALYZE_BODY_LIMIT_BYTES = 1024 * 1024;
 
 const MAX_EUROS = 10_000_000;
 
@@ -129,17 +133,29 @@ function toListingDto(body: AnalyzeBody): ListingDto {
 
 export function createAnalysisRoutes(deps: AnalysisRoutesDeps) {
   return new Hono()
-    .post("/analyses", validated("json", analyzeBodySchema), async (c) => {
-      const body = c.req.valid("json");
-      const analysis = succeeded(
-        await deps.AnalyzeListingUseCase.execute({
-          listing: toListingDto(body),
-          forceRefresh: body.forceRefresh,
-        }),
-      );
+    .post(
+      "/analyses",
+      bodyLimit({
+        maxSize: ANALYZE_BODY_LIMIT_BYTES,
+        onError: () => {
+          throw new HTTPException(413, {
+            message: "The request body exceeds 1 MB",
+          });
+        },
+      }),
+      validated("json", analyzeBodySchema),
+      async (c) => {
+        const body = c.req.valid("json");
+        const analysis = succeeded(
+          await deps.AnalyzeListingUseCase.execute({
+            listing: toListingDto(body),
+            forceRefresh: body.forceRefresh,
+          }),
+        );
 
-      return c.json(toAnalysisDto(analysis), 201);
-    })
+        return c.json(toAnalysisDto(analysis), 201);
+      },
+    )
     .get("/analyses/:vintedId", async (c) => {
       const analysis = succeeded(
         await deps.PortfolioService.get({ vintedId: c.req.param("vintedId") }),

@@ -23,16 +23,13 @@ describe("layering rules of the studio module", () => {
     expect(scan.throwsPerFile("application")).toEqual({});
   });
 
-  it.skipIf(!scan.exists(INFRASTRUCTURE))(
-    "reaches the AI provider from infrastructure, test fixtures and the module wiring only (skipped until infrastructure/ exists)",
-    () => {
-      expectProviderReachedOnlyFrom(scan, {
-        prefix: "@packages/ai/",
-        except: [SHARED_LANGUAGES],
-        allowedIn: [`${INFRASTRUCTURE}/`, "testing/", "studio.module.ts"],
-      });
-    },
-  );
+  it("reaches the AI provider from infrastructure, test fixtures and the module wiring only", () => {
+    expectProviderReachedOnlyFrom(scan, {
+      prefix: "@packages/ai/",
+      except: [SHARED_LANGUAGES],
+      allowedIn: [`${INFRASTRUCTURE}/`, "testing/", "studio.module.ts"],
+    });
+  });
 
   it("never reads the environment", () => {
     expectNoEnvironmentRead(scan);
