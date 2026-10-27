@@ -1,6 +1,16 @@
 import type { SuggestInput } from "@/lib/messaging/protocol";
+import { UNREADABLE_PHOTO_MESSAGE } from "./edit-queue";
 
 export const MAX_SUGGESTION_PHOTOS = 10;
+
+const agreedPhotos = (count: number, participle: string): string =>
+  count > 1 ? `${count} photos ${participle}s` : `${count} photo ${participle}`;
+
+export const droppedPhotosNotice = (count: number): string =>
+  `${agreedPhotos(count, "non envoyée")} : ${MAX_SUGGESTION_PHOTOS} photos au maximum.`;
+
+export const unreadablePhotosNotice = (count: number): string =>
+  `${agreedPhotos(count, "ignorée")} : ${UNREADABLE_PHOTO_MESSAGE.toLowerCase()}.`;
 
 interface SuggestionInputOptions {
   language: string;

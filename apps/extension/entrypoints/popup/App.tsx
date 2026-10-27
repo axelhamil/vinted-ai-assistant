@@ -43,7 +43,7 @@ export function App() {
 
   if (current.isError)
     return (
-      <main className="flex h-140 w-90 flex-col">
+      <main className="popup-panel flex h-140 w-90 flex-col">
         <ErrorPanel
           message={LOCAL_FAILURE_MESSAGE}
           onRetry={() => void current.refetch()}
@@ -58,7 +58,7 @@ export function App() {
   const settingsOpen = view === "settings";
 
   return (
-    <main className="flex h-140 w-90 flex-col">
+    <main className="popup-panel flex h-140 w-90 flex-col">
       <Header
         enabled={values.enabled}
         onEnabledChange={(enabled) => save.mutate({ enabled })}

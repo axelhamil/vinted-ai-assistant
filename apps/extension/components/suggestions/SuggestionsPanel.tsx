@@ -13,7 +13,8 @@ import { downscale } from "@/lib/photos/downscale";
 import { UNREADABLE_PHOTO_MESSAGE } from "@/lib/photos/edit-queue";
 import {
   buildSuggestionInput,
-  MAX_SUGGESTION_PHOTOS,
+  droppedPhotosNotice,
+  unreadablePhotosNotice,
 } from "@/lib/photos/suggestion-input";
 import { useBackgroundMutation } from "@/lib/ui/query";
 import { detectLanguage } from "@/lib/vinted/language";
@@ -74,9 +75,6 @@ function use(field: ListingField, value: string | number): void {
   );
 }
 
-const photos = (count: number): string =>
-  count > 1 ? `${count} photos` : `${count} photo`;
-
 export function SuggestionsPanel({ sources }: SuggestionsPanelProps) {
   const request = useBackgroundMutation(suggest);
   const result = request.data;
@@ -105,15 +103,11 @@ export function SuggestionsPanel({ sources }: SuggestionsPanelProps) {
         </p>
       )}
       {result && result.droppedCount > 0 && (
-        <p className="fact-note">
-          {photos(result.droppedCount)} non envoyées : {MAX_SUGGESTION_PHOTOS}{" "}
-          photos au maximum.
-        </p>
+        <p className="fact-note">{droppedPhotosNotice(result.droppedCount)}</p>
       )}
       {result && result.unreadableCount > 0 && (
         <p className="fact-note tone-loss">
-          {photos(result.unreadableCount)} ignorées :{" "}
-          {UNREADABLE_PHOTO_MESSAGE.toLowerCase()}.
+          {unreadablePhotosNotice(result.unreadableCount)}
         </p>
       )}
       {result && (

@@ -111,6 +111,10 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  :host > div {
+    @apply relative z-2147483000 font-sans text-ink;
+  }
 }
 
 @layer components {
@@ -188,6 +192,10 @@
 
   .error-message {
     @apply text-base text-ink;
+  }
+
+  .popup-panel {
+    @apply bg-surface font-sans text-sm text-ink;
   }
 
   .popup-header {

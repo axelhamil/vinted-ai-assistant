@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   buildSuggestionInput,
+  droppedPhotosNotice,
   MAX_SUGGESTION_PHOTOS,
+  unreadablePhotosNotice,
 } from "./suggestion-input";
 
 const MB = 1024 * 1024;
@@ -76,5 +78,25 @@ describe("buildSuggestionInput", () => {
 
     expect(built.input).toBeNull();
     expect(built.unreadableCount).toBe(1);
+  });
+});
+
+describe("suggestion notices", () => {
+  it("agrees the participle with a single photo", () => {
+    expect(droppedPhotosNotice(1)).toBe(
+      "1 photo non envoyée : 10 photos au maximum.",
+    );
+    expect(unreadablePhotosNotice(1)).toBe(
+      "1 photo ignorée : format de photo non pris en charge.",
+    );
+  });
+
+  it("agrees the participle with several photos", () => {
+    expect(droppedPhotosNotice(3)).toBe(
+      "3 photos non envoyées : 10 photos au maximum.",
+    );
+    expect(unreadablePhotosNotice(2)).toBe(
+      "2 photos ignorées : format de photo non pris en charge.",
+    );
   });
 });

@@ -18,7 +18,7 @@ export function SidebarShell({
   return (
     <aside
       aria-label="Assistant Vinted"
-      className="sidebar-panel fixed inset-y-0 right-0 z-2147483000 flex w-sidebar max-w-full flex-col"
+      className="sidebar-panel fixed inset-y-0 right-0 flex w-sidebar max-w-full flex-col"
     >
       <header className="sidebar-header flex items-start justify-between gap-stack p-gutter">
         {header}

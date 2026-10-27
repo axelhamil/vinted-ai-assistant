@@ -13,7 +13,7 @@ export function Launcher({ label, analysis, onOpen }: LauncherProps) {
   return (
     <Button
       size="lg"
-      className="fixed right-gutter bottom-gutter z-2147483000"
+      className="fixed right-gutter bottom-gutter"
       onClick={onOpen}
     >
       {analysis && (
