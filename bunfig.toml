@@ -3,4 +3,4 @@ env = false
 [test]
 preload = ["@packages/testing/install-fetch-guard"]
 randomize = true
-pathIgnorePatterns = ["**/*.db.test.ts", "apps/backend/**", "apps/extension/**"]
+pathIgnorePatterns = ["**/*.db.test.ts", "apps/extension/**"]

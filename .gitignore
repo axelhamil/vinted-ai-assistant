@@ -43,9 +43,6 @@ coverage/
 npm-debug.log*
 pnpm-debug.log*
 
-# Drizzle
-apps/backend/drizzle/
-
 # Extension build
 .output/
 .wxt/

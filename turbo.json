@@ -12,12 +12,6 @@
       "persistent": true,
       "dependsOn": ["^build"]
     },
-    "typecheck": {
-      "dependsOn": ["^build"]
-    },
-    "lint": {
-      "dependsOn": ["^build"]
-    },
     "type-check": {
       "dependsOn": ["^build"],
       "outputs": []
@@ -38,13 +32,6 @@
       "cache": false,
       "outputs": ["drizzle/migrations/**"],
       "env": ["DATABASE_URL"]
-    },
-    "db:push": {
-      "cache": false
-    },
-    "db:studio": {
-      "cache": false,
-      "persistent": true
     }
   }
 }

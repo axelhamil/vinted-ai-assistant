@@ -4,9 +4,6 @@
   "files": {
     "includes": [
       "**",
-      "!apps/backend",
-      "!packages/shared",
-      "!installer",
       "!**/migrations",
       "!**/.output",
       "!**/.wxt",

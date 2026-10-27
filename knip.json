@@ -33,7 +33,6 @@
       ]
     }
   },
-  "ignoreWorkspaces": ["apps/backend", "packages/shared", "installer"],
   "ignoreExportsUsedInFile": true,
   "rules": {
     "unlisted": "off",

@@ -7,7 +7,6 @@ allowBuilds:
   "@google/genai": false
   "@biomejs/biome": true
   "@tailwindcss/oxide": true
-  better-sqlite3: true
   esbuild: true
   protobufjs: false
   sharp: false

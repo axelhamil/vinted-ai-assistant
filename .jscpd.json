@@ -10,8 +10,6 @@
     "**/.turbo/**",
     "**/pnpm-lock.yaml",
     "**/*.d.ts",
-    "**/packages/shared/**",
-    "**/apps/backend/**",
     "**/apps/extension/components/ui/**"
   ],
   "format": ["typescript", "javascript", "tsx", "jsx"],

@@ -1,6 +1,5 @@
 const MODULES = "^packages/modules";
 const LIBS = "^packages/(?!modules/)[^/]+/";
-const LEGACY = "^(apps/backend|packages/shared|installer)/";
 const FRAMEWORKS =
   "node_modules/(hono|drizzle-orm|pg|postgres|pino|inwire|@google/genai)(/|$)";
 
@@ -108,7 +107,7 @@ module.exports = {
   ],
   options: {
     doNotFollow: { path: "node_modules" },
-    exclude: { path: `^(packages|apps)/.*/(dist|\\.output|\\.wxt)/|${LEGACY}` },
+    exclude: { path: "^(packages|apps)/.*/(dist|\\.output|\\.wxt)/" },
     tsPreCompilationDeps: true,
     combinedDependencies: true,
     enhancedResolveOptions: {
