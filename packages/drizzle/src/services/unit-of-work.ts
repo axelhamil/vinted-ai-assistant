@@ -119,9 +119,9 @@ export class DrizzleUnitOfWork implements IUnitOfWork {
     if (isFailedResult(result)) throw new FailedResultRollback(result);
     if (outermost.rollbackOnly) throw rollbackOf(outermost.failure);
 
-    await tx.execute(sql`select 1`);
     this.collect(outermost.pending);
     await flush(outermost.pending, tx);
+    await tx.execute(sql`select 1`);
 
     return result;
   }

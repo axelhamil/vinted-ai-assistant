@@ -39,6 +39,13 @@ function isFailedResult(value: unknown): boolean {
   return value instanceof Result && value.isFailure;
 }
 
+function markRollbackOnly(outermost: OutermostRun, failure: unknown): void {
+  if (outermost.rollbackOnly) return;
+
+  outermost.rollbackOnly = true;
+  outermost.failure = failure;
+}
+
 export function mockUnitOfWork(
   options: UnitOfWorkOptions = {},
 ): UnitOfWorkMock {
@@ -51,18 +58,20 @@ export function mockUnitOfWork(
     const ambient = scope.getStore();
     if (ambient) {
       const result = await EventCollector.runWithContext(async () => {
-        const nested = await work();
-        if (!isFailedResult(nested))
-          ambient.pending.push(...EventCollector.drain());
+        try {
+          const nested = await work();
+          if (!isFailedResult(nested))
+            ambient.pending.push(...EventCollector.drain());
 
-        return nested;
+          return nested;
+        } catch (error) {
+          markRollbackOnly(ambient, error);
+          throw error;
+        }
       });
       if (!isFailedResult(result)) return result;
 
-      if (!ambient.rollbackOnly) {
-        ambient.rollbackOnly = true;
-        ambient.failure = result;
-      }
+      markRollbackOnly(ambient, result);
       throw new NestedRollback(result);
     }
 
@@ -83,6 +92,7 @@ export function mockUnitOfWork(
       }
       if (outermost.rollbackOnly) {
         outcome = "rolled_back";
+        if (!isFailedResult(outermost.failure)) throw outermost.failure;
 
         return outermost.failure as typeof result;
       }

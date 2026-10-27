@@ -46,4 +46,23 @@ describe("the unit of work mock", () => {
 
     expect(outcome()).toBe("committed");
   });
+
+  it("rolls back and fails when a nested run throws and the outer work catches it", async () => {
+    const { unitOfWork, outcome, writtenEvents } = mockUnitOfWork();
+
+    const run = unitOfWork.run(async () => {
+      EventCollector.add(listingSaved);
+      try {
+        await unitOfWork.run(async () => {
+          throw new Error("nested work crashed");
+        });
+      } catch {}
+
+      return Result.ok();
+    });
+
+    await expect(run).rejects.toThrow("nested work crashed");
+    expect(outcome()).toBe("rolled_back");
+    expect(writtenEvents()).toEqual([]);
+  });
 });

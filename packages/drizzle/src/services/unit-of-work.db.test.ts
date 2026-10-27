@@ -6,7 +6,7 @@ import {
   expect,
   it,
 } from "bun:test";
-import { Result } from "@packages/ddd-kit";
+import { EventCollector, Result } from "@packages/ddd-kit";
 import { sql } from "drizzle-orm";
 import { createDb } from "../config";
 import { DrizzleUnitOfWork, resolveExecutor } from "./unit-of-work";
@@ -105,6 +105,29 @@ describe("the drizzle unit of work", () => {
     });
 
     await expect(run).rejects.toThrow("nested work crashed");
+    expect(await rowCount()).toBe(0);
+  });
+
+  it("fails and keeps nothing when the flush handler swallowed a SQL error", async () => {
+    const swallowingOutbox = new DrizzleUnitOfWork(db, async (_events, tx) => {
+      try {
+        await tx.execute(sql`insert into uow_missing_outbox values (1)`);
+      } catch {}
+    });
+
+    const run = swallowingOutbox.run(async () => {
+      await insertRow();
+      EventCollector.add({
+        eventType: "probe.inserted",
+        aggregateId: "probe-1",
+        dateOccurred: new Date(),
+        payload: {},
+      });
+
+      return Result.ok();
+    });
+
+    await expect(run).rejects.toThrow();
     expect(await rowCount()).toBe(0);
   });
 });
