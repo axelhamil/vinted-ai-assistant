@@ -9,6 +9,7 @@
     "dev:down": "docker compose --profile dev --profile prod-smoke down",
     "dev:smoke": "docker compose --profile prod-smoke up -d --build --wait api-prod migrate-prod && curl -fsS http://127.0.0.1:3001/health/ready",
     "dev:ext": "pnpm --filter extension dev",
+    "import:sqlite": "pnpm --filter api import:sqlite",
     "dev:psql": "docker compose exec db psql -U postgres -d vinted",
     "build": "turbo build",
     "lint:fix": "biome check --write .",

@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
+    "import:sqlite": "bun scripts/import-sqlite.ts",
     "type-check": "tsc7 -v && tsc7 --noEmit",
     "test": "bun --config=../../bunfig.toml test --isolate",
     "test:db": "bun ../../packages/testing/src/global-setup.ts && bun --config=../../bunfig.db.toml test --isolate --timeout=15000 .db.test.ts"

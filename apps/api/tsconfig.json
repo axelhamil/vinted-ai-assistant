@@ -6,6 +6,6 @@
     "types": ["node", "bun"],
     "noEmit": true
   },
-  "include": ["common/**/*", "src/**/*"],
+  "include": ["common/**/*", "scripts/**/*", "src/**/*"],
   "exclude": ["node_modules"]
 }
