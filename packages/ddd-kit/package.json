@@ -8,7 +8,7 @@
   },
   "scripts": {
     "type-check": "tsc7 -v && tsc7 --noEmit",
-    "test": "bun test"
+    "test": "bun --config=../../bunfig.toml test"
   },
   "peerDependencies": {
     "zod": ">=3.0.0"

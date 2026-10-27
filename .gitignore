@@ -44,7 +44,7 @@ npm-debug.log*
 pnpm-debug.log*
 
 # Drizzle
-drizzle/
+apps/backend/drizzle/
 
 # Extension build
 apps/extension/dist/
