@@ -5,7 +5,10 @@
 .superpowers
 docs
 installer
-apps/extension
+apps/extension/*
+!apps/extension/package.json
+apps/backend/*
+!apps/backend/package.json
 **/node_modules
 **/dist
 **/coverage
