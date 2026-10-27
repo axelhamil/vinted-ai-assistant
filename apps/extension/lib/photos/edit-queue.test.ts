@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { Reply } from "@/lib/api/failure";
 import type { EditedPhotoDto, EditInput } from "@/lib/messaging/protocol";
-import { editPhotoJob, runEdits, toFile } from "./edit-queue";
+import {
+  EDITED_UNREADABLE_MESSAGE,
+  editPhotoJob,
+  runEdits,
+  toFile,
+} from "./edit-queue";
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -110,5 +115,24 @@ describe("editPhotoJob", () => {
     );
 
     expect(outcome.ok && outcome.data.name).toBe("pull-retouche.png");
+  });
+
+  it("fails the photo when the edited image cannot be decoded", async () => {
+    const outcome = await editPhotoJob(
+      source,
+      { presetId: "preset-white-studio" },
+      {
+        downscale: async () => "data:image/jpeg;base64,AAAA",
+        send: async () => ({
+          ok: true,
+          data: { mimeType: "image/png", imageBase64: "%%%not base64%%%" },
+        }),
+      },
+    );
+
+    expect(outcome).toEqual({
+      ok: false,
+      failure: { kind: "local", message: EDITED_UNREADABLE_MESSAGE },
+    });
   });
 });

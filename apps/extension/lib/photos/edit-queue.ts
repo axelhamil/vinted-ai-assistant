@@ -25,6 +25,9 @@ export type EditOutcome =
 
 export const UNREADABLE_PHOTO_MESSAGE = "Format de photo non pris en charge";
 
+export const EDITED_UNREADABLE_MESSAGE =
+  "La photo retouchée est illisible. Relancez la retouche.";
+
 const DEFAULT_CONCURRENCY = 3;
 
 const EXTENSIONS: Record<string, string> = {
@@ -96,8 +99,15 @@ export async function editPhotoJob(
   );
   if (!reply.ok) return reply;
 
-  return {
-    ok: true,
-    data: toFile(reply.data, editedName(source.name, reply.data.mimeType)),
-  };
+  try {
+    return {
+      ok: true,
+      data: toFile(reply.data, editedName(source.name, reply.data.mimeType)),
+    };
+  } catch {
+    return {
+      ok: false,
+      failure: { kind: "local", message: EDITED_UNREADABLE_MESSAGE },
+    };
+  }
 }

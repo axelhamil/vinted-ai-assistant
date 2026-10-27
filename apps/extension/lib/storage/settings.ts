@@ -56,3 +56,9 @@ export const settings = storage.defineItem<Settings>(
     },
   },
 );
+
+export async function enabledSettings(): Promise<Settings | null> {
+  const current = await settings.getValue().catch(() => DEFAULT_SETTINGS);
+
+  return current.enabled ? current : null;
+}

@@ -79,6 +79,7 @@ export function App({
   if (!open)
     return (
       <Launcher
+        label={analysis.data ? "Voir l'analyse" : "Analyser l'annonce"}
         analysis={analysis.data}
         onOpen={() => {
           setOpen(true);

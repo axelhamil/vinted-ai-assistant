@@ -1,4 +1,3 @@
-import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ErrorPanel } from "@/components/sidebar/ErrorPanel";
@@ -11,24 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { sendMessage } from "@/lib/messaging/protocol";
-import { downscale } from "@/lib/photos/downscale";
-import {
-  type EditMode,
-  editPhotoJob,
-  type PhotoJob,
-  runEdits,
-} from "@/lib/photos/edit-queue";
+import type { EditMode, PhotoJob } from "@/lib/photos/edit-queue";
 import { useBackground } from "@/lib/ui/query";
 import { injectPhotos } from "@/lib/vinted/listing-form";
 
 export interface PhotoStudioProps {
   jobs: PhotoJob[];
-  onJobChange: (job: PhotoJob) => void;
-}
-
-interface EditRun {
-  targets: PhotoJob[];
-  mode: EditMode;
+  editing: boolean;
+  onEdit: (mode: EditMode) => void;
 }
 
 const INSTRUCTION_MIN = 10;
@@ -56,7 +45,7 @@ function addToListing(files: File[]): void {
   );
 }
 
-export function PhotoStudio({ jobs, onJobChange }: PhotoStudioProps) {
+export function PhotoStudio({ jobs, editing, onEdit }: PhotoStudioProps) {
   const presets = useBackground({
     key: ["studio", "presets"],
     request: () => sendMessage("listPresets", undefined),
@@ -64,28 +53,6 @@ export function PhotoStudio({ jobs, onJobChange }: PhotoStudioProps) {
   });
   const [choice, setChoice] = useState("");
   const [instruction, setInstruction] = useState("");
-  const edit = useMutation({
-    mutationFn: ({ targets, mode }: EditRun) =>
-      runEdits(
-        targets.map((job) => async () => {
-          onJobChange({ id: job.id, source: job.source, status: "editing" });
-          const outcome = await editPhotoJob(job.source, mode, {
-            downscale,
-            send: (input) => sendMessage("editPhoto", input),
-          });
-          onJobChange(
-            outcome.ok
-              ? { ...job, status: "done", edited: outcome.data }
-              : {
-                  id: job.id,
-                  source: job.source,
-                  status: "failed",
-                  failure: outcome.failure,
-                },
-          );
-        }),
-      ),
-  });
 
   if (presets.error)
     return (
@@ -105,7 +72,6 @@ export function PhotoStudio({ jobs, onJobChange }: PhotoStudioProps) {
     );
 
   const mode = editMode(choice, instruction);
-  const pending = jobs.filter((job) => job.status !== "done");
   const edited = jobs.flatMap((job) => (job.edited ? [job.edited] : []));
   const instructionLength = instruction.trim().length;
   const instructionInvalid =
@@ -147,16 +113,10 @@ export function PhotoStudio({ jobs, onJobChange }: PhotoStudioProps) {
       <div className="flex flex-wrap gap-row">
         <Button
           className="flex-1"
-          disabled={!mode || jobs.length === 0 || edit.isPending}
-          onClick={() =>
-            mode &&
-            edit.mutate({
-              targets: pending.length > 0 ? pending : jobs,
-              mode,
-            })
-          }
+          disabled={!mode || jobs.length === 0 || editing}
+          onClick={() => mode && onEdit(mode)}
         >
-          {edit.isPending ? "Retouche en cours" : "Retoucher les photos"}
+          {editing ? "Retouche en cours" : "Retoucher les photos"}
         </Button>
         <Button
           variant="outline"

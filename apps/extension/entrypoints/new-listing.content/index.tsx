@@ -1,6 +1,6 @@
 import "@/assets/styles.css";
 import { defineContentScript } from "#imports";
-import { DEFAULT_SETTINGS, settings } from "@/lib/storage/settings";
+import { enabledSettings } from "@/lib/storage/settings";
 import { mountSidebar } from "@/lib/ui/mount-sidebar";
 import { hostPatterns } from "@/lib/vinted/hosts";
 import { App } from "./App";
@@ -23,7 +23,8 @@ export default defineContentScript({
   allFrames: import.meta.env.MODE === "proof",
   cssInjectionMode: "ui",
   async main(ctx) {
-    const current = await settings.getValue().catch(() => DEFAULT_SETTINGS);
+    const current = await enabledSettings();
+    if (!current) return;
 
     mountSidebar(ctx, {
       id: "vinted-ai-listing-form",

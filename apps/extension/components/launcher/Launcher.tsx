@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import type { AnalysisDto } from "@/lib/messaging/protocol";
 
 export interface LauncherProps {
-  analysis: AnalysisDto | undefined;
+  label: string;
+  analysis?: AnalysisDto;
   onOpen: () => void;
 }
 
-export function Launcher({ analysis, onOpen }: LauncherProps) {
+export function Launcher({ label, analysis, onOpen }: LauncherProps) {
   return (
     <Button
       size="lg"
@@ -21,7 +22,7 @@ export function Launcher({ analysis, onOpen }: LauncherProps) {
           size="mini"
         />
       )}
-      {analysis ? "Voir l'analyse" : "Analyser l'annonce"}
+      {label}
     </Button>
   );
 }

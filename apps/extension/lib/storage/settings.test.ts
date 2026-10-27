@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { fakeBrowser } from "wxt/testing/fake-browser";
-import { DEFAULT_SETTINGS, normalizeBackendUrl, settings } from "./settings";
+import {
+  DEFAULT_SETTINGS,
+  enabledSettings,
+  normalizeBackendUrl,
+  settings,
+} from "./settings";
 
 describe("settings", () => {
   beforeEach(() => {
@@ -44,5 +49,20 @@ describe("settings", () => {
     ["ftp://x", null],
   ])("normalizes the backend url %s to %s", (raw, expected) => {
     expect(normalizeBackendUrl(raw)).toBe(expected);
+  });
+
+  it("gives the sidebars nothing to mount when the assistant is disabled", async () => {
+    await settings.setValue({ ...DEFAULT_SETTINGS, enabled: false });
+
+    expect(await enabledSettings()).toBeNull();
+  });
+
+  it("gives the sidebars the stored settings when the assistant is enabled", async () => {
+    await settings.setValue({ ...DEFAULT_SETTINGS, autoOpenSidebar: false });
+
+    expect(await enabledSettings()).toEqual({
+      ...DEFAULT_SETTINGS,
+      autoOpenSidebar: false,
+    });
   });
 });

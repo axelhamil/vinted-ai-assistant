@@ -1,41 +1,29 @@
 import { useState } from "react";
+import { Launcher } from "@/components/launcher/Launcher";
 import { SidebarShell } from "@/components/sidebar/SidebarShell";
 import { PhotoStudio } from "@/components/studio/PhotoStudio";
 import { SuggestionsPanel } from "@/components/suggestions/SuggestionsPanel";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { PhotoJob } from "@/lib/photos/edit-queue";
+import { type EditInput, sendMessage } from "@/lib/messaging/protocol";
+import { downscale } from "@/lib/photos/downscale";
+import { usePhotoEdits } from "@/lib/photos/use-photo-edits";
 
 export interface ListingFormProps {
   autoOpen: boolean;
 }
 
-const toJobs = (files: FileList | null): PhotoJob[] =>
-  Array.from(files ?? [], (source) => ({
-    id: crypto.randomUUID(),
-    source,
-    status: "idle",
-  }));
+const EDIT_DEPS = {
+  downscale,
+  send: (input: EditInput) => sendMessage("editPhoto", input),
+};
 
 export function App({ autoOpen }: ListingFormProps) {
   const [open, setOpen] = useState(autoOpen);
-  const [jobs, setJobs] = useState<PhotoJob[]>([]);
-  const updateJob = (next: PhotoJob) =>
-    setJobs((current) =>
-      current.map((job) => (job.id === next.id ? next : job)),
-    );
+  const photos = usePhotoEdits(EDIT_DEPS);
 
   if (!open)
-    return (
-      <Button
-        size="lg"
-        className="fixed right-gutter bottom-gutter z-2147483000"
-        onClick={() => setOpen(true)}
-      >
-        Préparer l'annonce
-      </Button>
-    );
+    return <Launcher label="Préparer l'annonce" onOpen={() => setOpen(true)} />;
 
   return (
     <SidebarShell
@@ -48,8 +36,11 @@ export function App({ autoOpen }: ListingFormProps) {
           type="file"
           accept="image/*"
           multiple
+          disabled={photos.editing}
           aria-label="Choisir les photos de l'article"
-          onChange={(event) => setJobs(toJobs(event.currentTarget.files))}
+          onChange={(event) =>
+            photos.choose(Array.from(event.currentTarget.files ?? []))
+          }
         />
       </section>
       <Tabs defaultValue="photos">
@@ -57,11 +48,23 @@ export function App({ autoOpen }: ListingFormProps) {
           <TabsTrigger value="photos">Photos</TabsTrigger>
           <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
         </TabsList>
-        <TabsContent value="photos" className="p-gutter">
-          <PhotoStudio jobs={jobs} onJobChange={updateJob} />
+        <TabsContent
+          value="photos"
+          forceMount
+          className="p-gutter data-[state=inactive]:hidden"
+        >
+          <PhotoStudio
+            jobs={photos.jobs}
+            editing={photos.editing}
+            onEdit={photos.edit}
+          />
         </TabsContent>
-        <TabsContent value="suggestions" className="p-gutter">
-          <SuggestionsPanel sources={jobs.map((job) => job.source)} />
+        <TabsContent
+          value="suggestions"
+          forceMount
+          className="p-gutter data-[state=inactive]:hidden"
+        >
+          <SuggestionsPanel sources={photos.jobs.map((job) => job.source)} />
         </TabsContent>
       </Tabs>
     </SidebarShell>

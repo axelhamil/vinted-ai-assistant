@@ -37,21 +37,21 @@ export async function downscale(
   { maxEdge = 1600, quality = 0.85 }: DownscaleOptions = {},
 ): Promise<string> {
   const bitmap = await createImageBitmap(file);
-  const { width, height } = fitWithin(bitmap.width, bitmap.height, maxEdge);
-  const canvas = new OffscreenCanvas(width, height);
-  const context = canvas.getContext("2d");
 
-  if (!context) {
+  try {
+    const { width, height } = fitWithin(bitmap.width, bitmap.height, maxEdge);
+    const canvas = new OffscreenCanvas(width, height);
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("The canvas has no 2d context");
+
+    context.fillStyle = "white";
+    context.fillRect(0, 0, width, height);
+    context.drawImage(bitmap, 0, 0, width, height);
+
+    return await readAsDataUrl(
+      await canvas.convertToBlob({ type: "image/jpeg", quality }),
+    );
+  } finally {
     bitmap.close();
-    throw new Error("The canvas has no 2d context");
   }
-
-  context.fillStyle = "white";
-  context.fillRect(0, 0, width, height);
-  context.drawImage(bitmap, 0, 0, width, height);
-  bitmap.close();
-
-  return readAsDataUrl(
-    await canvas.convertToBlob({ type: "image/jpeg", quality }),
-  );
 }
