@@ -94,25 +94,27 @@ apps/extension/src/
 
 ## Tech Stack
 
-| Layer | Technologies |
-|-------|-------------|
-| Backend runtime | Bun |
-| Backend framework | Hono |
-| Database | SQLite + Drizzle ORM |
-| DI | Inversify |
-| Validation | Zod |
-| Frontend | React 19, Vite, Tailwind CSS |
-| State | Zustand |
-| Local DB | Dexie (IndexedDB) |
-| AI | Vercel AI SDK with Gemini/OpenAI |
-| Linting | Biome |
+| Layer             | Technologies                     |
+| ----------------- | -------------------------------- |
+| Backend runtime   | Bun                              |
+| Backend framework | Hono                             |
+| Database          | SQLite + Drizzle ORM             |
+| DI                | Inversify                        |
+| Validation        | Zod                              |
+| Frontend          | React 19, Vite, Tailwind CSS     |
+| State             | Zustand                          |
+| Local DB          | Dexie (IndexedDB)                |
+| AI                | Vercel AI SDK with Gemini/OpenAI |
+| Linting           | Biome                            |
 
 ## Code Style
 
-- **Biome** for linting and formatting (not ESLint/Prettier)
-- Tab indentation, single quotes, no semicolons, trailing commas (ES5)
-- `noUnusedImports` and `noUnusedVariables` are errors
-- `noExplicitAny` is enforced
+- **Biome 2** for linting and formatting (not ESLint/Prettier), config in `biome.json`
+- 2-space indentation, double quotes, semicolons, line width 80, LF line endings
+- `noUnusedImports`, `noUnusedVariables`, `noUndeclaredVariables` and `noImportCycles` are errors
+- `noExplicitAny` and `noNonNullAssertion` warn
+- Legacy `apps/backend`, `apps/extension`, `packages/shared` and `installer` are excluded from Biome until the v1 rewrite
+- Target architecture and migration steps: `docs/superpowers/specs/2026-10-27-v1-refactor-roadmap.md`
 
 ## Environment Setup
 
@@ -127,21 +129,25 @@ Extension settings are stored in Chrome storage and configured via popup UI.
 ## Code Quality Rules
 
 ### NO Useless Abstractions
+
 - **NEVER** create a service/interface that only wraps a function
 - If a class only delegates → use the function directly
 - DI only for: repositories, providers, services with real business logic
 
 ### NO Dead Code
+
 - Delete commented code immediately
 - Delete unused imports
 - Delete identical conditional branches (e.g., `x ? 'A' : 'A'`)
 
 ### Type Safety
+
 - `any` forbidden except for documented exceptions (poorly-typed external SDKs)
 - Prefer `unknown` + type guards over `any`
 - Type assertions (`as`) must be justified
 
 ### Clean Architecture
+
 - Adapters don't import other adapters
 - Use cases orchestrate, they don't do low-level logic
 - Controllers return DTOs, not HTTP Response objects

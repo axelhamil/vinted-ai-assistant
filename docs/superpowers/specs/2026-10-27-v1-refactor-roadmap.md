@@ -6,15 +6,15 @@ The project has not moved for months. It runs on SQLite, crxjs, Inversify and Bi
 
 ## Decisions (27/10/2026)
 
-| Topic | Choice | Rejected |
-|---|---|---|
-| Database | Postgres 18 in Docker, one `pgSchema` per module | SQLite `bun:sqlite` |
-| Extension | WXT 0.21 (Vite 8, React 19, Tailwind 4) | crxjs 3.0 |
-| Packages | pnpm 12 workspaces, Bun 1.4.4 runtime and test runner | Bun workspaces |
-| Scope | Full OpenUp base: modules, ddd-kit, inwire, Result/Option, ambient UoW, outbox, pino + requestId, Zod env, graceful shutdown, Sentry, depcruise, knip, jscpd, husky, commitlint, CI, compose profiles with `develop.watch` | Light base |
-| Release | release-please kept (already in the repo, global default) | semantic-release |
-| Task runner | Turbo kept (already in the repo) | `pnpm -r` |
-| Formatting | Biome 2 with OpenUp settings (2 spaces, double quotes, semicolons) | Tabs and single quotes |
+| Topic       | Choice                                                                                                                                                                                                                     | Rejected               |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| Database    | Postgres 18 in Docker, one `pgSchema` per module                                                                                                                                                                           | SQLite `bun:sqlite`    |
+| Extension   | WXT 0.21 (Vite 8, React 19, Tailwind 4)                                                                                                                                                                                    | crxjs 3.0              |
+| Packages    | pnpm 12 workspaces, Bun 1.4.4 runtime and test runner                                                                                                                                                                      | Bun workspaces         |
+| Scope       | Full OpenUp base: modules, ddd-kit, inwire, Result/Option, ambient UoW, outbox, pino + requestId, Zod env, graceful shutdown, Sentry, depcruise, knip, jscpd, husky, commitlint, CI, compose profiles with `develop.watch` | Light base             |
+| Release     | release-please kept (already in the repo, global default)                                                                                                                                                                  | semantic-release       |
+| Task runner | Turbo kept (already in the repo)                                                                                                                                                                                           | `pnpm -r`              |
+| Formatting  | Biome 2 with OpenUp settings (2 spaces, double quotes, semicolons)                                                                                                                                                         | Tabs and single quotes |
 
 ## Constraints that every step keeps
 
@@ -45,28 +45,37 @@ packages/
 ## Steps, in order
 
 ### 0. Toolchain and quality guards
+
 Pins (`.bun-version`, `.nvmrc`, `packageManager`), pnpm workspace settings, `packages/typescript-config`, Biome 2 config, knip, jscpd, dependency-cruiser boundaries, husky + lint-staged + commitlint, CI workflow, release-please workflow, `package-lock.json` files removed. Legacy apps ignored by the new checks.
 
 ### 1. Kernel and test database
+
 `packages/ddd-kit`, `packages/drizzle` (UoW, migrator), `packages/testing` (port mock, UoW mock, template database cloned per test file), `docker-compose.yaml` with `db` and `postgres-test`, `bunfig.toml` and `bunfig.db.toml`. `pnpm db`, `pnpm test`, `pnpm test:db` work.
 
 ### 2. API host
+
 `apps/api`: env Zod, pino with requestId, central error handler mapping typed codes to HTTP, `/health/live` and `/health/ready`, graceful shutdown steps, Sentry no-op without DSN, inwire composition root. Dockerfile (dev, production on `debian:trixie-slim` + Bun) and compose `api` service with `develop.watch`, `migrate` service.
 
 ### 3. AI library
+
 `packages/ai`: Gemini text with structured output and Google Search tool, Gemini image editing, retry with backoff on 429/503, WebP re-encode and metadata strip with sharp. One client, used by both modules.
 
 ### 4. Module analysis
+
 Aggregate `Analysis` with value objects (`VintedId`, `Score`, `Price`, `PriceRange`, `Margin`, `AnalysisStatus`, `Language`, `NegotiationTone`), status transitions, events. Use cases: analyze listing (with 1 h cache), get analysis, list portfolio, portfolio stats, change status, delete, regenerate negotiation (persisted), export markdown. Drizzle repository in `pgSchema("analysis")` with indexes on status, opportunity score and analyzed date. Fixes from the inventory: stats count in SQL, atomic upsert and status update, negotiation rules in one place, score and margin thresholds exposed once.
 
 ### 5. Module studio
+
 Aggregate `StudioPreset` (system presets cannot be deleted), photo editing (single, custom, batch with concurrency 3), listing form suggestions. `pgSchema("studio")`, system presets seeded by migration.
 
 ### 6. Outbox
+
 `packages/outbox`, one outbox table per module, flush in the outermost UoW run, relay with LISTEN + poll, dead letter after 10 attempts. Events: `analysis.completed`, `analysis.status-changed`, `analysis.deleted`.
 
 ### 7. Extension on WXT
+
 `apps/extension` rebuilt on WXT with the same screens. One typed messaging client, one background API client built on the Hono RPC type of `apps/api`, score and margin thresholds read from the API contract, Tailwind 4 tokens, shadcn components, Dexie cache kept. Dead stores, hooks and badge folder removed. Host permissions cover every Vinted TLD the language detector supports.
 
 ### 8. Cut-over
+
 Legacy `apps/backend` and `packages/shared` deleted, one-shot `scripts/import-sqlite.ts` moves an existing SQLite portfolio into Postgres, installer replaced by `docker compose --profile prod up`, README and CLAUDE.md rewritten, image budget check.

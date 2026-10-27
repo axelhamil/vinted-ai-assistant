@@ -1,27 +1,27 @@
 {
-	"name": "vinted-ai-assistant",
-	"version": "1.1.0",
-	"private": true,
-	"type": "module",
-	"workspaces": ["apps/*", "packages/*"],
-	"scripts": {
-		"dev": "turbo dev",
-		"build": "turbo build",
-		"lint": "turbo lint",
-		"lint:fix": "biome check --write .",
-		"typecheck": "turbo typecheck",
-		"db:push": "pnpm --filter backend db:push",
-		"db:generate": "pnpm --filter backend db:generate",
-		"db:migrate": "pnpm --filter backend db:migrate",
-		"db:studio": "pnpm --filter backend db:studio"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^1.9.4",
-		"turbo": "^2.7.5",
-		"typescript": "^5.7.2"
-	},
-	"packageManager": "pnpm@9.15.4",
-	"engines": {
-		"node": ">=20.0.0"
-	}
+  "name": "vinted-ai-assistant",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "lint:fix": "biome check --write .",
+    "typecheck": "turbo typecheck",
+    "db:push": "pnpm --filter backend db:push",
+    "db:generate": "pnpm --filter backend db:generate",
+    "db:migrate": "pnpm --filter backend db:migrate",
+    "db:studio": "pnpm --filter backend db:studio"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.3",
+    "@types/bun": "^1.4.4",
+    "turbo": "^2.11.9",
+    "typescript": "^7.0.2"
+  },
+  "packageManager": "pnpm@12.14.0",
+  "engines": {
+    "node": ">=24.22.1"
+  }
 }

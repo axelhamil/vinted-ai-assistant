@@ -1,3 +1,18 @@
 packages:
-  - "apps/*"
-  - "packages/*"
+  - apps/*
+  - packages/*
+  - packages/modules/*
+
+allowBuilds:
+  "@biomejs/biome": true
+  "@tailwindcss/oxide": true
+  better-sqlite3: false
+  esbuild: true
+  protobufjs: false
+  sharp: true
+
+autoInstallPeers: true
+minimumReleaseAge: 1440
+nodeLinker: hoisted
+preferWorkspacePackages: true
+shamefullyHoist: true

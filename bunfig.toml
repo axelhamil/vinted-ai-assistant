@@ -1,0 +1,3 @@
+[test]
+randomize = true
+pathIgnorePatterns = ["**/*.db.test.ts", "apps/backend/**", "apps/extension/**"]

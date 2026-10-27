@@ -19,7 +19,6 @@
 ## Quick Start (Non Developers)
 
 > **One-click installation** — No coding required!
-
 1. **Download** the latest release: [Releases](https://github.com/your-username/vinted-ai-assistant/releases/latest)
 2. **Extract** the ZIP file
 3. **Double-click** the installer for your system:
@@ -63,12 +62,12 @@ vinted-ai-assistant/
 
 ## Tech Stack
 
-| Component | Technologies |
-|-----------|-------------|
-| **Backend** | Bun, Hono, Drizzle ORM, SQLite |
-| **Extension** | React 19, Vite, Tailwind CSS, Zustand |
-| **AI** | Google Gemini (with Google Search grounding), OpenAI |
-| **Monorepo** | pnpm workspaces, Turborepo |
+| Component     | Technologies                                         |
+| ------------- | ---------------------------------------------------- |
+| **Backend**   | Bun, Hono, Drizzle ORM, SQLite                       |
+| **Extension** | React 19, Vite, Tailwind CSS, Zustand                |
+| **AI**        | Google Gemini (with Google Search grounding), OpenAI |
+| **Monorepo**  | pnpm workspaces, Turborepo                           |
 
 ## Installation (Developers)
 
@@ -136,7 +135,7 @@ Accessible via the extension popup:
 
 ## Screenshots
 
-*Coming soon*
+_Coming soon_
 
 ## Development
 
