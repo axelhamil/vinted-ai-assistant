@@ -117,6 +117,8 @@ services:
         - action: rebuild
           path: ./packages/drizzle/package.json
         - action: rebuild
+          path: ./packages/outbox/package.json
+        - action: rebuild
           path: ./packages/testing/package.json
         - action: rebuild
           path: ./packages/typescript-config/package.json
