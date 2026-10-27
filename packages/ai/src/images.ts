@@ -1,7 +1,7 @@
 import { Option, Result } from "@packages/ddd-kit";
 import sharp from "sharp";
-import { type AiFailure, aiFailure } from "./failures";
-import type { InlineImage } from "./gemini-client";
+import { type AiFailure, aiFailure, errorReason } from "./failures";
+import type { InlineImage } from "./inline-image";
 
 export type FetchImage = (url: URL, init: RequestInit) => Promise<Response>;
 
@@ -76,10 +76,11 @@ async function normalize(
       base64: webp.toString("base64"),
     });
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-
     return Result.fail(
-      aiFailure("IMAGE_INVALID", `The photo could not be decoded: ${reason}`),
+      aiFailure(
+        "IMAGE_INVALID",
+        `The photo could not be decoded: ${errorReason(error)}`,
+      ),
     );
   }
 }
@@ -148,9 +149,7 @@ async function download(
     const reason =
       error instanceof Error && error.name === "TimeoutError"
         ? `no answer within ${timeoutMs} ms`
-        : error instanceof Error
-          ? error.message
-          : String(error);
+        : errorReason(error);
 
     return Result.fail(
       aiFailure(

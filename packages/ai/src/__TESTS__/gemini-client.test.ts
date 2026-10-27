@@ -1,15 +1,21 @@
-import { describe, expect, it, mock } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import {
   ApiError,
   BlockedReason,
   type Candidate,
   FinishReason,
+  type GenerateContentParameters,
   GenerateContentResponse,
   Modality,
 } from "@google/genai";
+import { mockPort } from "@packages/testing/port-mock";
 import { z } from "zod";
-import type { AiFailureCode } from "../failures";
-import { createGeminiClient, type GenAiModels } from "../gemini-client";
+import type { AiFailure, AiFailureCode } from "../failures";
+import {
+  createGeminiClient,
+  type GeminiClient,
+  type GenAiModels,
+} from "../gemini-client";
 import { IMAGE_MODEL } from "../models";
 
 const listingSchema = z.object({
@@ -28,20 +34,58 @@ function answering(text: string, extra: Candidate = {}): Candidate {
 }
 
 function clientAnswering(response: GenerateContentResponse) {
-  const generateContent = mock<GenAiModels["generateContent"]>();
-  generateContent.mockResolvedValue(response);
+  const models = mockPort<GenAiModels>();
+  models.generateContent.mockResolvedValue(response);
 
   return {
-    client: createGeminiClient({ models: { generateContent } }),
-    generateContent,
+    client: createGeminiClient({ models }),
+    generateContent: models.generateContent,
   };
 }
 
 function clientFailingWith(error: unknown) {
-  const generateContent = mock<GenAiModels["generateContent"]>();
-  generateContent.mockRejectedValue(error);
+  const models = mockPort<GenAiModels>();
+  models.generateContent.mockRejectedValue(error);
 
-  return createGeminiClient({ models: { generateContent } });
+  return createGeminiClient({ models });
+}
+
+const fastBudgets = {
+  text: { attemptMs: 20, totalMs: 60 },
+  image: { attemptMs: 30, totalMs: 80 },
+};
+
+function rejectedOnAbort(
+  parameters: GenerateContentParameters,
+): Promise<GenerateContentResponse> {
+  return new Promise((_, reject) => {
+    const signal = parameters.config?.abortSignal;
+    signal?.addEventListener("abort", () => reject(signal.reason));
+  });
+}
+
+function neverAnswering(): Promise<GenerateContentResponse> {
+  return new Promise(() => undefined);
+}
+
+async function timedOut(
+  answer: GenAiModels["generateContent"],
+  call: (client: GeminiClient) => Promise<{ getError(): AiFailure }>,
+) {
+  const models = mockPort<GenAiModels>();
+  models.generateContent.mockImplementation(answer);
+  const startedAt = performance.now();
+
+  const result = await call(
+    createGeminiClient({ models, budgets: fastBudgets }),
+  );
+
+  return {
+    code: result.getError().code,
+    elapsedMs: performance.now() - startedAt,
+    attemptMs:
+      models.generateContent.mock.calls[0]?.[0].config?.httpOptions?.timeout,
+  };
 }
 
 const request = {
@@ -168,6 +212,30 @@ describe("generateStructured", () => {
 
     expect(result.getError().code).toBe("AI_REJECTED");
     expect(result.getError().detail).toContain("SAFETY");
+  });
+
+  it("fails with AI_INVALID_OUTPUT when the answer is empty because it ran out of tokens", async () => {
+    const { client } = clientAnswering(
+      responseWith({
+        content: { role: "model", parts: [] },
+        finishReason: FinishReason.MAX_TOKENS,
+      }),
+    );
+
+    const result = await client.generateStructured(request);
+
+    expect(result.getError().code).toBe("AI_INVALID_OUTPUT");
+    expect(result.getError().detail).toContain("MAX_TOKENS");
+  });
+
+  it("fails with AI_TIMEOUT within the total budget, each attempt bounded by the attempt timeout", async () => {
+    const outcome = await timedOut(rejectedOnAbort, (client) =>
+      client.generateStructured(request),
+    );
+
+    expect(outcome.code).toBe("AI_TIMEOUT");
+    expect(outcome.elapsedMs).toBeLessThan(500);
+    expect(outcome.attemptMs).toBe(fastBudgets.text.attemptMs);
   });
 
   it("fails with AI_REJECTED and the block reason when the prompt itself is blocked", async () => {
@@ -330,6 +398,52 @@ describe("editImage", () => {
       "I cannot edit photos of people.",
     );
     expect(result.getError().detail).toContain("STOP");
+  });
+
+  it("fails with AI_REJECTED when the image is blocked for safety", async () => {
+    const { client } = clientAnswering(
+      responseWith({
+        content: { role: "model", parts: [] },
+        finishReason: FinishReason.IMAGE_SAFETY,
+      }),
+    );
+
+    const result = await client.editImage(editRequest);
+
+    expect(result.getError().code).toBe("AI_REJECTED");
+    expect(result.getError().detail).toContain("IMAGE_SAFETY");
+  });
+
+  it("returns an image part without a MIME type as image/png", async () => {
+    const { client } = clientAnswering(
+      responseWith({
+        content: {
+          role: "model",
+          parts: [
+            {
+              inlineData: { data: Buffer.from(editedBytes).toString("base64") },
+            },
+          ],
+        },
+      }),
+    );
+
+    const result = await client.editImage(editRequest);
+
+    expect(result.getValue()).toEqual({
+      mimeType: "image/png",
+      bytes: editedBytes,
+    });
+  });
+
+  it("fails with AI_TIMEOUT at the total budget even when the SDK keeps waiting", async () => {
+    const outcome = await timedOut(neverAnswering, (client) =>
+      client.editImage(editRequest),
+    );
+
+    expect(outcome.code).toBe("AI_TIMEOUT");
+    expect(outcome.elapsedMs).toBeLessThan(500);
+    expect(outcome.attemptMs).toBe(fastBudgets.image.attemptMs);
   });
 
   it("maps an API error 503 to AI_UNAVAILABLE with its status", async () => {

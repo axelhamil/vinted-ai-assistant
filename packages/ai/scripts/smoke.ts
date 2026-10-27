@@ -1,15 +1,8 @@
-import { fileURLToPath } from "node:url";
-import { config } from "dotenv";
 import sharp from "sharp";
 import { z } from "zod";
 import type { AiFailure } from "../src/failures";
 import { createGeminiClient, type GeminiClient } from "../src/gemini-client";
 import { IMAGE_MODEL, TEXT_MODEL } from "../src/models";
-
-config({
-  path: fileURLToPath(new URL("../../../.env", import.meta.url)),
-  quiet: true,
-});
 
 function report(step: string, failure: AiFailure) {
   const status = failure.status.map(String).unwrapOr("none");

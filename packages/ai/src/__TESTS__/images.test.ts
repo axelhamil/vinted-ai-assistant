@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test";
 import { crc32 } from "node:zlib";
 import { fetch as networkFetch, serve, sleep } from "bun";
 import sharp from "sharp";
-import type { AiFailureCode } from "../failures";
+import type { AiFailure, ImageIntakeCode } from "../failures";
 import {
   fetchListingImage,
   fetchListingImages,
@@ -128,8 +128,8 @@ afterAll(async () => {
 });
 
 function expectFailure(
-  result: { isFailure: boolean; getError(): { code: AiFailureCode } },
-  code: AiFailureCode,
+  result: { isFailure: boolean; getError(): AiFailure },
+  code: ImageIntakeCode,
 ) {
   expect(result.isFailure).toBe(true);
   expect(result.getError().code).toBe(code);

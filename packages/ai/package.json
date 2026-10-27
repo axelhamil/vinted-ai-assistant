@@ -5,14 +5,14 @@
   "type": "module",
   "exports": {
     "./gemini-client": "./src/gemini-client.ts",
-    "./models": "./src/models.ts",
     "./failures": "./src/failures.ts",
-    "./images": "./src/images.ts"
+    "./images": "./src/images.ts",
+    "./inline-image": "./src/inline-image.ts"
   },
   "scripts": {
     "type-check": "tsc7 -v && tsc7 --noEmit",
     "test": "bun --config=../../bunfig.toml test",
-    "smoke": "bun scripts/smoke.ts"
+    "smoke": "bun --env-file=../../.env scripts/smoke.ts"
   },
   "dependencies": {
     "@google/genai": "^2.31.0",
@@ -21,10 +21,10 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@packages/testing": "workspace:*",
     "@packages/typescript-config": "workspace:*",
     "@types/bun": "^1.4.4",
     "@types/node": "^24.19.2",
-    "dotenv": "^18.0.9",
     "typescript": "~6.0.3"
   }
 }

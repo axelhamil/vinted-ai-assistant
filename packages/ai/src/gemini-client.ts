@@ -1,4 +1,5 @@
 import {
+  FinishReason,
   type GenerateContentParameters,
   type GenerateContentResponse,
   GoogleGenAI,
@@ -7,15 +8,17 @@ import {
 } from "@google/genai";
 import { Result } from "@packages/ddd-kit";
 import { z } from "zod";
-import { type AiFailure, aiFailure, toAiFailure } from "./failures";
+import {
+  type AiFailure,
+  type AiFailureCode,
+  aiFailure,
+  errorReason,
+  toAiFailure,
+} from "./failures";
+import type { InlineImage } from "./inline-image";
 import { IMAGE_MODEL, TEXT_MODEL } from "./models";
 
 export type GenAiModels = Pick<GoogleGenAI["models"], "generateContent">;
-
-export interface InlineImage {
-  mimeType: string;
-  base64: string;
-}
 
 export interface GroundingSource {
   title: string;
@@ -54,7 +57,19 @@ export interface GeminiClient {
   ): Promise<Result<GeneratedImage, AiFailure>>;
 }
 
-type GeminiClientOptions = { apiKey: string } | { models: GenAiModels };
+interface CallBudget {
+  attemptMs: number;
+  totalMs: number;
+}
+
+interface CallBudgets {
+  text: CallBudget;
+  image: CallBudget;
+}
+
+type GeminiClientOptions = ({ apiKey: string } | { models: GenAiModels }) & {
+  budgets?: CallBudgets;
+};
 
 const RETRY_OPTIONS = {
   attempts: 4,
@@ -65,9 +80,21 @@ const RETRY_OPTIONS = {
   httpStatusCodes: [408, 429, 500, 502, 503, 504],
 } satisfies HttpRetryOptions;
 
-const TEXT_TIMEOUT_MS = 90_000;
+const DEFAULT_BUDGETS: CallBudgets = {
+  text: { attemptMs: 60_000, totalMs: 120_000 },
+  image: { attemptMs: 90_000, totalMs: 150_000 },
+};
 
-const IMAGE_TIMEOUT_MS = 120_000;
+const REJECTING_FINISH_REASONS = new Set<FinishReason>([
+  FinishReason.SAFETY,
+  FinishReason.PROHIBITED_CONTENT,
+  FinishReason.BLOCKLIST,
+  FinishReason.IMAGE_SAFETY,
+  FinishReason.SPII,
+  FinishReason.RECITATION,
+]);
+
+const PNG_MIME_TYPE = "image/png";
 
 function responseJsonSchema(schema: z.ZodType): Result<unknown, AiFailure> {
   try {
@@ -75,12 +102,10 @@ function responseJsonSchema(schema: z.ZodType): Result<unknown, AiFailure> {
 
     return Result.ok(jsonSchema);
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-
     return Result.fail(
       aiFailure(
         "AI_INVALID_OUTPUT",
-        `The answer schema has no JSON Schema form: ${reason}`,
+        `The answer schema has no JSON Schema form: ${errorReason(error)}`,
       ),
     );
   }
@@ -108,15 +133,52 @@ function structuredParameters<S extends z.ZodType>(
   };
 }
 
+function rejectOnAbort(signal: AbortSignal): Promise<never> {
+  return new Promise((_, reject) => {
+    signal.addEventListener("abort", () => reject(signal.reason), {
+      once: true,
+    });
+  });
+}
+
 async function callModel(
   models: GenAiModels,
   parameters: GenerateContentParameters,
+  budget: CallBudget,
 ): Promise<Result<GenerateContentResponse, AiFailure>> {
+  const signal = AbortSignal.timeout(budget.totalMs);
+  const answer = models.generateContent({
+    ...parameters,
+    config: {
+      ...parameters.config,
+      abortSignal: signal,
+      httpOptions: { timeout: budget.attemptMs },
+    },
+  });
+
   try {
-    return Result.ok(await models.generateContent(parameters));
+    return Result.ok(await Promise.race([answer, rejectOnAbort(signal)]));
   } catch (error) {
     return Result.fail(toAiFailure(error));
   }
+}
+
+function emptyAnswerFailure(
+  response: GenerateContentResponse,
+  otherwise: AiFailureCode,
+  missing: string,
+): AiFailure {
+  const finishReason = response.candidates?.[0]?.finishReason;
+  const blockReason = response.promptFeedback?.blockReason;
+  const rejected =
+    blockReason !== undefined ||
+    (finishReason !== undefined && REJECTING_FINISH_REASONS.has(finishReason));
+  const reason = finishReason ?? blockReason ?? "UNKNOWN";
+
+  return aiFailure(
+    rejected ? "AI_REJECTED" : otherwise,
+    `The model returned no ${missing} (finish reason: ${reason}).`,
+  );
 }
 
 function parseJson(text: string): Result<unknown, AiFailure> {
@@ -155,19 +217,10 @@ function readStructured<S extends z.ZodType>(
 ): Result<StructuredAnswer<z.infer<S>>, AiFailure> {
   const text = response.text?.trim() ?? "";
 
-  if (text === "") {
-    const reason =
-      response.candidates?.[0]?.finishReason ??
-      response.promptFeedback?.blockReason ??
-      "UNKNOWN";
-
+  if (text === "")
     return Result.fail(
-      aiFailure(
-        "AI_REJECTED",
-        `The model returned no text (finish reason: ${reason}).`,
-      ),
+      emptyAnswerFailure(response, "AI_INVALID_OUTPUT", "text"),
     );
-  }
 
   return parseJson(text).flatMap((json) => {
     const parsed = schema.safeParse(json);
@@ -211,52 +264,39 @@ function imageEditParameters(
         ],
       },
     ],
-    config: {
-      responseModalities: [Modality.IMAGE],
-      httpOptions: { timeout: IMAGE_TIMEOUT_MS },
-    },
+    config: { responseModalities: [Modality.IMAGE] },
   };
 }
 
 function readImage(
   response: GenerateContentResponse,
 ): Result<GeneratedImage, AiFailure> {
-  const candidate = response.candidates?.[0];
-  const parts = candidate?.content?.parts ?? [];
+  const parts = response.candidates?.[0]?.content?.parts ?? [];
 
   for (const { inlineData } of parts) {
-    if (!inlineData?.data || !inlineData.mimeType) continue;
+    if (!inlineData?.data) continue;
 
     return Result.ok({
-      mimeType: inlineData.mimeType,
+      mimeType: inlineData.mimeType ?? PNG_MIME_TYPE,
       bytes: Uint8Array.from(Buffer.from(inlineData.data, "base64")),
     });
   }
 
   const text = response.text?.trim() || "(none)";
-  const reason =
-    candidate?.finishReason ??
-    response.promptFeedback?.blockReason ??
-    "UNKNOWN";
 
   return Result.fail(
-    aiFailure(
-      "AI_NO_IMAGE",
-      `The model returned no image (finish reason: ${reason}, text: ${text}).`,
-    ),
+    emptyAnswerFailure(response, "AI_NO_IMAGE", `image, text: ${text}`),
   );
 }
 
 export function createGeminiClient(options: GeminiClientOptions): GeminiClient {
+  const budgets = options.budgets ?? DEFAULT_BUDGETS;
   const models =
     "models" in options
       ? options.models
       : new GoogleGenAI({
           apiKey: options.apiKey,
-          httpOptions: {
-            retryOptions: RETRY_OPTIONS,
-            timeout: TEXT_TIMEOUT_MS,
-          },
+          httpOptions: { retryOptions: RETRY_OPTIONS },
         }).models;
 
   return {
@@ -267,6 +307,7 @@ export function createGeminiClient(options: GeminiClientOptions): GeminiClient {
       const response = await callModel(
         models,
         structuredParameters(request, jsonSchema.getValue()),
+        budgets.text,
       );
 
       return response.flatMap((answer) =>
@@ -275,7 +316,11 @@ export function createGeminiClient(options: GeminiClientOptions): GeminiClient {
     },
 
     async editImage(request) {
-      const response = await callModel(models, imageEditParameters(request));
+      const response = await callModel(
+        models,
+        imageEditParameters(request),
+        budgets.image,
+      );
 
       return response.flatMap(readImage);
     },
