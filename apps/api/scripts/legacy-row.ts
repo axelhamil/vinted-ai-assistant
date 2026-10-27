@@ -6,6 +6,9 @@ import {
 import type { ListingFacts } from "@packages/analysis/domain/listing-facts";
 import { AnalysisStatus } from "@packages/analysis/domain/value-objects/analysis-status.vo";
 import { NegotiationTone } from "@packages/analysis/domain/value-objects/negotiation-tone.vo";
+import { Price } from "@packages/analysis/domain/value-objects/price.vo";
+import { PriceRange } from "@packages/analysis/domain/value-objects/price-range.vo";
+import { Score } from "@packages/analysis/domain/value-objects/score.vo";
 import { Option, Result } from "@packages/ddd-kit";
 import { z } from "zod";
 
@@ -84,46 +87,80 @@ const legacyRowSchema = z.object({
 
 type LegacyRow = z.infer<typeof legacyRowSchema>;
 
-function toCents(amount: number): number {
-  return Math.round(amount * 100);
+function inColumn<T>(column: string, result: Result<T>): Result<T> {
+  return result.mapError((error) => `Invalid legacy ${column}: ${error}`);
 }
 
-function factsOf(row: LegacyRow): ListingFacts {
-  const averageCents = toCents(row.market_price_avg);
-  const sources = row.market_price_sources ?? [];
+function centsIn(column: string, euros: number): Result<number> {
+  return inColumn(
+    column,
+    Price.fromEuros(euros).map((price) => price.value),
+  );
+}
 
-  return {
-    photoQuality: { score: row.photo_quality_score, ...row.photo_analysis },
-    authenticity: {
-      score: row.authenticity_score,
-      flags: row.authenticity_flags,
-      confidence: row.authenticity_confidence,
-    },
-    market: {
-      lowCents: Option.fromNullable(row.market_price_low)
-        .map(toCents)
-        .unwrapOr(averageCents),
-      averageCents,
-      highCents: Option.fromNullable(row.market_price_high)
-        .map(toCents)
-        .unwrapOr(averageCents),
-      confidence: row.market_price_confidence ?? "low",
-      reasoning: row.market_price_reasoning ?? "",
-      retail: Option.none(),
-      sources: sources.map((source) => ({
+function optionalCentsIn(
+  column: string,
+  euros: number | null | undefined,
+): Result<number | null> {
+  return Option.fromNullable(euros)
+    .tryMap((amount) => centsIn(column, amount))
+    .map((cents) => cents.toNull());
+}
+
+function marketRangeOf(row: LegacyRow): Result<PriceRange> {
+  const average = row.market_price_avg;
+
+  return Result.all([
+    centsIn("market_price_low", row.market_price_low ?? average),
+    centsIn("market_price_avg", average),
+    centsIn("market_price_high", row.market_price_high ?? average),
+  ]).flatMap(([lowCents, averageCents, highCents]) =>
+    inColumn(
+      "market_price_low, market_price_avg, market_price_high",
+      PriceRange.create({ lowCents, averageCents, highCents }),
+    ),
+  );
+}
+
+function factsOf(row: LegacyRow): Result<ListingFacts> {
+  const scores = Result.combine([
+    inColumn("photo_quality_score", Score.create(row.photo_quality_score)),
+    inColumn("authenticity_score", Score.create(row.authenticity_score)),
+  ]);
+  const sources = Result.all(
+    (row.market_price_sources ?? []).map((source) =>
+      centsIn("market_price_sources", source.price).map((priceCents) => ({
         name: source.name,
-        priceCents: toCents(source.price),
+        priceCents,
         searchQuery: "",
         count: 1,
       })),
-    },
-    detected: {
-      brand: Option.none(),
-      model: Option.fromNullable(row.detected_model),
-      condition: row.condition ?? "",
-    },
-    signals: row.signals,
-  };
+    ),
+  );
+
+  return Result.all([scores, marketRangeOf(row), sources]).map(
+    ([, range, validSources]) => ({
+      photoQuality: { score: row.photo_quality_score, ...row.photo_analysis },
+      authenticity: {
+        score: row.authenticity_score,
+        flags: row.authenticity_flags,
+        confidence: row.authenticity_confidence,
+      },
+      market: {
+        ...range.value,
+        confidence: row.market_price_confidence ?? "low",
+        reasoning: row.market_price_reasoning ?? "",
+        retail: Option.none(),
+        sources: validSources,
+      },
+      detected: {
+        brand: Option.none(),
+        model: Option.fromNullable(row.detected_model),
+        condition: row.condition ?? "",
+      },
+      signals: row.signals,
+    }),
+  );
 }
 
 function groundingSourcesOf(row: LegacyRow): GroundingSource[] {
@@ -149,6 +186,14 @@ export function analysisFromLegacyRow(raw: unknown): Result<Analysis, string> {
   }
 
   const row = parsed.data;
+  const prices = Result.all([
+    centsIn("price", row.price),
+    optionalCentsIn("total_price", row.total_price),
+    factsOf(row),
+  ]);
+  if (prices.isFailure) return Result.fail(prices.getError());
+
+  const [priceCents, totalPriceCents, facts] = prices.getValue();
   const analyzedAt = new Date(row.analyzed_at * 1000);
   const values = Result.all([
     toListing({
@@ -159,10 +204,8 @@ export function analysisFromLegacyRow(raw: unknown): Result<Analysis, string> {
       brand: row.brand,
       size: row.size,
       condition: row.condition ?? "",
-      priceCents: toCents(row.price),
-      totalPriceCents: Option.fromNullable(row.total_price)
-        .map(toCents)
-        .toNull(),
+      priceCents,
+      totalPriceCents,
       shippingCostCents: null,
       listedAt: null,
       photos: row.photos,
@@ -181,7 +224,7 @@ export function analysisFromLegacyRow(raw: unknown): Result<Analysis, string> {
   const [listing, tone, status] = values.getValue();
   const created = Analysis.create({
     listing,
-    facts: factsOf(row),
+    facts,
     groundingSources: groundingSourcesOf(row),
     negotiation: {
       script: row.negotiation_script ?? "",
