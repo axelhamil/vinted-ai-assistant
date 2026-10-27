@@ -58,7 +58,7 @@ Pins (`.bun-version`, `.nvmrc`, `packageManager`), pnpm workspace settings, `pac
 
 `apps/api`: env Zod, pino with requestId, central error handler mapping typed codes to HTTP, `/health/live` and `/health/ready`, graceful shutdown steps, Sentry no-op without DSN, inwire composition root. Dockerfile (dev, production on `debian:trixie-slim` + Bun) and compose `api` service with `develop.watch`, `migrate` service.
 
-### 3. AI library
+### 3. AI library (delivered 27/10/2026, live smoke pending a billed key)
 
 `packages/ai`: one Gemini client on the official `@google/genai` SDK (no Vercel AI SDK): text with structured output validated by Zod and the Google Search tool, image editing, retry with backoff on 429/503 read from the SDK error status (not from message substrings), WebP re-encode and metadata strip with sharp. Model ids in one config, checked against the current GA list before pinning. Used by both modules through their own ports.
 
