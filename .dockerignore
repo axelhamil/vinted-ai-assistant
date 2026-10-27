@@ -1,0 +1,16 @@
+.git
+.github
+.husky
+.claude
+.superpowers
+docs
+installer
+apps/extension
+**/node_modules
+**/dist
+**/coverage
+**/.turbo
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+!**/.env.example

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {},
+    "packages/*": {
+      "entry": ["src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/modules/*": {
+      "entry": [
+        "schemas/*.ts",
+        "src/*.module.ts",
+        "src/testing/*.ts",
+        "src/**/*.test.ts"
+      ],
+      "project": ["schemas/**/*.ts", "src/**/*.ts"]
+    },
+    "apps/api": {
+      "entry": ["src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
+    }
+  },
+  "ignoreWorkspaces": [
+    "apps/backend",
+    "apps/extension",
+    "packages/shared",
+    "installer"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "rules": {
+    "unlisted": "off",
+    "unresolved": "off",
+    "optionalPeerDependencies": "off",
+    "exports": "warn",
+    "types": "warn",
+    "duplicates": "off"
+  }
+}

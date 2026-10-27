@@ -1,0 +1,19 @@
+{
+  "threshold": 13,
+  "reporters": ["console"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/.turbo/**",
+    "**/pnpm-lock.yaml",
+    "**/*.d.ts",
+    "**/packages/shared/**",
+    "**/apps/backend/**",
+    "**/apps/extension/**"
+  ],
+  "format": ["typescript", "javascript", "tsx", "jsx"],
+  "minLines": 5,
+  "minTokens": 50,
+  "absolute": true
+}

@@ -9,7 +9,7 @@ allowBuilds:
   better-sqlite3: false
   esbuild: true
   protobufjs: false
-  sharp: true
+  sharp: false
 
 autoInstallPeers: true
 minimumReleaseAge: 1440

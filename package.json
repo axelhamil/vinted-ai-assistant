@@ -10,15 +10,44 @@
     "lint:fix": "biome check --write .",
     "typecheck": "turbo typecheck",
     "db:push": "pnpm --filter backend db:push",
-    "db:generate": "pnpm --filter backend db:generate",
-    "db:migrate": "pnpm --filter backend db:migrate",
-    "db:studio": "pnpm --filter backend db:studio"
+    "db:generate": "turbo db:generate",
+    "db:migrate": "turbo db:migrate",
+    "db:studio": "pnpm --filter backend db:studio",
+    "db": "docker compose up -d --wait db postgres-test",
+    "db:down": "docker compose down",
+    "check": "biome check .",
+    "fix": "biome check --write .",
+    "ci:check": "biome ci .",
+    "type-check": "turbo type-check",
+    "test": "turbo test",
+    "test:db": "turbo test:db",
+    "check:duplication": "jscpd ./packages ./apps",
+    "check:unused": "knip",
+    "check:boundaries": "depcruise packages apps --config .dependency-cruiser.cjs",
+    "check:all": "pnpm type-check && pnpm check && pnpm check:duplication && pnpm check:unused && pnpm check:boundaries && pnpm test && pnpm test:db",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.3",
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
     "@types/bun": "^1.4.4",
+    "dependency-cruiser": "^18.7.0",
+    "husky": "^9.1.7",
+    "jscpd": "^5.4.2",
+    "knip": "^6.43.0",
+    "lint-staged": "^17.6.0",
     "turbo": "^2.11.9",
-    "typescript": "^7.0.2"
+    "typescript": "~6.0.3",
+    "typescript-7": "npm:typescript@7.0.2"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,cjs,mjs}": [
+      "biome check --write --no-errors-on-unmatched"
+    ],
+    "*.{json,md,css,scss,html,yml,yaml}": [
+      "biome format --write --no-errors-on-unmatched"
+    ]
   },
   "packageManager": "pnpm@12.14.0",
   "engines": {
