@@ -230,7 +230,7 @@ export const parseArticle = (doc: Document, url: URL): ArticleInput | null => {
   const product = readJsonLdProduct(doc);
   const title = firstText(doc, TITLES);
   const price = inRange(readPrice(doc, product), MIN_PRICE);
-  const photos = readPhotos(doc);
+  const photos = vintedId ? readPhotos(doc, vintedId) : [];
 
   if (!vintedId || !title || price === null || photos.length === 0) return null;
 

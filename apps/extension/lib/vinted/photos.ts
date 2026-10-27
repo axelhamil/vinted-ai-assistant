@@ -61,12 +61,18 @@ const unescapeScript = (content: string): string =>
     .replace(ESCAPED_SLASH, "/")
     .replace(ESCAPED_QUOTE, '"');
 
-const fromScripts = (doc: Document): string[] =>
-  [...doc.querySelectorAll("script:not([src])")].flatMap((script) =>
-    [
-      ...unescapeScript(script.textContent ?? "").matchAll(SCRIPT_PHOTO),
-    ].flatMap((match) => match[1] ?? []),
-  );
+const mentions = (content: string, vintedId: string): boolean =>
+  new RegExp(`(?<!\\d)${vintedId}(?!\\d)`).test(content);
+
+const fromScripts = (doc: Document, vintedId: string): string[] =>
+  [...doc.querySelectorAll("script:not([src])")]
+    .map((script) => script.textContent ?? "")
+    .filter((content) => mentions(content, vintedId))
+    .flatMap((content) =>
+      [...unescapeScript(content).matchAll(SCRIPT_PHOTO)].flatMap(
+        (match) => match[1] ?? [],
+      ),
+    );
 
 const largestFromSrcset = (srcset: string | null): string | null => {
   const candidates = (srcset ?? "").split(",").map((entry) => {
@@ -108,9 +114,9 @@ const uniquePhotos = (sources: string[]): string[] => [
   ...new Set(sources.flatMap((source) => toPhoto(source) ?? [])),
 ];
 
-export const readPhotos = (doc: Document): string[] => {
+export const readPhotos = (doc: Document, vintedId: string): string[] => {
   const photos = uniquePhotos([
-    ...fromScripts(doc),
+    ...fromScripts(doc, vintedId),
     ...(readJsonLdProduct(doc)?.images ?? []),
     ...fromGallery(doc),
   ]);
