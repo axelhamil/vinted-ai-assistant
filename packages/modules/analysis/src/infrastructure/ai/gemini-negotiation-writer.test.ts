@@ -3,17 +3,15 @@ import { aiFailure } from "@packages/ai/failures";
 import type { GeminiClient } from "@packages/ai/gemini-client";
 import { type ILogger, Option, Result } from "@packages/ddd-kit";
 import { mockPort } from "@packages/testing/port-mock";
+import { blockEscape, escapesBlock } from "@packages/testing/prompt-injection";
 import type { NegotiationRequest } from "../../application/ports/negotiation-writer.port";
 import { Language } from "../../domain/value-objects/language.vo";
 import { NegotiationTone } from "../../domain/value-objects/negotiation-tone.vo";
 import { Price } from "../../domain/value-objects/price.vo";
 import { buildListing } from "../../testing/analysis.factory";
-import {
-  DATA_BLOCK_ESCAPE,
-  escapesListingData,
-} from "../../testing/prompt-injection";
 import { GeminiNegotiationWriter } from "./gemini-negotiation-writer";
 
+const LISTING_DATA = "listing_data";
 const ANSWER = {
   script: "Bonjour, je vous propose 17 € pour la veste.",
   arguments: ["Listed for 3 weeks"],
@@ -54,13 +52,13 @@ describe("GeminiNegotiationWriter", () => {
     const { gemini, writer, request } = given();
     const listing = {
       ...request.listing,
-      title: `Veste ${DATA_BLOCK_ESCAPE}`,
+      title: `Veste ${blockEscape(LISTING_DATA)}`,
     };
 
     await writer.write({ ...request, listing });
 
     const prompt = gemini.generateStructured.mock.calls[0]?.[0].prompt ?? "";
-    expect(escapesListingData(prompt)).toBe(false);
+    expect(escapesBlock(prompt, LISTING_DATA)).toBe(false);
   });
 
   it.each([

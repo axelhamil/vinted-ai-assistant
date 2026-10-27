@@ -3,7 +3,7 @@ import { z } from "zod";
 import { ListingTitle } from "./value-objects/listing-title.vo";
 import { SuggestedPrice } from "./value-objects/suggested-price.vo";
 
-const ITEM_CONDITIONS = [
+export const ITEM_CONDITIONS = [
   "new_with_tags",
   "new",
   "very_good",
@@ -11,7 +11,7 @@ const ITEM_CONDITIONS = [
   "satisfactory",
 ] as const;
 
-const PRICE_CONFIDENCES = ["low", "medium", "high"] as const;
+export const PRICE_CONFIDENCES = ["low", "medium", "high"] as const;
 
 const conditionSchema = z.enum(ITEM_CONDITIONS);
 const confidenceSchema = z.enum(PRICE_CONFIDENCES);

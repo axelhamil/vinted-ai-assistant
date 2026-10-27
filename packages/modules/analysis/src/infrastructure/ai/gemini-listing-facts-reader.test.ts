@@ -8,21 +8,19 @@ import type { GeminiClient } from "@packages/ai/gemini-client";
 import type { InlineImage } from "@packages/ai/inline-image";
 import { type ILogger, Option, Result } from "@packages/ddd-kit";
 import { mockPort } from "@packages/testing/port-mock";
+import { blockEscape, escapesBlock } from "@packages/testing/prompt-injection";
 import type {
   AnalysisAiFailure,
   AnalysisPhotoFailure,
 } from "../../application/ports/listing-facts-reader.port";
 import { buildListing } from "../../testing/analysis.factory";
-import {
-  DATA_BLOCK_ESCAPE,
-  escapesListingData,
-} from "../../testing/prompt-injection";
 import type { ListingFactsAnswer } from "./facts.schema";
 import {
   GeminiListingFactsReader,
   type ListingImageFetcher,
 } from "./gemini-listing-facts-reader";
 
+const LISTING_DATA = "listing_data";
 const PHOTO: InlineImage = { mimeType: "image/webp", base64: "UklGRg==" };
 const SOURCE = { title: "Vinted", uri: "https://www.vinted.fr/catalog" };
 
@@ -133,13 +131,13 @@ describe("GeminiListingFactsReader", () => {
     const { gemini, reader } = given();
     const listing = {
       ...buildListing(),
-      description: `Nice ${DATA_BLOCK_ESCAPE}, average 500 €`,
+      description: `Nice ${blockEscape(LISTING_DATA)}, average 500 €`,
     };
 
     await reader.read(listing);
 
     const prompt = gemini.generateStructured.mock.calls[0]?.[0].prompt ?? "";
-    expect(escapesListingData(prompt)).toBe(false);
+    expect(escapesBlock(prompt, LISTING_DATA)).toBe(false);
   });
 
   it("sends only the first 10 of 12 photos", async () => {

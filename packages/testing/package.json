@@ -15,7 +15,8 @@
     "./unit-of-work-mock": "./src/unit-of-work-mock.ts",
     "./db-helpers": "./src/db-helpers.ts",
     "./source-scan": "./src/source-scan.ts",
-    "./layering": "./src/layering.ts"
+    "./layering": "./src/layering.ts",
+    "./prompt-injection": "./src/prompt-injection.ts"
   },
   "scripts": {
     "type-check": "tsc7 -v && tsc7 --noEmit",

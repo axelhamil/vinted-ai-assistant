@@ -24,12 +24,12 @@ describe("layering rules of the studio module", () => {
   });
 
   it.skipIf(!scan.exists(INFRASTRUCTURE))(
-    "reaches the AI provider from infrastructure and the module wiring only (skipped until infrastructure/ exists)",
+    "reaches the AI provider from infrastructure, test fixtures and the module wiring only (skipped until infrastructure/ exists)",
     () => {
       expectProviderReachedOnlyFrom(scan, {
         prefix: "@packages/ai/",
         except: [SHARED_LANGUAGES],
-        allowedIn: [`${INFRASTRUCTURE}/`, "studio.module.ts"],
+        allowedIn: [`${INFRASTRUCTURE}/`, "testing/", "studio.module.ts"],
       });
     },
   );
