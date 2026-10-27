@@ -6,15 +6,17 @@ The project has not moved for months. It runs on SQLite, crxjs, Inversify and Bi
 
 ## Decisions (27/10/2026)
 
-| Topic       | Choice                                                                                                                                                                                                                     | Rejected               |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| Database    | Postgres 18 in Docker, one `pgSchema` per module                                                                                                                                                                           | SQLite `bun:sqlite`    |
-| Extension   | WXT 0.21 (Vite 8, React 19, Tailwind 4)                                                                                                                                                                                    | crxjs 3.0              |
-| Packages    | pnpm 12 workspaces, Bun 1.4.4 runtime and test runner                                                                                                                                                                      | Bun workspaces         |
-| Scope       | Full OpenUp base: modules, ddd-kit, inwire, Result/Option, ambient UoW, outbox, pino + requestId, Zod env, graceful shutdown, Sentry, depcruise, knip, jscpd, husky, commitlint, CI, compose profiles with `develop.watch` | Light base             |
-| Release     | release-please kept (already in the repo, global default)                                                                                                                                                                  | semantic-release       |
-| Task runner | Turbo kept (already in the repo)                                                                                                                                                                                           | `pnpm -r`              |
-| Formatting  | Biome 2 with OpenUp settings (2 spaces, double quotes, semicolons)                                                                                                                                                         | Tabs and single quotes |
+| Topic       | Choice                                                                                                                                                                                                                     | Rejected                          |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| Database    | Postgres 18 in Docker, one `pgSchema` per module                                                                                                                                                                           | SQLite `bun:sqlite`               |
+| Extension   | WXT 0.21 (Vite 8, React 19, Tailwind 4)                                                                                                                                                                                    | crxjs 3.0                         |
+| Packages    | pnpm 12 workspaces, Bun 1.4.4 runtime and test runner                                                                                                                                                                      | Bun workspaces                    |
+| Scope       | Full OpenUp base: modules, ddd-kit, inwire, Result/Option, ambient UoW, outbox, pino + requestId, Zod env, graceful shutdown, Sentry, depcruise, knip, jscpd, husky, commitlint, CI, compose profiles with `develop.watch` | Light base                        |
+| Release     | release-please kept (already in the repo, global default)                                                                                                                                                                  | semantic-release                  |
+| Task runner | Turbo kept (already in the repo)                                                                                                                                                                                           | `pnpm -r`                         |
+| Formatting  | Biome 2 with OpenUp settings (2 spaces, double quotes, semicolons)                                                                                                                                                         | Tabs and single quotes            |
+| AI          | Official provider SDK only (`@google/genai`), Zod 4 `z.toJSONSchema` for structured output; a second provider plugs in behind the same module ports with its own official SDK                                              | Vercel AI SDK (`ai`, `@ai-sdk/*`) |
+| Scores      | The model returns facts (observed prices, signals, condition, photo findings); the domain computes opportunity score, margin and offer                                                                                     | Score computed by the prompt      |
 
 ## Constraints that every step keeps
 
@@ -22,7 +24,7 @@ The project has not moved for months. It runs on SQLite, crxjs, Inversify and Bi
 - The legacy `apps/backend`, `apps/extension` and `packages/shared` stay in place and runnable until the step that replaces them deletes them. New checks ignore them until then.
 - Reference implementation: `/home/axel/DEV/clients/raphael-openup-app` (branch `refactor/v1`). Copy its patterns, do not reinvent.
 - Each step = one commit on `refactor/v1`, delivered with `pnpm check:all` green, reviewed by the five `delivering-tickets` agents.
-- Versions are pinned to the latest stable on 27/10/2026: Bun 1.4.4, Node 24.22.1, TypeScript 7.0.2, Hono 4.13.14, drizzle-orm 0.45.4, drizzle-kit 0.31.11, Zod 4.6.7, ai 7, @ai-sdk/google 4, React 19.3.1, Vite 8.3.5, Tailwind 4.3.3, WXT 0.21.5, Biome 2.6.3, knip 6.43.0, jscpd 5.4.2, dependency-cruiser 18.7.0, Postgres 18.6.
+- Versions are pinned to the latest stable on 27/10/2026: Bun 1.4.4, Node 24.22.1, TypeScript 7.0.2, Hono 4.13.14, drizzle-orm 0.45.4, drizzle-kit 0.31.11, Zod 4.6.7, @google/genai latest stable, React 19.3.1, Vite 8.3.5, Tailwind 4.3.3, WXT 0.21.5, Biome 2.6.3, knip 6.43.0, jscpd 5.4.2, dependency-cruiser 18.7.0, Postgres 18.6.
 
 ## Target layout
 
@@ -58,11 +60,11 @@ Pins (`.bun-version`, `.nvmrc`, `packageManager`), pnpm workspace settings, `pac
 
 ### 3. AI library
 
-`packages/ai`: Gemini text with structured output and Google Search tool, Gemini image editing, retry with backoff on 429/503, WebP re-encode and metadata strip with sharp. One client, used by both modules.
+`packages/ai`: one Gemini client on the official `@google/genai` SDK (no Vercel AI SDK): text with structured output validated by Zod and the Google Search tool, image editing, retry with backoff on 429/503 read from the SDK error status (not from message substrings), WebP re-encode and metadata strip with sharp. Model ids in one config, checked against the current GA list before pinning. Used by both modules through their own ports.
 
 ### 4. Module analysis
 
-Aggregate `Analysis` with value objects (`VintedId`, `Score`, `Price`, `PriceRange`, `Margin`, `AnalysisStatus`, `Language`, `NegotiationTone`), status transitions, events. Use cases: analyze listing (with 1 h cache), get analysis, list portfolio, portfolio stats, change status, delete, regenerate negotiation (persisted), export markdown. Drizzle repository in `pgSchema("analysis")` with indexes on status, opportunity score and analyzed date. Fixes from the inventory: stats count in SQL, atomic upsert and status update, negotiation rules in one place, score and margin thresholds exposed once.
+Aggregate `Analysis` with value objects (`VintedId`, `Score`, `Price`, `PriceRange`, `Margin`, `AnalysisStatus`, `Language`, `NegotiationTone`), status transitions, events. Use cases: analyze listing (with 1 h cache), get analysis, list portfolio, portfolio stats, change status, delete, regenerate negotiation (persisted), export markdown. Drizzle repository in `pgSchema("analysis")` with indexes on status, opportunity score and analyzed date. Reliability: the model returns facts only, the domain computes opportunity score, margin and suggested offer with tested rules; an out-of-range or malformed model answer is a typed failure, never a thrown error, and never breaks reading a stored analysis. Fixes from the inventory: stats count in SQL, atomic upsert and status update, negotiation rules in one place, score and margin thresholds exposed once.
 
 ### 5. Module studio
 
@@ -74,8 +76,12 @@ Aggregate `StudioPreset` (system presets cannot be deleted), photo editing (sing
 
 ### 7. Extension on WXT
 
-`apps/extension` rebuilt on WXT with the same screens. One typed messaging client, one background API client built on the Hono RPC type of `apps/api`, score and margin thresholds read from the API contract, Tailwind 4 tokens, shadcn components, Dexie cache kept. Dead stores, hooks and badge folder removed. Host permissions cover every Vinted TLD the language detector supports.
+`apps/extension` rebuilt on WXT with the same screens. One typed messaging client, one background API client built on the Hono RPC type of `apps/api`, score and margin thresholds read from the API contract, Tailwind 4 tokens, shadcn components, Dexie cache kept. Dead stores, hooks and badge folder removed. Host permissions cover every Vinted TLD the language detector supports. Every front task runs `frontend-design:frontend-design` first for the visual direction, then `lean-ui` on every touched file.
 
 ### 8. Cut-over
 
 Legacy `apps/backend` and `packages/shared` deleted, one-shot `scripts/import-sqlite.ts` moves an existing SQLite portfolio into Postgres, installer replaced by `docker compose --profile prod up`, README and CLAUDE.md rewritten, image budget check.
+
+## After the refactor
+
+Once step 8 lands, a product brainstorm (`superpowers:brainstorming`) on the concept and the app opens a new roadmap for a commercial v1: fully working end to end, accounts, paywall and billing. The refactor adds no product feature beyond the reliability fixes above.
