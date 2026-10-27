@@ -53,10 +53,27 @@ const RETRY_OPTIONS = {
 
 const TEXT_TIMEOUT_MS = 90_000;
 
+function responseJsonSchema(schema: z.ZodType): Result<unknown, AiFailure> {
+  try {
+    const { $schema: _, ...jsonSchema } = z.toJSONSchema(schema);
+
+    return Result.ok(jsonSchema);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+
+    return Result.fail(
+      aiFailure(
+        "AI_INVALID_OUTPUT",
+        `The answer schema has no JSON Schema form: ${reason}`,
+      ),
+    );
+  }
+}
+
 function structuredParameters<S extends z.ZodType>(
   request: StructuredRequest<S>,
+  jsonSchema: unknown,
 ): GenerateContentParameters {
-  const { $schema: _, ...responseJsonSchema } = z.toJSONSchema(request.schema);
   const imageParts = request.images.map((image) => ({
     inlineData: { mimeType: image.mimeType, data: image.base64 },
   }));
@@ -69,7 +86,7 @@ function structuredParameters<S extends z.ZodType>(
     config: {
       systemInstruction: request.system,
       responseMimeType: "application/json",
-      responseJsonSchema,
+      responseJsonSchema: jsonSchema,
       ...(request.search ? { tools: [{ googleSearch: {} }] } : {}),
     },
   };
@@ -173,7 +190,13 @@ export function createGeminiClient(options: GeminiClientOptions): GeminiClient {
 
   return {
     async generateStructured(request) {
-      const response = await callModel(models, structuredParameters(request));
+      const jsonSchema = responseJsonSchema(request.schema);
+      if (jsonSchema.isFailure) return Result.fail(jsonSchema.getError());
+
+      const response = await callModel(
+        models,
+        structuredParameters(request, jsonSchema.getValue()),
+      );
 
       return response.flatMap((answer) =>
         readStructured(answer, request.schema),

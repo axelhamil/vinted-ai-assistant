@@ -1,6 +1,7 @@
 import { describe, expect, it, mock } from "bun:test";
 import {
   ApiError,
+  BlockedReason,
   type Candidate,
   FinishReason,
   GenerateContentResponse,
@@ -125,8 +126,22 @@ describe("generateStructured", () => {
     const result = await client.generateStructured(request);
 
     expect(result.getError().code).toBe("AI_INVALID_OUTPUT");
-    expect(result.getError().message).toContain("brand");
-    expect(result.getError().message).toContain("price");
+    expect(result.getError().detail).toContain("brand");
+    expect(result.getError().detail).toContain("price");
+  });
+
+  it("fails with AI_INVALID_OUTPUT without calling the model when the schema has no JSON Schema form", async () => {
+    const { client, generateContent } = clientAnswering(
+      responseWith(answering("{}")),
+    );
+
+    const result = await client.generateStructured({
+      ...request,
+      schema: z.object({ listedAt: z.date() }),
+    });
+
+    expect(result.getError().code).toBe("AI_INVALID_OUTPUT");
+    expect(generateContent).not.toHaveBeenCalled();
   });
 
   it("fails with AI_INVALID_OUTPUT when the text is not JSON", async () => {
@@ -150,7 +165,42 @@ describe("generateStructured", () => {
     const result = await client.generateStructured(request);
 
     expect(result.getError().code).toBe("AI_REJECTED");
-    expect(result.getError().message).toContain("SAFETY");
+    expect(result.getError().detail).toContain("SAFETY");
+  });
+
+  it("fails with AI_REJECTED and the block reason when the prompt itself is blocked", async () => {
+    const { client } = clientAnswering(
+      Object.assign(new GenerateContentResponse(), {
+        candidates: [],
+        promptFeedback: { blockReason: BlockedReason.PROHIBITED_CONTENT },
+      }),
+    );
+
+    const result = await client.generateStructured(request);
+
+    expect(result.getError().code).toBe("AI_REJECTED");
+    expect(result.getError().detail).toContain("PROHIBITED_CONTENT");
+  });
+
+  it("skips a grounding chunk that has no uri", async () => {
+    const { client } = clientAnswering(
+      responseWith(
+        answering('{"brand":"Levi\'s","price":35}', {
+          groundingMetadata: {
+            groundingChunks: [
+              { web: { title: "no link" } },
+              { web: { title: "ebay.fr", uri: "https://b.example/2" } },
+            ],
+          },
+        }),
+      ),
+    );
+
+    const result = await client.generateStructured(request);
+
+    expect(result.getValue().sources).toEqual([
+      { title: "ebay.fr", uri: "https://b.example/2" },
+    ]);
   });
 
   it.each<[number, AiFailureCode]>([
@@ -158,14 +208,17 @@ describe("generateStructured", () => {
     [503, "AI_UNAVAILABLE"],
     [400, "AI_REJECTED"],
   ])("maps an API error %d to %s with its status", async (status, code) => {
+    const rawBody = '{"error":{"message":"quota exceeded for project 42"}}';
     const client = clientFailingWith(
-      new ApiError({ message: "quota", status }),
+      new ApiError({ message: rawBody, status }),
     );
 
     const result = await client.generateStructured(request);
 
     expect(result.getError().code).toBe(code);
     expect(result.getError().status.unwrap()).toBe(status);
+    expect(result.getError().message).not.toContain("project 42");
+    expect(result.getError().detail).toContain("project 42");
   });
 
   it.each(["TimeoutError", "AbortError"])(

@@ -16,17 +16,40 @@ export type AiFailureCode =
 export interface AiFailure {
   code: AiFailureCode;
   message: string;
+  detail: string;
   status: Option<number>;
 }
+
+const MESSAGES: Record<AiFailureCode, string> = {
+  AI_RATE_LIMITED:
+    "The AI service is receiving too many requests. Try again in a minute.",
+  AI_UNAVAILABLE:
+    "The AI service is unavailable right now. Try again in a few minutes.",
+  AI_TIMEOUT: "The AI service took too long to answer. Try again.",
+  AI_REJECTED:
+    "The AI service refused this request. Change the listing photos or text and try again.",
+  AI_INVALID_OUTPUT:
+    "The AI service returned an answer that could not be read. Try again.",
+  AI_NO_IMAGE:
+    "The AI service did not return an image. Try again with another photo.",
+  IMAGE_FETCH_FAILED:
+    "A listing photo could not be downloaded. Reload the listing and try again.",
+  IMAGE_HOST_FORBIDDEN:
+    "Only photos hosted by Vinted can be analysed. Use the photos of the listing.",
+  IMAGE_TOO_LARGE:
+    "A listing photo is too large to analyse. Use a photo under 10 MB.",
+  IMAGE_INVALID:
+    "A listing photo is not a readable image. Use another photo of the listing.",
+};
 
 const ABORT_NAMES = new Set(["TimeoutError", "AbortError"]);
 
 export function aiFailure(
   code: AiFailureCode,
-  message: string,
+  detail: string,
   status: Option<number> = Option.none(),
 ): AiFailure {
-  return { code, message, status };
+  return { code, message: MESSAGES[code], detail, status };
 }
 
 function codeForStatus(status: number): AiFailureCode {
